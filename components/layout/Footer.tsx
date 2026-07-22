@@ -24,9 +24,6 @@ export default function Footer() {
               <Link href="/notice" className="text-zinc-500 hover:text-brand-dark">
                 NOTICE
               </Link>
-              <Link href="/consultation" className="text-zinc-500 hover:text-brand-dark">
-                상담 신청
-              </Link>
             </div>
             <div className="flex flex-col gap-2">
               <span className="font-semibold text-zinc-700">고객지원</span>

@@ -40,10 +40,10 @@ export default function Header() {
             로그인
           </Link>
           <Link
-            href="/consultation"
+            href="/signup"
             className="rounded-md bg-brand px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
           >
-            상담 신청
+            회원가입
           </Link>
         </div>
       </div>
