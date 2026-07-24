@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 const NAV_ITEMS = [
+  { label: "LEGACY를 소개합니다", href: "/about" },
   { label: "수강신청", href: "/courses" },
   { label: "NOTICE", href: "/notice" },
   { label: "MY PAGE", href: "/mypage" },
@@ -16,7 +17,7 @@ export default function Header() {
             LEGACY EDU
           </span>
           <span className="hidden text-xs text-zinc-500 sm:inline">
-            분당 · 성남 · 수지 내신&수능 전문
+            고등 내신&수능 전문
           </span>
         </Link>
 

@@ -13,7 +13,7 @@ export default function HomePage() {
             /
           </span>
           <h1 className="text-4xl font-bold leading-tight text-zinc-900 sm:text-5xl">
-            분당 · 성남 · 수지 고등 내신 &amp; 수능 전문
+            고등 내신 &amp; 수능 전문
             <br />
             <span className="text-brand-dark">LEGACY EDU</span>
           </h1>

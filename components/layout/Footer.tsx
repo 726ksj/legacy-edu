@@ -8,7 +8,7 @@ export default function Footer() {
           <div>
             <p className="text-lg font-bold text-brand-dark">LEGACY EDU</p>
             <p className="mt-2 text-sm text-zinc-500">
-              분당 · 성남 · 수지 고등학생 내신 및 수능 전문 교육
+              고등학생 내신 및 수능 전문 교육
             </p>
             <p className="mt-1 text-xs text-zinc-400">
               (임시) 주소 · 사업자등록번호 · 대표자명 등 정보 영역
