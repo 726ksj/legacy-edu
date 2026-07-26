@@ -34,3 +34,10 @@ export async function createStudentCode(
   revalidatePath("/admin/student-codes");
   return { success: true };
 }
+
+export async function deleteStudentCode(id: string) {
+  const supabase = createAdminClient();
+  // 이미 사용된 코드는 profiles에서 참조 중이라 삭제하지 않음 (FK 제약과 별개로 명시적으로 막음)
+  await supabase.from("student_codes").delete().eq("id", id).eq("is_used", false);
+  revalidatePath("/admin/student-codes");
+}

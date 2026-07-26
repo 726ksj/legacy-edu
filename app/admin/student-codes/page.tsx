@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import StudentCodeForm from "./StudentCodeForm";
+import { deleteStudentCode } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function Page() {
               <th className="px-4 py-3">상태</th>
               <th className="px-4 py-3">발급일</th>
               <th className="px-4 py-3">사용일</th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -65,11 +67,25 @@ export default async function Page() {
                     ? new Date(row.used_at).toLocaleString("ko-KR")
                     : "-"}
                 </td>
+                <td className="px-4 py-3 text-right">
+                  {row.is_used ? (
+                    <span className="text-xs text-zinc-300">-</span>
+                  ) : (
+                    <form action={deleteStudentCode.bind(null, row.id)}>
+                      <button
+                        type="submit"
+                        className="text-xs font-semibold text-red-500 hover:text-red-600"
+                      >
+                        삭제
+                      </button>
+                    </form>
+                  )}
+                </td>
               </tr>
             ))}
             {codes?.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-zinc-400">
                   등록된 학생코드가 없습니다.
                 </td>
               </tr>
