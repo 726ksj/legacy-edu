@@ -30,5 +30,9 @@ export async function login(
     return { error: "아이디 또는 비밀번호가 올바르지 않습니다." };
   }
 
+  if (username === process.env.ADMIN_USERNAME) {
+    redirect("/admin");
+  }
+
   redirect("/mypage");
 }
