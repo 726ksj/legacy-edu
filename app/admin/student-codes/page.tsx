@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import StudentCodeForm from "./StudentCodeForm";
+import DeleteCodeButton from "./DeleteCodeButton";
 import { deleteStudentCode } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -68,18 +69,10 @@ export default async function Page() {
                     : "-"}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {row.is_used ? (
-                    <span className="text-xs text-zinc-300">-</span>
-                  ) : (
-                    <form action={deleteStudentCode.bind(null, row.id)}>
-                      <button
-                        type="submit"
-                        className="text-xs font-semibold text-red-500 hover:text-red-600"
-                      >
-                        삭제
-                      </button>
-                    </form>
-                  )}
+                  <DeleteCodeButton
+                    action={deleteStudentCode.bind(null, row.id)}
+                    isUsed={row.is_used}
+                  />
                 </td>
               </tr>
             ))}

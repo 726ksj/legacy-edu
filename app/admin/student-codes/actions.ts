@@ -37,7 +37,18 @@ export async function createStudentCode(
 
 export async function deleteStudentCode(id: string) {
   const supabase = createAdminClient();
-  // 이미 사용된 코드는 profiles에서 참조 중이라 삭제하지 않음 (FK 제약과 별개로 명시적으로 막음)
-  await supabase.from("student_codes").delete().eq("id", id).eq("is_used", false);
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("student_code_id", id)
+    .maybeSingle();
+
+  if (profile) {
+    // auth 유저 삭제 시 profiles 행도 on delete cascade로 함께 삭제됨
+    await supabase.auth.admin.deleteUser(profile.id);
+  }
+
+  await supabase.from("student_codes").delete().eq("id", id);
   revalidatePath("/admin/student-codes");
 }
