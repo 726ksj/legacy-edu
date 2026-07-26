@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import StudentCodeForm from "./StudentCodeForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const supabase = createAdminClient();
   const { data: codes, error } = await supabase
