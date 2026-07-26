@@ -3,8 +3,14 @@ import QuickLoginCard from "@/components/home/QuickLoginCard";
 import ReviewSection from "@/components/home/ReviewSection";
 import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
+import { createClient } from "@/lib/supabase/server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <div className="flex flex-1 flex-col">
       <section className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-10 px-4 py-24 sm:px-6 lg:flex-row lg:items-center">
@@ -31,7 +37,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <QuickLoginCard />
+        {!user && <QuickLoginCard />}
       </section>
 
       <ReviewSection />
