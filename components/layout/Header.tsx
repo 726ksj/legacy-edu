@@ -4,7 +4,7 @@ import { logout } from "@/lib/supabase/auth-actions";
 
 const NAV_ITEMS = [
   { label: "LEGACY를 소개합니다", href: "/about" },
-  { label: "수강신청", href: "/courses" },
+  { label: "나의 강의실", href: "/my-classroom" },
   { label: "NOTICE", href: "/notice" },
   { label: "MY PAGE", href: "/mypage" },
   { label: "고객센터", href: "/customer-center" },
