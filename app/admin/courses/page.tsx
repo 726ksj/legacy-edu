@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import CourseForm from "./CourseForm";
 import DeleteCourseButton from "./DeleteCourseButton";
@@ -61,7 +62,17 @@ export default async function Page() {
                   {new Date(row.created_at).toLocaleString("ko-KR")}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <DeleteCourseButton action={deleteCourse.bind(null, row.id)} />
+                  <div className="flex items-center justify-end gap-3">
+                    <Link
+                      href={`/admin/courses/${row.id}/lessons`}
+                      className="text-xs font-semibold text-brand-dark hover:underline"
+                    >
+                      차시 관리
+                    </Link>
+                    <DeleteCourseButton
+                      action={deleteCourse.bind(null, row.id)}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
