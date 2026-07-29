@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import DeleteUserButton from "./DeleteUserButton";
+import { deleteUser } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +19,7 @@ export default async function Page() {
       </span>
       <h1 className="text-2xl font-bold text-zinc-900">회원 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        가입한 학생/학부모 회원 정보를 확인하는 페이지입니다.
+        가입한 학생/학부모 회원 정보를 확인하고 수정/탈퇴 처리하는 페이지입니다.
       </p>
 
       {error && (
@@ -36,6 +39,7 @@ export default async function Page() {
               <th className="px-4 py-3">학교</th>
               <th className="px-4 py-3">학년</th>
               <th className="px-4 py-3">가입일</th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -56,11 +60,22 @@ export default async function Page() {
                 <td className="px-4 py-3 text-zinc-500">
                   {new Date(row.created_at).toLocaleString("ko-KR")}
                 </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-3">
+                    <Link
+                      href={`/admin/users/${row.id}`}
+                      className="text-xs font-semibold text-brand-dark hover:underline"
+                    >
+                      수정
+                    </Link>
+                    <DeleteUserButton action={deleteUser.bind(null, row.id)} />
+                  </div>
+                </td>
               </tr>
             ))}
             {users?.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-zinc-400">
                   가입한 회원이 없습니다.
                 </td>
               </tr>
