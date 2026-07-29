@@ -12,13 +12,6 @@ interface Enrollment {
   } | null;
 }
 
-interface Lesson {
-  id: string;
-  course_id: string;
-  order_no: number;
-  title: string;
-}
-
 export default async function MyClassroomPage() {
   const supabase = await createClient();
   const {
@@ -35,18 +28,6 @@ export default async function MyClassroomPage() {
     .eq("profile_id", user.id)
     .returns<Enrollment[]>();
 
-  const courseIds = (enrollments ?? []).map((e) => e.course_id);
-
-  const { data: lessons } = courseIds.length
-    ? await supabase
-        .from("lessons")
-        .select("id, course_id, order_no, title")
-        .in("course_id", courseIds)
-        .eq("status", "ready")
-        .order("order_no", { ascending: true })
-        .returns<Lesson[]>()
-    : { data: [] as Lesson[] };
-
   return (
     <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-4 py-24 sm:px-6">
       <div>
@@ -62,49 +43,30 @@ export default async function MyClassroomPage() {
         </p>
       )}
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
         {enrollments?.map((enrollment) => {
           const course = enrollment.courses;
           if (!course) return null;
-          const courseLessons =
-            lessons?.filter((l) => l.course_id === course.id) ?? [];
 
           return (
-            <div
+            <Link
               key={course.id}
-              className="rounded-lg border border-zinc-200 bg-white p-6"
+              href={`/my-classroom/${course.id}`}
+              className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-6 hover:border-brand"
             >
-              <p className="text-xs font-semibold text-brand-dark">
-                {course.subject}
-              </p>
-              <h2 className="mt-1 text-lg font-bold text-zinc-900">
-                {course.title}
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                {course.teacher_name} 선생님
-              </p>
-
-              <ul className="mt-4 divide-y divide-zinc-100">
-                {courseLessons.map((lesson) => (
-                  <li key={lesson.id}>
-                    <Link
-                      href={`/watch/${lesson.id}`}
-                      className="flex items-center justify-between py-3 text-sm text-zinc-700 hover:text-brand-dark"
-                    >
-                      <span>
-                        {lesson.order_no}강 · {lesson.title}
-                      </span>
-                      <span className="text-xs text-zinc-400">시청하기 →</span>
-                    </Link>
-                  </li>
-                ))}
-                {courseLessons.length === 0 && (
-                  <li className="py-3 text-sm text-zinc-400">
-                    아직 업로드된 영상이 없습니다.
-                  </li>
-                )}
-              </ul>
-            </div>
+              <div>
+                <p className="text-xs font-semibold text-brand-dark">
+                  {course.subject}
+                </p>
+                <h2 className="mt-1 text-lg font-bold text-zinc-900">
+                  {course.title}
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {course.teacher_name} 선생님
+                </p>
+              </div>
+              <span className="text-sm text-zinc-400">차시 목록 보기 →</span>
+            </Link>
           );
         })}
       </div>

@@ -17,3 +17,11 @@ export async function signPlaybackToken(playbackId: string) {
     expiration: "6h",
   });
 }
+
+export async function signThumbnailToken(playbackId: string) {
+  const mux = createMuxClient();
+  return mux.jwt.signPlaybackId(playbackId, {
+    type: "thumbnail",
+    expiration: "6h",
+  });
+}
