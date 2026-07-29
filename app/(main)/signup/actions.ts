@@ -16,11 +16,22 @@ export async function signup(
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const school = String(formData.get("school") ?? "").trim();
+  const grade = String(formData.get("grade") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const studentCode = String(formData.get("studentCode") ?? "").trim();
 
-  if (!name || !address || !phone || !username || !password || !studentCode) {
+  if (
+    !name ||
+    !address ||
+    !phone ||
+    !school ||
+    !grade ||
+    !username ||
+    !password ||
+    !studentCode
+  ) {
     return { error: "모든 항목을 입력해주세요." };
   }
   if (password.length < 8) {
@@ -72,6 +83,8 @@ export async function signup(
     name,
     phone,
     address,
+    school,
+    grade,
     student_code_id: codeRow.id,
   });
 

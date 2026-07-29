@@ -40,6 +40,23 @@ export default function SignupPage() {
         <Field label="이름" name="name" />
         <Field label="주소" name="address" />
         <Field label="전화번호" name="phone" type="tel" />
+        <Field label="학교" name="school" placeholder="예: 분당고등학교" />
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          학년
+          <select
+            name="grade"
+            required
+            defaultValue=""
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="" disabled>
+              선택
+            </option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+          </select>
+        </label>
         <Field label="아이디" name="username" />
         <Field label="비밀번호" name="password" type="password" />
         <Field
