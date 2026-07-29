@@ -74,16 +74,29 @@ export default function UploadLessonForm({ courseId }: { courseId: string }) {
           className="min-w-[14rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
         />
       </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+      <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         영상 파일
-        <input
-          type="file"
-          accept="video/*"
-          disabled={isBusy}
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="text-sm text-zinc-700"
-        />
-      </label>
+        <label
+          className={
+            "flex w-fit items-center gap-2 " +
+            (isBusy ? "cursor-not-allowed opacity-60" : "cursor-pointer")
+          }
+        >
+          <span className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark">
+            파일 선택
+          </span>
+          <span className="max-w-[12rem] truncate text-sm text-zinc-500">
+            {file ? file.name : "선택된 파일 없음"}
+          </span>
+          <input
+            type="file"
+            accept="video/*"
+            disabled={isBusy}
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="hidden"
+          />
+        </label>
+      </div>
       <button
         type="submit"
         disabled={isBusy}
