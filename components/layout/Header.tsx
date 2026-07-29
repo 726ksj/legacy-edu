@@ -43,12 +43,6 @@ export default async function Header() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <Link
-                href="/mypage"
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-700 hover:text-brand-dark"
-              >
-                마이페이지
-              </Link>
               <form action={logout}>
                 <button
                   type="submit"

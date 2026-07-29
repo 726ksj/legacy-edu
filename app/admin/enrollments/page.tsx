@@ -20,6 +20,11 @@ export default async function Page() {
     .select("id, subject, title")
     .order("created_at", { ascending: false });
 
+  const { data: students } = await supabase
+    .from("profiles")
+    .select("id, name, username")
+    .order("name", { ascending: true });
+
   const { data: enrollments, error } = await supabase
     .from("enrollments")
     .select("id, enrolled_at, profiles(name, username), courses(subject, title)")
@@ -37,7 +42,7 @@ export default async function Page() {
       </p>
 
       <div className="mt-6">
-        <EnrollmentForm courses={courses ?? []} />
+        <EnrollmentForm courses={courses ?? []} students={students ?? []} />
       </div>
 
       {error && (

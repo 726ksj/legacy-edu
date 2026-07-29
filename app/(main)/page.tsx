@@ -5,11 +5,17 @@ import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
 import { createClient } from "@/lib/supabase/server";
 
+const EMAIL_DOMAIN = "legacyedu.local";
+
 export default async function HomePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const isAdmin =
+    Boolean(process.env.ADMIN_USERNAME) &&
+    user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -38,6 +44,20 @@ export default async function HomePage() {
         </div>
 
         {!user && <QuickLoginCard />}
+        {isAdmin && (
+          <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-zinc-500">
+              관리자로 로그인 중입니다
+            </p>
+            <p className="text-lg font-bold text-brand-dark">LEGACY EDU</p>
+            <Link
+              href="/admin"
+              className="mt-4 block rounded-md bg-brand px-4 py-2 text-center text-sm font-semibold text-white hover:bg-brand-dark"
+            >
+              관리자 모드로 이동
+            </Link>
+          </div>
+        )}
       </section>
 
       <ReviewSection />

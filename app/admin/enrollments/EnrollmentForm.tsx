@@ -11,7 +11,19 @@ interface Course {
   title: string;
 }
 
-export default function EnrollmentForm({ courses }: { courses: Course[] }) {
+interface Student {
+  id: string;
+  name: string;
+  username: string;
+}
+
+export default function EnrollmentForm({
+  courses,
+  students,
+}: {
+  courses: Course[];
+  students: Student[];
+}) {
   const [state, formAction, isPending] = useActionState(
     createEnrollment,
     initialState,
@@ -31,15 +43,6 @@ export default function EnrollmentForm({ courses }: { courses: Course[] }) {
       className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-white p-4"
     >
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        학생 아이디
-        <input
-          name="username"
-          placeholder="예: testuser01"
-          required
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         강좌
         <select
           name="courseId"
@@ -53,6 +56,24 @@ export default function EnrollmentForm({ courses }: { courses: Course[] }) {
           {courses.map((course) => (
             <option key={course.id} value={course.id}>
               [{course.subject}] {course.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        학생
+        <select
+          name="profileId"
+          required
+          defaultValue=""
+          className="min-w-[14rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        >
+          <option value="" disabled>
+            선택
+          </option>
+          {students.map((student) => (
+            <option key={student.id} value={student.id}>
+              {student.name} ({student.username})
             </option>
           ))}
         </select>
