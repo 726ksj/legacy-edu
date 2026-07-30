@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ADMIN_NAV_ITEMS = [
@@ -20,45 +22,90 @@ const ADMIN_NAV_ITEMS = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      <div className="flex h-16 items-center border-b border-zinc-200 px-6">
-        <Link href="/admin" className="text-lg font-bold text-brand-dark">
-          LEGACY EDU
+    <>
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-4 md:hidden">
+        <Link href="/admin" className="flex items-baseline gap-1.5">
+          <span className="text-base font-bold text-brand-dark">
+            LEGACY EDU
+          </span>
+          <span className="text-xs font-medium text-zinc-400">Admin</span>
         </Link>
-        <span className="ml-2 text-xs font-medium text-zinc-400">Admin</span>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="메뉴 열기"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-zinc-700 hover:bg-zinc-100"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {ADMIN_NAV_ITEMS.map((item) => {
-          const isActive =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(item.href);
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-brand-light text-brand-dark"
-                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-              )}
-            >
-              {item.label}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex h-full w-64 shrink-0 -translate-x-full flex-col border-r border-zinc-200 bg-white transition-transform duration-200 md:static md:translate-x-0",
+          open && "translate-x-0",
+        )}
+      >
+        <div className="flex h-16 items-center justify-between border-b border-zinc-200 px-6">
+          <div className="flex items-center">
+            <Link href="/admin" className="text-lg font-bold text-brand-dark">
+              LEGACY EDU
             </Link>
-          );
-        })}
-      </nav>
+            <span className="ml-2 text-xs font-medium text-zinc-400">
+              Admin
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="메뉴 닫기"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 md:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-      <div className="border-t border-zinc-200 px-6 py-4">
-        <Link href="/" className="text-xs text-zinc-400 hover:text-zinc-600">
-          ← 사용자 화면으로 돌아가기
-        </Link>
-      </div>
-    </aside>
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const isActive =
+              item.href === "/admin"
+                ? pathname === "/admin"
+                : pathname.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "block rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-brand-light text-brand-dark"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-zinc-200 px-6 py-4">
+          <Link href="/" className="text-xs text-zinc-400 hover:text-zinc-600">
+            ← 사용자 화면으로 돌아가기
+          </Link>
+        </div>
+      </aside>
+    </>
   );
 }

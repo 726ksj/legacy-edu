@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
+import MobileNav from "./MobileNav";
 
 const NAV_ITEMS = [
   { label: "LEGACY를 소개합니다", href: "/about" },
@@ -68,6 +69,7 @@ export default async function Header() {
               </Link>
             </>
           )}
+          <MobileNav navItems={NAV_ITEMS} />
         </div>
       </div>
     </header>
