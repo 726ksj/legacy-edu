@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
+import EditProfileForm from "./EditProfileForm";
+
+export const dynamic = "force-dynamic";
 
 export default async function MyPage() {
   const supabase = await createClient();
@@ -14,9 +17,13 @@ export default async function MyPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, name, phone, address, created_at")
+    .select("username, name, phone, address, school, grade")
     .eq("id", user.id)
     .single();
+
+  if (!profile) {
+    redirect("/login");
+  }
 
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-24 sm:px-6">
@@ -25,16 +32,11 @@ export default async function MyPage() {
           /mypage
         </span>
         <h1 className="mt-3 text-3xl font-bold text-zinc-900">
-          {profile?.name ?? profile?.username}님, 안녕하세요
+          {profile.name}님, 안녕하세요
         </h1>
       </div>
 
-      <dl className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white px-6">
-        <Row label="이름" value={profile?.name} />
-        <Row label="아이디" value={profile?.username} />
-        <Row label="전화번호" value={profile?.phone} />
-        <Row label="주소" value={profile?.address} />
-      </dl>
+      <EditProfileForm profile={profile} />
 
       <form action={logout}>
         <button
@@ -45,14 +47,5 @@ export default async function MyPage() {
         </button>
       </form>
     </section>
-  );
-}
-
-function Row({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div className="flex justify-between py-3 text-sm">
-      <dt className="text-zinc-500">{label}</dt>
-      <dd className="font-medium text-zinc-900">{value ?? "-"}</dd>
-    </div>
   );
 }

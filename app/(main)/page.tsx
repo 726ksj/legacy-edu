@@ -1,5 +1,4 @@
 import Link from "next/link";
-import QuickLoginCard from "@/components/home/QuickLoginCard";
 import ReviewSection from "@/components/home/ReviewSection";
 import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
@@ -43,7 +42,6 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {!user && <QuickLoginCard />}
         {isAdmin && (
           <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
             <p className="text-sm font-medium text-zinc-500">
