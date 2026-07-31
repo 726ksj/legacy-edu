@@ -64,21 +64,6 @@ export default async function HomePage() {
           </div>
           {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
         </div>
-
-        {isAdmin && (
-          <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-zinc-500">
-              관리자로 로그인 중입니다
-            </p>
-            <p className="text-lg font-bold text-brand-dark">LEGACY EDU</p>
-            <Link
-              href="/admin"
-              className="mt-4 block rounded-md bg-brand px-4 py-2 text-center text-sm font-semibold text-white hover:bg-brand-dark"
-            >
-              관리자 모드로 이동
-            </Link>
-          </div>
-        )}
       </section>
 
       <ReviewSection />

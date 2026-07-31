@@ -11,11 +11,17 @@ const NAV_ITEMS = [
   { label: "고객센터", href: "/customer-center" },
 ];
 
+const EMAIL_DOMAIN = "legacyedu.local";
+
 export default async function Header() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const isAdmin =
+    Boolean(process.env.ADMIN_USERNAME) &&
+    user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
@@ -45,7 +51,7 @@ export default async function Header() {
           {user ? (
             <>
               <Link
-                href="/mypage"
+                href={isAdmin ? "/admin" : "/mypage"}
                 className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-700 hover:text-brand-dark"
               >
                 MY PAGE
