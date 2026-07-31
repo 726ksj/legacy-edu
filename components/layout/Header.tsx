@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { label: "LEGACY를 소개합니다", href: "/about" },
   { label: "나의 강의실", href: "/my-classroom" },
   { label: "NOTICE", href: "/notice" },
-  { label: "MY PAGE", href: "/mypage" },
+  { label: "나의 Q&A", href: "/my-qna" },
   { label: "고객센터", href: "/customer-center" },
 ];
 
@@ -44,6 +44,12 @@ export default async function Header() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
+              <Link
+                href="/mypage"
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-700 hover:text-brand-dark"
+              >
+                MY PAGE
+              </Link>
               <form action={logout}>
                 <button
                   type="submit"

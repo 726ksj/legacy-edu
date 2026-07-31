@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signPlaybackToken, signThumbnailToken } from "@/lib/mux";
 import VideoPlayer from "./VideoPlayer";
+import QnaSection from "./QnaSection";
 
 interface LessonRow {
   id: string;
@@ -68,6 +69,13 @@ export default async function WatchPage({
     })),
   );
 
+  const { data: questions } = await supabase
+    .from("questions")
+    .select("id, content, answer, created_at")
+    .eq("lesson_id", lessonId)
+    .eq("profile_id", user.id)
+    .order("created_at", { ascending: false });
+
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-16 sm:px-6 lg:flex-row lg:items-start">
       <div className="flex flex-1 flex-col gap-4">
@@ -97,6 +105,8 @@ export default async function WatchPage({
             </p>
           </div>
         )}
+
+        <QnaSection lessonId={lesson.id} questions={questions ?? []} />
       </div>
 
       <aside className="flex w-full flex-col gap-3 lg:w-80 lg:shrink-0">
