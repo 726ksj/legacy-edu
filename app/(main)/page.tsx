@@ -54,7 +54,6 @@ export default async function HomePage() {
             내신 전교 1등 maker! 압도적인 강의력, 꼼꼼한 관리로 학생 한 명
             한 명의 배움의 자산(legacy)을 함께 만들어갑니다.
           </p>
-          {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
               href="/about"
@@ -63,6 +62,7 @@ export default async function HomePage() {
               LEGACY 소개
             </Link>
           </div>
+          {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
         </div>
 
         {isAdmin && (
