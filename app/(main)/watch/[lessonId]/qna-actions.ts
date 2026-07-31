@@ -41,3 +41,9 @@ export async function askQuestion(
   revalidatePath(`/watch/${lessonId}`);
   return { success: true };
 }
+
+export async function deleteQuestion(id: string, lessonId: string) {
+  const supabase = await createClient();
+  await supabase.from("questions").delete().eq("id", id);
+  revalidatePath(`/watch/${lessonId}`);
+}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
-import { askQuestion, type AskQuestionState } from "./qna-actions";
+import { askQuestion, deleteQuestion, type AskQuestionState } from "./qna-actions";
+import DeleteQuestionButton from "@/components/qna/DeleteQuestionButton";
 
 interface QuestionItem {
   id: string;
@@ -69,7 +70,12 @@ export default function QnaSection({
               key={question.id}
               className="rounded-lg border border-zinc-200 bg-white p-4"
             >
-              <p className="text-sm text-zinc-900">{question.content}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm text-zinc-900">{question.content}</p>
+                <DeleteQuestionButton
+                  action={deleteQuestion.bind(null, question.id, lessonId)}
+                />
+              </div>
               <p className="mt-1 text-xs text-zinc-400">
                 {question.createdAt}
               </p>

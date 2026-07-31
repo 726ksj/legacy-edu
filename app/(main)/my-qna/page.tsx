@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { deleteQuestion } from "./actions";
+import DeleteQuestionButton from "@/components/qna/DeleteQuestionButton";
 
 export const dynamic = "force-dynamic";
 
@@ -99,9 +101,14 @@ export default async function MyQnaPage() {
                       )}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-zinc-900">
-                    {question.content}
-                  </p>
+                  <div className="mt-2 flex items-start justify-between gap-3">
+                    <p className="text-sm text-zinc-900">
+                      {question.content}
+                    </p>
+                    <DeleteQuestionButton
+                      action={deleteQuestion.bind(null, question.id)}
+                    />
+                  </div>
                   {question.answer ? (
                     <div className="mt-3 rounded-md bg-brand-light p-3">
                       <p className="text-xs font-semibold text-brand-dark">
