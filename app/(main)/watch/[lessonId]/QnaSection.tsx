@@ -7,7 +7,7 @@ interface QuestionItem {
   id: string;
   content: string;
   answer: string | null;
-  created_at: string;
+  createdAt: string;
 }
 
 const initialState: AskQuestionState = {};
@@ -71,7 +71,7 @@ export default function QnaSection({
             >
               <p className="text-sm text-zinc-900">{question.content}</p>
               <p className="mt-1 text-xs text-zinc-400">
-                {new Date(question.created_at).toLocaleString("ko-KR")}
+                {question.createdAt}
               </p>
               {question.answer ? (
                 <div className="mt-3 rounded-md bg-brand-light p-3">
