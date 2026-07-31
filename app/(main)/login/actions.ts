@@ -34,5 +34,5 @@ export async function login(
     redirect("/admin");
   }
 
-  redirect("/mypage");
+  redirect("/");
 }
