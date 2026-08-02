@@ -99,12 +99,6 @@ export default function AdminSidebar() {
             );
           })}
         </nav>
-
-        <div className="border-t border-zinc-200 px-6 py-4">
-          <Link href="/" className="text-xs text-zinc-400 hover:text-zinc-600">
-            ← 사용자 화면으로 돌아가기
-          </Link>
-        </div>
       </aside>
     </>
   );

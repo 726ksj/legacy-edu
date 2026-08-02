@@ -4,12 +4,12 @@ const SUBJECTS = [
   {
     label: "국어",
     icon: BookText,
-    description: "비문학·문학 독해력을 기르는 내신·수능 커리큘럼",
+    description: "준비 중입니다.",
   },
   {
     label: "수학",
     icon: Calculator,
-    description: "개념부터 심화 문제까지 단계별 학습 커리큘럼",
+    description: "준비 중입니다.",
   },
   {
     label: "영어",
@@ -19,12 +19,12 @@ const SUBJECTS = [
   {
     label: "사회탐구",
     icon: Landmark,
-    description: "흐름 중심으로 이해하는 암기 최소화 커리큘럼",
+    description: "준비 중입니다.",
   },
   {
     label: "과학탐구",
     icon: FlaskConical,
-    description: "실전 문제풀이 중심의 개념 완성 커리큘럼",
+    description: "준비 중입니다.",
   },
 ];
 
@@ -36,7 +36,7 @@ export default function CurriculumSection() {
           LEGACY EDU
         </span>
         <h2 className="mt-1 text-2xl font-bold text-zinc-900 sm:text-3xl">
-          과목별 커리큘럼
+          영어 커리큘럼
         </h2>
       </div>
 
