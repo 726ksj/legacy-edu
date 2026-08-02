@@ -43,6 +43,18 @@ export default async function HomePage() {
     .select("id, name, school, subject, summary, detail")
     .order("created_at", { ascending: false });
 
+  const { data: contentRows } = await supabase
+    .from("site_content")
+    .select("key, value")
+    .in("key", ["hero_heading", "hero_subtitle"]);
+
+  const heroHeading =
+    contentRows?.find((row) => row.key === "hero_heading")?.value ??
+    "고등 내신 & 수능 전문";
+  const heroSubtitle =
+    contentRows?.find((row) => row.key === "hero_subtitle")?.value ??
+    "내신 전교 1등 maker! 압도적인 강의력, 꼼꼼한 관리로 학생 한 명 한 명의 배움의 자산(legacy)을 함께 만들어갑니다.";
+
   return (
     <div className="flex flex-1 flex-col">
       <section className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:flex-row lg:items-center">
@@ -51,14 +63,11 @@ export default async function HomePage() {
             /
           </span>
           <h1 className="text-4xl font-bold leading-tight text-zinc-900 sm:text-5xl">
-            고등 내신 &amp; 수능 전문
+            {heroHeading}
             <br />
             <span className="text-brand-dark">LEGACY EDU</span>
           </h1>
-          <p className="max-w-xl text-zinc-500">
-            내신 전교 1등 maker! 압도적인 강의력, 꼼꼼한 관리로 학생 한 명
-            한 명의 배움의 자산(legacy)을 함께 만들어갑니다.
-          </p>
+          <p className="max-w-xl text-zinc-500">{heroSubtitle}</p>
           {!user && (
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
