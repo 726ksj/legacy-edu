@@ -54,14 +54,16 @@ export default async function HomePage() {
             내신 전교 1등 maker! 압도적인 강의력, 꼼꼼한 관리로 학생 한 명
             한 명의 배움의 자산(legacy)을 함께 만들어갑니다.
           </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              href="/about"
-              className="rounded-md border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
-            >
-              LEGACY 소개
-            </Link>
-          </div>
+          {!user && (
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link
+                href="/consultation"
+                className="rounded-md border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
+              >
+                상담하기
+              </Link>
+            </div>
+          )}
           {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
         </div>
       </section>
