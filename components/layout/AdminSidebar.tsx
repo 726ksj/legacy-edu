@@ -27,7 +27,7 @@ export default function AdminSidebar() {
   return (
     <>
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-4 md:hidden">
-        <Link href="/admin" className="flex items-baseline gap-1.5">
+        <Link href="/" className="flex items-baseline gap-1.5">
           <span className="text-base font-bold text-brand-dark">
             LEGACY EDU
           </span>
@@ -58,7 +58,7 @@ export default function AdminSidebar() {
       >
         <div className="flex h-16 items-center justify-between border-b border-zinc-200 px-6">
           <div className="flex items-center">
-            <Link href="/admin" className="text-lg font-bold text-brand-dark">
+            <Link href="/" className="text-lg font-bold text-brand-dark">
               LEGACY EDU
             </Link>
             <span className="ml-2 text-xs font-medium text-zinc-400">
