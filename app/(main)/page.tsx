@@ -38,6 +38,11 @@ export default async function HomePage() {
       .filter((course): course is NonNullable<typeof course> => Boolean(course));
   }
 
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("id, name, school, subject, summary, detail")
+    .order("created_at", { ascending: false });
+
   return (
     <div className="flex flex-1 flex-col">
       <section className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:flex-row lg:items-center">
@@ -68,7 +73,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <ReviewSection />
+      <ReviewSection reviews={reviews ?? []} />
       <VideoSection />
       <CurriculumSection />
     </div>

@@ -4,97 +4,13 @@ import { useState } from "react";
 import { Camera, Play, Rss, X } from "lucide-react";
 
 interface Review {
-  id: number;
+  id: string;
   name: string;
   school: string;
   subject: string;
   summary: string;
   detail: string;
 }
-
-const REVIEWS: Review[] = [
-  {
-    id: 1,
-    name: "박*준",
-    school: "분당고",
-    subject: "수학",
-    summary: "내신 수학 2등급 → 1등급으로 올랐어요!",
-    detail:
-      "선생님이 개념부터 꼼꼼하게 잡아주셔서 시험 범위 안에서 흔들리지 않고 문제를 풀 수 있었습니다. 특히 오답노트 관리가 큰 도움이 됐어요.",
-  },
-  {
-    id: 2,
-    name: "이*연",
-    school: "서현고",
-    subject: "영어",
-    summary: "내신 영어 등급이 3등급이나 상승했어요.",
-    detail:
-      "지문 분석 방식이 학교 시험 스타일과 정확히 맞아서 시험장에서 자신감 있게 풀 수 있었습니다.",
-  },
-  {
-    id: 3,
-    name: "김*호",
-    school: "수지고",
-    subject: "국어",
-    summary: "수능 국어 1등급을 처음 받아봤습니다.",
-    detail:
-      "매주 진행되는 모의고사 첨삭 덕분에 실전 감각을 꾸준히 유지할 수 있었어요.",
-  },
-  {
-    id: 4,
-    name: "최*아",
-    school: "정자고",
-    subject: "수학",
-    summary: "꼼꼼한 관리 덕분에 성적이 안정됐어요.",
-    detail:
-      "매달 상담을 통해 부족한 부분을 바로 짚어주셔서 공부 방향을 잃지 않았습니다.",
-  },
-  {
-    id: 5,
-    name: "정*우",
-    school: "판교고",
-    subject: "과학탐구",
-    summary: "내신 과탐 1등급 유지 중입니다.",
-    detail:
-      "개념 설명이 명확하고, 학교 기출 분석 자료가 실제 시험과 거의 비슷하게 나왔어요.",
-  },
-  {
-    id: 6,
-    name: "한*빈",
-    school: "동광고",
-    subject: "영어",
-    summary: "동광고 영어 내신 만점 받았습니다!",
-    detail:
-      "학교별 맞춤 자료 덕분에 시험 직전까지 효율적으로 마무리할 수 있었습니다.",
-  },
-  {
-    id: 7,
-    name: "오*진",
-    school: "분당고",
-    subject: "사회탐구",
-    summary: "암기 과목도 체계적으로 관리해주셨어요.",
-    detail:
-      "단순 암기가 아니라 흐름으로 이해하는 방식이라 오래 기억에 남았습니다.",
-  },
-  {
-    id: 8,
-    name: "장*희",
-    school: "낙생고",
-    subject: "수학",
-    summary: "수능 수학 3등급에서 2등급으로!",
-    detail:
-      "취약 유형을 데이터로 분석해서 그 부분만 집중적으로 훈련해주셨어요.",
-  },
-  {
-    id: 9,
-    name: "윤*서",
-    school: "수지고",
-    subject: "국어",
-    summary: "선생님과의 소통이 정말 편했어요.",
-    detail:
-      "궁금한 점을 나의 Q&A로 질문하면 빠르게 답변해주셔서 막히는 부분이 없었습니다.",
-  },
-];
 
 const NOTE_COLORS = [
   "bg-amber-100",
@@ -104,7 +20,7 @@ const NOTE_COLORS = [
   "bg-violet-100",
 ];
 
-export default function ReviewSection() {
+export default function ReviewSection({ reviews }: { reviews: Review[] }) {
   const [selected, setSelected] = useState<Review | null>(null);
 
   return (
@@ -131,8 +47,14 @@ export default function ReviewSection() {
         </div>
       </div>
 
+      {reviews.length === 0 && (
+        <p className="mt-8 text-sm text-zinc-400">
+          아직 등록된 후기가 없습니다.
+        </p>
+      )}
+
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {REVIEWS.map((review, i) => (
+        {reviews.map((review, i) => (
           <div
             key={review.id}
             className={`flex flex-col justify-between rounded-sm p-4 shadow-sm ${NOTE_COLORS[i % NOTE_COLORS.length]}`}
@@ -155,10 +77,6 @@ export default function ReviewSection() {
           </div>
         ))}
       </div>
-
-      <p className="mt-4 text-xs text-zinc-400">
-        * 위 후기는 예시이며, 실제 후기는 추후 업데이트됩니다.
-      </p>
 
       {selected && (
         <div
