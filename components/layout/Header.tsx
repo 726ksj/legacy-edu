@@ -27,15 +27,15 @@ export default async function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex min-w-0 shrink items-center gap-2">
           <Image
             src="/logo.png"
             alt="LEGACY EDU"
             width={28}
             height={28}
-            className="h-7 w-7"
+            className="h-7 w-7 shrink-0"
           />
-          <span className="text-xl font-bold tracking-tight text-brand-dark">
+          <span className="truncate text-base font-bold tracking-tight text-brand-dark sm:text-xl">
             LEGACY EDU
           </span>
           <span className="hidden text-xs text-zinc-500 sm:inline">
@@ -55,19 +55,19 @@ export default async function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
           {user ? (
             <>
               <Link
                 href={isAdmin ? "/admin" : "/mypage"}
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-700 hover:text-brand-dark"
+                className="whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium text-zinc-700 hover:text-brand-dark sm:px-3 sm:text-sm"
               >
                 MY PAGE
               </Link>
               <form action={logout}>
                 <button
                   type="submit"
-                  className="rounded-md border border-zinc-300 px-4 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark"
+                  className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:text-sm"
                 >
                   로그아웃
                 </button>
@@ -77,13 +77,13 @@ export default async function Header() {
             <>
               <Link
                 href="/login"
-                className="rounded-md border border-zinc-300 px-4 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark"
+                className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:text-sm"
               >
                 로그인
               </Link>
               <Link
                 href="/signup"
-                className="rounded-md bg-brand px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
+                className="whitespace-nowrap rounded-md bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-dark sm:px-4 sm:text-sm"
               >
                 회원가입
               </Link>
