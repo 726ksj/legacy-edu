@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { CONTENT_KEYS } from "./keys";
 
 export interface SiteContentState {
   error?: string;
@@ -12,20 +13,17 @@ export async function updateSiteContent(
   _prevState: SiteContentState,
   formData: FormData,
 ): Promise<SiteContentState> {
-  const heroHeading = String(formData.get("hero_heading") ?? "").trim();
-  const heroSubtitle = String(formData.get("hero_subtitle") ?? "").trim();
-  const aboutBody = String(formData.get("about_body") ?? "").trim();
+  const rows = CONTENT_KEYS.map((key) => ({
+    key,
+    value: String(formData.get(key) ?? "").trim(),
+  }));
 
-  if (!heroHeading || !heroSubtitle || !aboutBody) {
+  if (rows.some((row) => !row.value)) {
     return { error: "모든 항목을 입력해주세요." };
   }
 
   const supabase = createAdminClient();
-  const { error } = await supabase.from("site_content").upsert([
-    { key: "hero_heading", value: heroHeading },
-    { key: "hero_subtitle", value: heroSubtitle },
-    { key: "about_body", value: aboutBody },
-  ]);
+  const { error } = await supabase.from("site_content").upsert(rows);
 
   if (error) {
     return { error: error.message };

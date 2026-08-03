@@ -4,6 +4,7 @@ import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
 import MyCoursesStrip from "@/components/home/MyCoursesStrip";
 import { createClient } from "@/lib/supabase/server";
+import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
 
 const EMAIL_DOMAIN = "legacyedu.local";
 
@@ -45,15 +46,21 @@ export default async function HomePage() {
 
   const { data: contentRows } = await supabase
     .from("site_content")
-    .select("key, value")
-    .in("key", ["hero_heading", "hero_subtitle"]);
+    .select("key, value");
 
-  const heroHeading =
-    contentRows?.find((row) => row.key === "hero_heading")?.value ??
-    "고등 내신 & 수능 전문";
-  const heroSubtitle =
-    contentRows?.find((row) => row.key === "hero_subtitle")?.value ??
-    "내신 전교 1등 maker! 압도적인 강의력, 꼼꼼한 관리로 학생 한 명 한 명의 배움의 자산(legacy)을 함께 만들어갑니다.";
+  const content: SiteContentMap = { ...CONTENT_DEFAULTS };
+  for (const row of contentRows ?? []) {
+    if (row.key in content) {
+      content[row.key as keyof SiteContentMap] = row.value;
+    }
+  }
+
+  const curriculumSteps = [1, 2, 3, 4, 5, 6].map((n) => ({
+    no: String(n).padStart(2, "0"),
+    title: content[`curriculum_step${n}_title` as keyof SiteContentMap],
+    subtitle: content[`curriculum_step${n}_subtitle` as keyof SiteContentMap],
+    description: content[`curriculum_step${n}_desc` as keyof SiteContentMap],
+  }));
 
   return (
     <div className="flex flex-1 flex-col">
@@ -63,11 +70,11 @@ export default async function HomePage() {
             /
           </span>
           <h1 className="text-4xl font-bold leading-tight text-zinc-900 sm:text-5xl">
-            {heroHeading}
+            {content.hero_heading}
             <br />
             <span className="text-brand-dark">LEGACY EDU</span>
           </h1>
-          <p className="max-w-xl text-zinc-500">{heroSubtitle}</p>
+          <p className="max-w-xl text-zinc-500">{content.hero_subtitle}</p>
           {!user && (
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
@@ -84,7 +91,10 @@ export default async function HomePage() {
 
       <ReviewSection reviews={reviews ?? []} />
       <VideoSection />
-      <CurriculumSection />
+      <CurriculumSection
+        intro={content.curriculum_intro}
+        steps={curriculumSteps}
+      />
     </div>
   );
 }
