@@ -38,13 +38,28 @@ export default function EditInstructorForm({
         />
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        사진 URL
-        <input
-          name="photoUrl"
-          defaultValue={instructor.photo_url ?? ""}
-          placeholder="https://..."
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
+        사진
+        <div className="flex items-center gap-3">
+          {instructor.photo_url && (
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-zinc-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={instructor.photo_url}
+                alt={instructor.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+          <input
+            name="photo"
+            type="file"
+            accept="image/*"
+            className="text-sm text-zinc-700 file:mr-3 file:rounded-md file:border file:border-zinc-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-zinc-700 hover:file:border-brand hover:file:text-brand-dark"
+          />
+        </div>
+        <span className="text-xs text-zinc-400">
+          새 사진을 선택하면 기존 사진을 대체합니다.
+        </span>
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         소개

@@ -35,11 +35,12 @@ export default function InstructorForm() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          사진 URL (선택)
+          사진 (선택)
           <input
-            name="photoUrl"
-            placeholder="https://..."
-            className="min-w-[16rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            name="photo"
+            type="file"
+            accept="image/*"
+            className="text-sm text-zinc-700 file:mr-3 file:rounded-md file:border file:border-zinc-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-zinc-700 hover:file:border-brand hover:file:text-brand-dark"
           />
         </label>
       </div>

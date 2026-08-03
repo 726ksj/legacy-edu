@@ -1,41 +1,67 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+const PHOTO_BUCKET = "instructor-photos";
 
 export interface InstructorFormState {
   error?: string;
   success?: boolean;
 }
 
-function readInstructorFields(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  const photoUrl = String(formData.get("photoUrl") ?? "").trim();
-  const bio = String(formData.get("bio") ?? "").trim();
+async function uploadPhoto(
+  supabase: ReturnType<typeof createAdminClient>,
+  file: File,
+) {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${randomUUID()}.${ext}`;
 
-  if (!name) {
-    return { error: "강사 이름을 입력해주세요." } as const;
+  const { error } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, file, { contentType: file.type || undefined });
+
+  if (error) {
+    throw new Error(`사진 업로드에 실패했습니다: ${error.message}`);
   }
 
-  return {
-    fields: {
-      name,
-      photo_url: photoUrl || null,
-      bio: bio || null,
-    },
-  } as const;
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+
+  return publicUrl;
 }
 
 export async function createInstructor(
   _prevState: InstructorFormState,
   formData: FormData,
 ): Promise<InstructorFormState> {
-  const parsed = readInstructorFields(formData);
-  if ("error" in parsed) return { error: parsed.error };
+  const name = String(formData.get("name") ?? "").trim();
+  const bio = String(formData.get("bio") ?? "").trim();
+  const photo = formData.get("photo");
+
+  if (!name) {
+    return { error: "강사 이름을 입력해주세요." };
+  }
 
   const supabase = createAdminClient();
-  const { error } = await supabase.from("instructors").insert(parsed.fields);
+
+  let photoUrl: string | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    try {
+      photoUrl = await uploadPhoto(supabase, photo);
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : "사진 업로드에 실패했습니다." };
+    }
+  }
+
+  const { error } = await supabase.from("instructors").insert({
+    name,
+    photo_url: photoUrl,
+    bio: bio || null,
+  });
 
   if (error) {
     return { error: error.message };
@@ -51,13 +77,32 @@ export async function updateInstructor(
   _prevState: InstructorFormState,
   formData: FormData,
 ): Promise<InstructorFormState> {
-  const parsed = readInstructorFields(formData);
-  if ("error" in parsed) return { error: parsed.error };
+  const name = String(formData.get("name") ?? "").trim();
+  const bio = String(formData.get("bio") ?? "").trim();
+  const photo = formData.get("photo");
+
+  if (!name) {
+    return { error: "강사 이름을 입력해주세요." };
+  }
 
   const supabase = createAdminClient();
+
+  const update: { name: string; bio: string | null; photo_url?: string } = {
+    name,
+    bio: bio || null,
+  };
+
+  if (photo instanceof File && photo.size > 0) {
+    try {
+      update.photo_url = await uploadPhoto(supabase, photo);
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : "사진 업로드에 실패했습니다." };
+    }
+  }
+
   const { error } = await supabase
     .from("instructors")
-    .update(parsed.fields)
+    .update(update)
     .eq("id", id);
 
   if (error) {
