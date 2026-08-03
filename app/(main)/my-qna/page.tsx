@@ -62,10 +62,7 @@ export default async function MyQnaPage() {
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-16 sm:px-6">
       <div>
-        <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-          /my-qna
-        </span>
-        <h1 className="mt-3 text-3xl font-bold text-zinc-900">나의 Q&amp;A</h1>
+        <h1 className="text-3xl font-bold text-zinc-900">나의 Q&amp;A</h1>
         <p className="mt-2 text-sm text-zinc-500">
           강좌별로 남긴 질문과 답변을 모아볼 수 있어요. 나와 선생님만 볼 수
           있어요.

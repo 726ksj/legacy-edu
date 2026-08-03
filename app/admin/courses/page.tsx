@@ -15,9 +15,6 @@ export default async function Page() {
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <span className="mb-2 text-xs font-medium text-zinc-400">
-        /admin/courses
-      </span>
       <h1 className="text-2xl font-bold text-zinc-900">강좌 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         개설 강좌 정보를 등록/수정하는 페이지입니다.

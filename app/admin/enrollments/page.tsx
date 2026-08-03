@@ -40,9 +40,6 @@ export default async function Page() {
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <span className="mb-2 text-xs font-medium text-zinc-400">
-        /admin/enrollments
-      </span>
       <h1 className="text-2xl font-bold text-zinc-900">수강 권한 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         학생을 강좌에 등록하거나 수강 권한을 해지하는 페이지입니다.

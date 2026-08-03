@@ -1,7 +1,6 @@
 interface PagePlaceholderProps {
   title: string;
   description?: string;
-  routePath: string;
 }
 
 /**
@@ -11,13 +10,9 @@ interface PagePlaceholderProps {
 export default function PagePlaceholder({
   title,
   description,
-  routePath,
 }: PagePlaceholderProps) {
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start justify-center px-4 py-20 sm:px-6">
-      <span className="mb-3 rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-        {routePath}
-      </span>
       <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl">{title}</h1>
       {description && (
         <p className="mt-3 max-w-2xl text-zinc-500">{description}</p>

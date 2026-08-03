@@ -28,10 +28,7 @@ export default async function MyPage() {
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-24 sm:px-6">
       <div>
-        <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-          /mypage
-        </span>
-        <h1 className="mt-3 text-3xl font-bold text-zinc-900">
+        <h1 className="text-3xl font-bold text-zinc-900">
           {profile.name}님, 안녕하세요
         </h1>
       </div>

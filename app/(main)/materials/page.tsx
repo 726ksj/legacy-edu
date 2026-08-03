@@ -5,7 +5,6 @@ export default function Page() {
     <PagePlaceholder
       title="학습 자료실"
       description="강좌별 학습 자료를 다운로드하는 페이지입니다."
-      routePath="/materials"
     />
   );
 }

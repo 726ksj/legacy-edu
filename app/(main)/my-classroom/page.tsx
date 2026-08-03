@@ -31,10 +31,7 @@ export default async function MyClassroomPage() {
   return (
     <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-4 py-24 sm:px-6">
       <div>
-        <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-          /my-classroom
-        </span>
-        <h1 className="mt-3 text-3xl font-bold text-zinc-900">나의 강의실</h1>
+        <h1 className="text-3xl font-bold text-zinc-900">나의 강의실</h1>
       </div>
 
       {(!enrollments || enrollments.length === 0) && (

@@ -11,10 +11,7 @@ export default function LoginPage() {
   return (
     <section className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-24 sm:px-6">
       <div>
-        <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-          /login
-        </span>
-        <h1 className="mt-3 text-3xl font-bold text-zinc-900">로그인</h1>
+        <h1 className="text-3xl font-bold text-zinc-900">로그인</h1>
       </div>
 
       <form action={formAction} className="flex flex-col gap-4">

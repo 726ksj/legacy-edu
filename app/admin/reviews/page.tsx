@@ -15,9 +15,6 @@ export default async function Page() {
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <span className="mb-2 text-xs font-medium text-zinc-400">
-        /admin/reviews
-      </span>
       <h1 className="text-2xl font-bold text-zinc-900">수강생 리뷰 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         홈 화면 수강생 Review 섹션에 노출되는 후기를 등록/수정/삭제하는

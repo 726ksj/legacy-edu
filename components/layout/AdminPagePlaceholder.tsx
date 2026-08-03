@@ -1,19 +1,14 @@
 interface AdminPagePlaceholderProps {
   title: string;
   description?: string;
-  routePath: string;
 }
 
 export default function AdminPagePlaceholder({
   title,
   description,
-  routePath,
 }: AdminPagePlaceholderProps) {
   return (
     <div className="flex flex-1 flex-col p-8">
-      <span className="mb-2 text-xs font-medium text-zinc-400">
-        {routePath}
-      </span>
       <h1 className="text-2xl font-bold text-zinc-900">{title}</h1>
       {description && (
         <p className="mt-2 max-w-2xl text-sm text-zinc-500">{description}</p>

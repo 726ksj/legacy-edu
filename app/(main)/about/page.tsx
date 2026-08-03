@@ -26,9 +26,6 @@ export default async function Page() {
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-start justify-center gap-6 px-4 py-24 sm:px-6">
-      <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-        /about
-      </span>
       <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl">
         LEGACY EDU 소개
       </h1>

@@ -5,7 +5,6 @@ export default function Page() {
     <PagePlaceholder
       title="고객센터 / FAQ"
       description="자주 묻는 질문과 문의 안내 페이지입니다."
-      routePath="/customer-center"
     />
   );
 }

@@ -66,9 +66,6 @@ export default async function Page({
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <span className="mb-2 text-xs font-medium text-zinc-400">
-        /admin/courses/{courseId}/lessons
-      </span>
       <h1 className="text-2xl font-bold text-zinc-900">
         [{course.subject}] {course.title} — 차시 관리
       </h1>

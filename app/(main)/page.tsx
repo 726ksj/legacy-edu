@@ -66,9 +66,6 @@ export default async function HomePage() {
     <div className="flex flex-1 flex-col">
       <section className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:flex-row lg:items-center">
         <div className="flex w-full flex-col items-start gap-6">
-          <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-            /
-          </span>
           <h1 className="text-4xl font-bold leading-tight text-zinc-900 sm:text-5xl">
             {content.hero_heading}
             <br />

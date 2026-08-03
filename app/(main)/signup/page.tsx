@@ -27,10 +27,7 @@ export default function SignupPage() {
   return (
     <section className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-4 py-24 sm:px-6">
       <div>
-        <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-          /signup
-        </span>
-        <h1 className="mt-3 text-3xl font-bold text-zinc-900">회원가입</h1>
+        <h1 className="text-3xl font-bold text-zinc-900">회원가입</h1>
         <p className="mt-2 text-sm text-zinc-500">
           학원에서 상담 후 받은 학생코드를 입력해야 가입할 수 있습니다.
         </p>

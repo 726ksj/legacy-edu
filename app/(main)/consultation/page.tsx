@@ -4,10 +4,7 @@ export default function ConsultationPage() {
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-16 sm:px-6">
       <div>
-        <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-dark">
-          /consultation
-        </span>
-        <h1 className="mt-3 text-3xl font-bold text-zinc-900">상담하기</h1>
+        <h1 className="text-3xl font-bold text-zinc-900">상담하기</h1>
         <p className="mt-2 text-sm text-zinc-500">
           아래 내용을 남겨주시면 순차적으로 연락드려요.
         </p>
