@@ -77,7 +77,7 @@ export default async function Header() {
             <>
               <Link
                 href="/login"
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-700 hover:text-brand-dark"
+                className="rounded-md border border-zinc-300 px-4 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark"
               >
                 로그인
               </Link>
