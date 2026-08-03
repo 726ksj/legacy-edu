@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 interface ConsultationRow {
   id: string;
   role: string;
+  name: string;
   school: string;
   grade: string;
   phone: string;
@@ -24,7 +25,7 @@ export default async function Page() {
   const { data: requests, error } = await supabase
     .from("consultation_requests")
     .select(
-      "id, role, school, grade, phone, subject, mock_grade, school_exam_grade, message, status, created_at",
+      "id, role, name, school, grade, phone, subject, mock_grade, school_exam_grade, message, status, created_at",
     )
     .order("created_at", { ascending: false })
     .returns<ConsultationRow[]>();
@@ -72,7 +73,8 @@ export default async function Page() {
                   {row.status === "pending" ? "대기중" : "처리완료"}
                 </span>
                 <span>
-                  {row.role} · {row.school} · {row.grade} · [{row.subject}]
+                  {row.name} ({row.role}) · {row.school} · {row.grade} · [
+                  {row.subject}]
                 </span>
               </div>
               <span className="text-xs text-zinc-400">

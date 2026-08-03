@@ -12,6 +12,7 @@ export async function submitConsultation(
   formData: FormData,
 ): Promise<ConsultationState> {
   const role = String(formData.get("role") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const grade = String(formData.get("grade") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
@@ -19,13 +20,14 @@ export async function submitConsultation(
   const schoolExamGrade = String(formData.get("schoolExamGrade") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
 
-  if (!role || !school || !grade || !phone || !message) {
+  if (!role || !name || !school || !grade || !phone || !message) {
     return { error: "필수 항목을 모두 입력해주세요." };
   }
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("consultation_requests").insert({
     role,
+    name,
     school,
     grade,
     phone,
