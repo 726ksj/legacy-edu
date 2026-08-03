@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { createDirectUpload, saveLesson } from "./actions";
 
-export default function UploadLessonForm({ courseId }: { courseId: string }) {
+export default function UploadLessonForm({
+  courseId,
+  existingSections,
+}: {
+  courseId: string;
+  existingSections: string[];
+}) {
   const [title, setTitle] = useState("");
+  const [sectionTitle, setSectionTitle] = useState("");
+  const [sectionSubtitle, setSectionSubtitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "saving">(
     "idle",
@@ -42,9 +50,17 @@ export default function UploadLessonForm({ courseId }: { courseId: string }) {
       });
 
       setStatus("saving");
-      await saveLesson(courseId, title.trim(), uploadId);
+      await saveLesson(
+        courseId,
+        title.trim(),
+        uploadId,
+        sectionTitle.trim(),
+        sectionSubtitle.trim(),
+      );
 
       setTitle("");
+      setSectionTitle("");
+      setSectionSubtitle("");
       setFile(null);
       setStatus("idle");
       setProgress(0);
@@ -72,6 +88,32 @@ export default function UploadLessonForm({ courseId }: { courseId: string }) {
           placeholder="예: 1강 - 문법 정리"
           disabled={isBusy}
           className="min-w-[14rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
+        />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        섹션명 (선택)
+        <input
+          value={sectionTitle}
+          onChange={(e) => setSectionTitle(e.target.value)}
+          placeholder="예: 1단원 - 문법"
+          list="section-title-options"
+          disabled={isBusy}
+          className="min-w-[10rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
+        />
+        <datalist id="section-title-options">
+          {existingSections.map((section) => (
+            <option key={section} value={section} />
+          ))}
+        </datalist>
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        섹션 부제 (선택)
+        <input
+          value={sectionSubtitle}
+          onChange={(e) => setSectionSubtitle(e.target.value)}
+          placeholder="예: 출판사-EBS"
+          disabled={isBusy}
+          className="min-w-[10rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
         />
       </label>
       <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">

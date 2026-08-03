@@ -18,6 +18,8 @@ export async function saveLesson(
   courseId: string,
   title: string,
   uploadId: string,
+  sectionTitle: string,
+  sectionSubtitle: string,
 ) {
   const mux = createMuxClient();
   const upload = await mux.video.uploads.retrieve(uploadId);
@@ -39,9 +41,55 @@ export async function saveLesson(
     order_no: nextOrderNo,
     mux_asset_id: upload.asset_id ?? null,
     status: "preparing",
+    section_title: sectionTitle || null,
+    section_subtitle: sectionSubtitle || null,
   });
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/my-classroom/${courseId}`);
+}
+
+export interface UpdateLessonInfoState {
+  error?: string;
+  success?: boolean;
+}
+
+export async function updateLessonInfo(
+  lessonId: string,
+  courseId: string,
+  _prevState: UpdateLessonInfoState,
+  formData: FormData,
+): Promise<UpdateLessonInfoState> {
+  const title = String(formData.get("title") ?? "").trim();
+  const orderNoRaw = String(formData.get("orderNo") ?? "").trim();
+  const sectionTitle = String(formData.get("sectionTitle") ?? "").trim();
+  const sectionSubtitle = String(
+    formData.get("sectionSubtitle") ?? "",
+  ).trim();
+  const orderNo = Number(orderNoRaw);
+
+  if (!title || !orderNoRaw || Number.isNaN(orderNo)) {
+    return { error: "차시 제목과 차시 번호를 입력해주세요." };
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("lessons")
+    .update({
+      title,
+      order_no: orderNo,
+      section_title: sectionTitle || null,
+      section_subtitle: sectionSubtitle || null,
+    })
+    .eq("id", lessonId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/my-classroom/${courseId}`);
+  return { success: true };
 }
 
 export async function deleteLesson(lessonId: string, courseId: string) {

@@ -13,6 +13,11 @@ export default async function Page() {
     .select("id, subject, title, teacher_name, school, created_at")
     .order("created_at", { ascending: false });
 
+  const { data: instructors } = await supabase
+    .from("instructors")
+    .select("id, name")
+    .order("name", { ascending: true });
+
   return (
     <div className="flex flex-1 flex-col p-8">
       <h1 className="text-2xl font-bold text-zinc-900">강좌 관리</h1>
@@ -21,7 +26,7 @@ export default async function Page() {
       </p>
 
       <div className="mt-6">
-        <CourseForm />
+        <CourseForm instructors={instructors ?? []} />
       </div>
 
       {error && (
@@ -47,7 +52,12 @@ export default async function Page() {
               <tr key={row.id}>
                 <td className="px-4 py-3 text-zinc-700">{row.subject}</td>
                 <td className="px-4 py-3 font-medium text-zinc-900">
-                  {row.title}
+                  <Link
+                    href={`/admin/courses/${row.id}`}
+                    className="hover:text-brand-dark hover:underline"
+                  >
+                    {row.title}
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-zinc-700">
                   {row.teacher_name}

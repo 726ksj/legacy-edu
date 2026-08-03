@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createMuxClient } from "@/lib/mux";
 import UploadLessonForm from "./UploadLessonForm";
-import DeleteLessonButton from "./DeleteLessonButton";
+import LessonRow from "./LessonRow";
 import { deleteLesson } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -33,9 +33,19 @@ export default async function Page({
 
   const { data: lessons } = await supabase
     .from("lessons")
-    .select("id, order_no, title, mux_asset_id, status, created_at")
+    .select(
+      "id, order_no, title, mux_asset_id, status, created_at, section_title, section_subtitle",
+    )
     .eq("course_id", courseId)
     .order("order_no", { ascending: true });
+
+  const existingSections = Array.from(
+    new Set(
+      (lessons ?? [])
+        .map((lesson) => lesson.section_title)
+        .filter((title): title is string => Boolean(title)),
+    ),
+  );
 
   if (lessons?.length) {
     const mux = createMuxClient();
@@ -74,7 +84,7 @@ export default async function Page({
       </p>
 
       <div className="mt-6">
-        <UploadLessonForm courseId={courseId} />
+        <UploadLessonForm courseId={courseId} existingSections={existingSections} />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-white">
@@ -93,29 +103,13 @@ export default async function Page({
               const statusInfo =
                 STATUS_LABEL[lesson.status] ?? STATUS_LABEL.preparing;
               return (
-                <tr key={lesson.id}>
-                  <td className="px-4 py-3 text-zinc-700">
-                    {lesson.order_no}강
-                  </td>
-                  <td className="px-4 py-3 font-medium text-zinc-900">
-                    {lesson.title}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo.className}`}
-                    >
-                      {statusInfo.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-zinc-500">
-                    {new Date(lesson.created_at).toLocaleString("ko-KR")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <DeleteLessonButton
-                      action={deleteLesson.bind(null, lesson.id, courseId)}
-                    />
-                  </td>
-                </tr>
+                <LessonRow
+                  key={lesson.id}
+                  lesson={lesson}
+                  courseId={courseId}
+                  statusInfo={statusInfo}
+                  deleteAction={deleteLesson.bind(null, lesson.id, courseId)}
+                />
               );
             })}
             {lessons?.length === 0 && (
