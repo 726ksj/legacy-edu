@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
@@ -27,6 +28,13 @@ export default async function Header() {
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            alt="LEGACY EDU"
+            width={28}
+            height={28}
+            className="h-7 w-7"
+          />
           <span className="text-xl font-bold tracking-tight text-brand-dark">
             LEGACY EDU
           </span>
