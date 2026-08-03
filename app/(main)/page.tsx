@@ -76,9 +76,9 @@ export default async function HomePage() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
                 href="/consultation"
-                className="rounded-md border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
+                className="rounded-md border border-zinc-300 px-8 py-4 text-base font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
               >
-                상담하기
+                상담 신청하기
               </Link>
             </div>
           )}
