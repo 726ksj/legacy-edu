@@ -8,7 +8,7 @@ export default function VideoSection() {
           LEGACY EDU
         </span>
         <h2 className="mt-1 text-2xl font-bold text-zinc-900 sm:text-3xl">
-          강좌 소개 영상
+          학원 실제 후기
         </h2>
       </div>
 

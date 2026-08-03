@@ -57,7 +57,7 @@ export default function ReviewSection({ reviews }: { reviews: Review[] }) {
         {reviews.map((review, i) => (
           <div
             key={review.id}
-            className={`flex flex-col justify-between rounded-sm p-4 shadow-sm ${NOTE_COLORS[i % NOTE_COLORS.length]}`}
+            className={`relative flex flex-col justify-between rounded-sm p-4 shadow-sm transition-all duration-200 hover:z-10 hover:-translate-y-1 hover:scale-[1.04] hover:shadow-lg ${NOTE_COLORS[i % NOTE_COLORS.length]}`}
           >
             <div>
               <p className="text-xs font-semibold text-zinc-500">
