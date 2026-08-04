@@ -55,7 +55,7 @@ function StepCard({ step, index }: { step: CurriculumStep; index: number }) {
       <p className="mt-2 text-xl font-bold text-zinc-900 sm:text-3xl lg:text-4xl">
         {step.subtitle}
       </p>
-      <p className="mt-3 max-w-xs text-sm leading-relaxed text-zinc-500 sm:mt-4 sm:max-w-md sm:text-base lg:text-lg">
+      <p className="mt-3 max-w-xs whitespace-pre-line text-sm leading-relaxed text-zinc-500 sm:mt-4 sm:max-w-md sm:text-base lg:text-lg">
         {step.description}
       </p>
     </div>
@@ -106,7 +106,7 @@ export default function CurriculumSection({
         <h2 className="mt-1 text-2xl font-bold text-zinc-900 sm:text-3xl lg:text-4xl">
           영어 커리큘럼
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-zinc-500 sm:text-base">
+        <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line text-sm text-zinc-500 sm:text-base">
           {intro}
         </p>
       </div>
