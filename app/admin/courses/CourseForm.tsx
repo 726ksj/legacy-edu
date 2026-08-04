@@ -6,11 +6,10 @@ import { createCourse, type CreateCourseState } from "./actions";
 
 const initialState: CreateCourseState = {};
 
-const SUBJECTS = ["국어", "수학", "영어", "사회", "과학"];
-
 interface Instructor {
   id: string;
   name: string;
+  subject: string;
 }
 
 export default function CourseForm({
@@ -38,24 +37,6 @@ export default function CourseForm({
     >
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          과목
-          <select
-            name="subject"
-            required
-            defaultValue=""
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="" disabled>
-              선택
-            </option>
-            {SUBJECTS.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           강좌명
           <input
             name="title"
@@ -77,7 +58,7 @@ export default function CourseForm({
             </option>
             {instructors.map((instructor) => (
               <option key={instructor.id} value={instructor.id}>
-                {instructor.name}
+                {instructor.name} ({instructor.subject})
               </option>
             ))}
           </select>

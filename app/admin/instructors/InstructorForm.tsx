@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useEffect } from "react";
 import { createInstructor, type InstructorFormState } from "./actions";
+import { SUBJECTS } from "@/lib/subjects";
 
 const initialState: InstructorFormState = {};
 
@@ -33,6 +34,24 @@ export default function InstructorForm() {
             required
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          과목
+          <select
+            name="subject"
+            required
+            defaultValue=""
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="" disabled>
+              선택
+            </option>
+            {SUBJECTS.map((subject) => (
+              <option key={subject} value={subject}>
+                {subject}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           사진 (선택)

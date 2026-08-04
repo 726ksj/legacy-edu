@@ -39,11 +39,12 @@ export async function createInstructor(
   formData: FormData,
 ): Promise<InstructorFormState> {
   const name = String(formData.get("name") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const photo = formData.get("photo");
 
-  if (!name) {
-    return { error: "강사 이름을 입력해주세요." };
+  if (!name || !subject) {
+    return { error: "강사 이름과 과목을 입력해주세요." };
   }
 
   const supabase = createAdminClient();
@@ -59,6 +60,7 @@ export async function createInstructor(
 
   const { error } = await supabase.from("instructors").insert({
     name,
+    subject,
     photo_url: photoUrl,
     bio: bio || null,
   });
@@ -78,17 +80,24 @@ export async function updateInstructor(
   formData: FormData,
 ): Promise<InstructorFormState> {
   const name = String(formData.get("name") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const photo = formData.get("photo");
 
-  if (!name) {
-    return { error: "강사 이름을 입력해주세요." };
+  if (!name || !subject) {
+    return { error: "강사 이름과 과목을 입력해주세요." };
   }
 
   const supabase = createAdminClient();
 
-  const update: { name: string; bio: string | null; photo_url?: string } = {
+  const update: {
+    name: string;
+    subject: string;
+    bio: string | null;
+    photo_url?: string;
+  } = {
     name,
+    subject,
     bio: bio || null,
   };
 

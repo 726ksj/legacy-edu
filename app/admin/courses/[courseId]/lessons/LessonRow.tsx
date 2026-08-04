@@ -16,8 +16,7 @@ interface Lesson {
   order_no: number;
   title: string;
   status: string;
-  section_title: string | null;
-  section_subtitle: string | null;
+  description: string | null;
   created_at: string;
 }
 
@@ -67,19 +66,11 @@ export default function LessonRow({
               />
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
-              섹션명
+              차시 소개
               <input
-                name="sectionTitle"
-                defaultValue={lesson.section_title ?? ""}
-                className="min-w-[10rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
-              섹션 부제
-              <input
-                name="sectionSubtitle"
-                defaultValue={lesson.section_subtitle ?? ""}
-                className="min-w-[10rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
+                name="description"
+                defaultValue={lesson.description ?? ""}
+                className="min-w-[16rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
               />
             </label>
             <button
@@ -112,10 +103,10 @@ export default function LessonRow({
       <td className="px-4 py-3 text-zinc-700">{lesson.order_no}강</td>
       <td className="px-4 py-3 font-medium text-zinc-900">
         {lesson.title}
-        {lesson.section_title && (
-          <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
-            {lesson.section_title}
-          </span>
+        {lesson.description && (
+          <p className="mt-0.5 max-w-xs truncate text-xs font-normal text-zinc-400">
+            {lesson.description}
+          </p>
         )}
       </td>
       <td className="px-4 py-3">

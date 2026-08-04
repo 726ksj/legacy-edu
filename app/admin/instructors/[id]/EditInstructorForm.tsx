@@ -2,12 +2,14 @@
 
 import { useActionState } from "react";
 import { updateInstructor, type InstructorFormState } from "../actions";
+import { SUBJECTS } from "@/lib/subjects";
 
 const initialState: InstructorFormState = {};
 
 interface InstructorData {
   id: string;
   name: string;
+  subject: string;
   photo_url: string | null;
   bio: string | null;
 }
@@ -36,6 +38,21 @@ export default function EditInstructorForm({
           required
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        과목
+        <select
+          name="subject"
+          required
+          defaultValue={instructor.subject}
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        >
+          {SUBJECTS.map((subject) => (
+            <option key={subject} value={subject}>
+              {subject}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         사진

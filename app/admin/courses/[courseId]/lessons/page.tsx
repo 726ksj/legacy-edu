@@ -34,18 +34,10 @@ export default async function Page({
   const { data: lessons } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, mux_asset_id, status, created_at, section_title, section_subtitle",
+      "id, order_no, title, mux_asset_id, status, created_at, description",
     )
     .eq("course_id", courseId)
     .order("order_no", { ascending: true });
-
-  const existingSections = Array.from(
-    new Set(
-      (lessons ?? [])
-        .map((lesson) => lesson.section_title)
-        .filter((title): title is string => Boolean(title)),
-    ),
-  );
 
   if (lessons?.length) {
     const mux = createMuxClient();
@@ -84,7 +76,7 @@ export default async function Page({
       </p>
 
       <div className="mt-6">
-        <UploadLessonForm courseId={courseId} existingSections={existingSections} />
+        <UploadLessonForm courseId={courseId} />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-white">

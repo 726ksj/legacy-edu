@@ -29,7 +29,7 @@ export default async function Page({
 
   const { data: instructors } = await supabase
     .from("instructors")
-    .select("id, name")
+    .select("id, name, subject")
     .order("name", { ascending: true });
 
   return (

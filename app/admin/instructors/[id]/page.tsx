@@ -16,7 +16,7 @@ export default async function Page({
   const supabase = createAdminClient();
   const { data: instructor } = await supabase
     .from("instructors")
-    .select("id, name, photo_url, bio")
+    .select("id, name, subject, photo_url, bio")
     .eq("id", id)
     .maybeSingle();
 

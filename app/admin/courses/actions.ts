@@ -9,40 +9,50 @@ export interface CreateCourseState {
   success?: boolean;
 }
 
-async function resolveInstructorName(
+async function resolveInstructor(
   supabase: ReturnType<typeof createAdminClient>,
   instructorId: string,
 ) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("instructors")
-    .select("name")
+    .select("name, subject")
     .eq("id", instructorId)
     .maybeSingle();
-  return data?.name ?? "";
+
+  if (error || !data) {
+    throw new Error("선택한 강사를 찾을 수 없습니다.");
+  }
+
+  return data;
 }
 
 export async function createCourse(
   _prevState: CreateCourseState,
   formData: FormData,
 ): Promise<CreateCourseState> {
-  const subject = String(formData.get("subject") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
 
-  if (!subject || !title || !instructorId) {
-    return { error: "과목, 강좌명, 강사를 선택해주세요." };
+  if (!title || !instructorId) {
+    return { error: "강좌명과 강사를 선택해주세요." };
   }
 
   const supabase = createAdminClient();
-  const teacherName = await resolveInstructorName(supabase, instructorId);
+
+  let instructor;
+  try {
+    instructor = await resolveInstructor(supabase, instructorId);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "강사 조회에 실패했습니다." };
+  }
 
   const { error } = await supabase.from("courses").insert({
-    subject,
+    subject: instructor.subject,
     title,
-    teacher_name: teacherName,
+    teacher_name: instructor.name,
     instructor_id: instructorId,
     school: school || null,
     thumbnail_url: thumbnailUrl || null,
@@ -62,26 +72,31 @@ export async function updateCourse(
   _prevState: CreateCourseState,
   formData: FormData,
 ): Promise<CreateCourseState> {
-  const subject = String(formData.get("subject") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
 
-  if (!subject || !title || !instructorId) {
-    return { error: "과목, 강좌명, 강사를 선택해주세요." };
+  if (!title || !instructorId) {
+    return { error: "강좌명과 강사를 선택해주세요." };
   }
 
   const supabase = createAdminClient();
-  const teacherName = await resolveInstructorName(supabase, instructorId);
+
+  let instructor;
+  try {
+    instructor = await resolveInstructor(supabase, instructorId);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "강사 조회에 실패했습니다." };
+  }
 
   const { error } = await supabase
     .from("courses")
     .update({
-      subject,
+      subject: instructor.subject,
       title,
-      teacher_name: teacherName,
+      teacher_name: instructor.name,
       instructor_id: instructorId,
       school: school || null,
       thumbnail_url: thumbnailUrl || null,

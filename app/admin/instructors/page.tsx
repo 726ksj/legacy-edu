@@ -8,7 +8,7 @@ export default async function Page() {
   const supabase = createAdminClient();
   const { data: instructors, error } = await supabase
     .from("instructors")
-    .select("id, name, photo_url, bio, created_at")
+    .select("id, name, subject, photo_url, bio, created_at")
     .order("created_at", { ascending: false });
 
   return (
@@ -35,6 +35,7 @@ export default async function Page() {
             <tr>
               <th className="px-4 py-3">사진</th>
               <th className="px-4 py-3">이름</th>
+              <th className="px-4 py-3">과목</th>
               <th className="px-4 py-3">소개</th>
               <th className="px-4 py-3" />
             </tr>
@@ -57,6 +58,7 @@ export default async function Page() {
                 <td className="px-4 py-3 font-medium text-zinc-900">
                   {row.name}
                 </td>
+                <td className="px-4 py-3 text-zinc-700">{row.subject}</td>
                 <td className="max-w-xs truncate px-4 py-3 text-zinc-500">
                   {row.bio ?? "-"}
                 </td>
@@ -72,7 +74,7 @@ export default async function Page() {
             ))}
             {instructors?.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
                   등록된 강사가 없습니다.
                 </td>
               </tr>

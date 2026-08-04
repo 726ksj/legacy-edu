@@ -5,11 +5,10 @@ import { updateCourse, type CreateCourseState } from "../actions";
 
 const initialState: CreateCourseState = {};
 
-const SUBJECTS = ["국어", "수학", "영어", "사회", "과학"];
-
 interface Instructor {
   id: string;
   name: string;
+  subject: string;
 }
 
 interface CourseData {
@@ -42,21 +41,6 @@ export default function EditCourseForm({
     >
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          과목
-          <select
-            name="subject"
-            required
-            defaultValue={course.subject}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            {SUBJECTS.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           강좌명
           <input
             name="title"
@@ -78,10 +62,13 @@ export default function EditCourseForm({
             </option>
             {instructors.map((instructor) => (
               <option key={instructor.id} value={instructor.id}>
-                {instructor.name}
+                {instructor.name} ({instructor.subject})
               </option>
             ))}
           </select>
+          <span className="text-xs font-normal text-zinc-400">
+            현재 과목: {course.subject}
+          </span>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           학교 (선택)

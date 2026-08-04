@@ -22,14 +22,7 @@ interface Lesson {
   id: string;
   order_no: number;
   title: string;
-  section_title: string | null;
-  section_subtitle: string | null;
-}
-
-interface Section {
-  title: string | null;
-  subtitle: string | null;
-  lessons: Lesson[];
+  description: string | null;
 }
 
 export default async function CourseClassroomPage({
@@ -62,25 +55,11 @@ export default async function CourseClassroomPage({
 
   const { data: lessons } = await supabase
     .from("lessons")
-    .select("id, order_no, title, section_title, section_subtitle")
+    .select("id, order_no, title, description")
     .eq("course_id", courseId)
     .eq("status", "ready")
     .order("order_no", { ascending: true })
     .returns<Lesson[]>();
-
-  const sections: Section[] = [];
-  for (const lesson of lessons ?? []) {
-    const last = sections[sections.length - 1];
-    if (last && last.title === lesson.section_title) {
-      last.lessons.push(lesson);
-    } else {
-      sections.push({
-        title: lesson.section_title,
-        subtitle: lesson.section_subtitle,
-        lessons: [lesson],
-      });
-    }
-  }
 
   const instructor = course.instructors;
 
@@ -127,46 +106,35 @@ export default async function CourseClassroomPage({
       <div>
         <h2 className="text-lg font-bold text-zinc-900">커리큘럼</h2>
         <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
-          {sections.length === 0 && (
+          {(!lessons || lessons.length === 0) && (
             <p className="px-6 py-8 text-center text-sm text-zinc-400">
               아직 업로드된 영상이 없습니다.
             </p>
           )}
-          <div className="divide-y divide-zinc-100">
-            {sections.map((section, i) => (
-              <div key={i}>
-                {section.title && (
-                  <div className="bg-zinc-50 px-6 py-3">
-                    <p className="text-sm font-semibold text-zinc-900">
-                      {section.title}
-                    </p>
-                    {section.subtitle && (
-                      <p className="text-xs text-zinc-500">
-                        {section.subtitle}
-                      </p>
+          <ul className="divide-y divide-zinc-100">
+            {lessons?.map((lesson) => (
+              <li key={lesson.id}>
+                <Link
+                  href={`/watch/${lesson.id}`}
+                  className="flex items-center justify-between gap-3 px-6 py-4 text-sm text-zinc-700 hover:text-brand-dark"
+                >
+                  <span>
+                    <span className="font-medium">
+                      {lesson.order_no}강 · {lesson.title}
+                    </span>
+                    {lesson.description && (
+                      <span className="mt-0.5 block whitespace-pre-line text-xs text-zinc-500">
+                        {lesson.description}
+                      </span>
                     )}
-                  </div>
-                )}
-                <ul className="divide-y divide-zinc-100">
-                  {section.lessons.map((lesson) => (
-                    <li key={lesson.id}>
-                      <Link
-                        href={`/watch/${lesson.id}`}
-                        className="flex items-center justify-between px-6 py-4 text-sm text-zinc-700 hover:text-brand-dark"
-                      >
-                        <span>
-                          {lesson.order_no}강 · {lesson.title}
-                        </span>
-                        <span className="text-xs text-zinc-400">
-                          시청하기 →
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  </span>
+                  <span className="shrink-0 text-xs text-zinc-400">
+                    시청하기 →
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
 
