@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { syncLessonStatuses } from "@/lib/mux";
 
 interface Instructor {
   name: string;
@@ -23,6 +24,8 @@ interface Lesson {
   order_no: number;
   title: string;
   description: string | null;
+  status: string;
+  mux_asset_id: string | null;
 }
 
 export default async function CourseClassroomPage({
@@ -53,13 +56,18 @@ export default async function CourseClassroomPage({
     notFound();
   }
 
-  const { data: lessons } = await supabase
+  const { data: allLessons } = await supabase
     .from("lessons")
-    .select("id, order_no, title, description")
+    .select("id, order_no, title, description, status, mux_asset_id")
     .eq("course_id", courseId)
-    .eq("status", "ready")
     .order("order_no", { ascending: true })
     .returns<Lesson[]>();
+
+  if (allLessons?.length) {
+    await syncLessonStatuses(supabase, allLessons);
+  }
+
+  const lessons = allLessons?.filter((lesson) => lesson.status === "ready");
 
   const instructor = course.instructors;
 
@@ -119,9 +127,7 @@ export default async function CourseClassroomPage({
                   className="flex items-center justify-between gap-3 px-6 py-4 text-sm text-zinc-700 hover:text-brand-dark"
                 >
                   <span>
-                    <span className="font-medium">
-                      {lesson.order_no}강 · {lesson.title}
-                    </span>
+                    <span className="font-medium">{lesson.title}</span>
                     {lesson.description && (
                       <span className="mt-0.5 block whitespace-pre-line text-xs text-zinc-500">
                         {lesson.description}

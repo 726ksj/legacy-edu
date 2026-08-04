@@ -1,7 +1,11 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { signPlaybackToken, signThumbnailToken } from "@/lib/mux";
+import {
+  signPlaybackToken,
+  signThumbnailToken,
+  syncLessonStatuses,
+} from "@/lib/mux";
 import VideoPlayer from "./VideoPlayer";
 import QnaSection from "./QnaSection";
 
@@ -10,6 +14,7 @@ interface LessonRow {
   order_no: number;
   title: string;
   status: string;
+  mux_asset_id: string | null;
   mux_playback_id: string | null;
   course_id: string;
   courses: { subject: string; title: string; teacher_name: string } | null;
@@ -19,6 +24,8 @@ interface SiblingLesson {
   id: string;
   order_no: number;
   title: string;
+  status: string;
+  mux_asset_id: string | null;
   mux_playback_id: string | null;
 }
 
@@ -40,7 +47,7 @@ export default async function WatchPage({
   const { data: lesson } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, status, mux_playback_id, course_id, courses(subject, title, teacher_name)",
+      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, courses(subject, title, teacher_name)",
     )
     .eq("id", lessonId)
     .maybeSingle()
@@ -50,15 +57,26 @@ export default async function WatchPage({
     notFound();
   }
 
+  if (lesson.status === "preparing") {
+    await syncLessonStatuses(supabase, [lesson]);
+  }
+
   const course = lesson.courses;
 
-  const { data: siblingLessons } = await supabase
+  const { data: allSiblings } = await supabase
     .from("lessons")
-    .select("id, order_no, title, mux_playback_id")
+    .select("id, order_no, title, status, mux_asset_id, mux_playback_id")
     .eq("course_id", lesson.course_id)
-    .eq("status", "ready")
     .order("order_no", { ascending: true })
     .returns<SiblingLesson[]>();
+
+  if (allSiblings?.length) {
+    await syncLessonStatuses(supabase, allSiblings);
+  }
+
+  const siblingLessons = allSiblings?.filter(
+    (sibling) => sibling.status === "ready",
+  );
 
   const upNext = await Promise.all(
     (siblingLessons ?? []).map(async (sibling) => ({
@@ -93,7 +111,7 @@ export default async function WatchPage({
             </p>
           )}
           <h1 className="mt-1 text-2xl font-bold text-zinc-900">
-            {lesson.order_no}강 · {lesson.title}
+            {lesson.title}
           </h1>
         </div>
 
@@ -137,17 +155,14 @@ export default async function WatchPage({
                     />
                   )}
                 </div>
-                <div className="flex min-w-0 flex-col">
+                <div className="flex min-w-0 flex-col justify-center">
                   <span
-                    className={
+                    className={`line-clamp-2 text-sm ${
                       sibling.id === lesson.id
                         ? "font-semibold text-brand-dark"
                         : "text-zinc-700"
-                    }
+                    }`}
                   >
-                    {sibling.order_no}강
-                  </span>
-                  <span className="line-clamp-2 text-xs text-zinc-500">
                     {sibling.title}
                   </span>
                 </div>

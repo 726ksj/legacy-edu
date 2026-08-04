@@ -100,7 +100,7 @@ export default function LessonRow({
 
   return (
     <tr>
-      <td className="px-4 py-3 text-zinc-700">{lesson.order_no}강</td>
+      <td className="px-4 py-3 text-zinc-700">{lesson.order_no}</td>
       <td className="px-4 py-3 font-medium text-zinc-900">
         {lesson.title}
         {lesson.description && (

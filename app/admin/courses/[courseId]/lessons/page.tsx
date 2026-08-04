@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createMuxClient } from "@/lib/mux";
+import { syncLessonStatuses } from "@/lib/mux";
 import UploadLessonForm from "./UploadLessonForm";
 import LessonRow from "./LessonRow";
 import { deleteLesson } from "./actions";
@@ -40,30 +40,7 @@ export default async function Page({
     .order("order_no", { ascending: true });
 
   if (lessons?.length) {
-    const mux = createMuxClient();
-    for (const lesson of lessons) {
-      if (lesson.status !== "preparing" || !lesson.mux_asset_id) continue;
-
-      try {
-        const asset = await mux.video.assets.retrieve(lesson.mux_asset_id);
-        if (asset.status === "ready") {
-          const playbackId = asset.playback_ids?.[0]?.id ?? null;
-          await supabase
-            .from("lessons")
-            .update({ status: "ready", mux_playback_id: playbackId })
-            .eq("id", lesson.id);
-          lesson.status = "ready";
-        } else if (asset.status === "errored") {
-          await supabase
-            .from("lessons")
-            .update({ status: "errored" })
-            .eq("id", lesson.id);
-          lesson.status = "errored";
-        }
-      } catch {
-        // 아직 Mux에 반영되지 않았을 수 있음 - 다음 새로고침에 재시도
-      }
-    }
+    await syncLessonStatuses(supabase, lessons);
   }
 
   return (
@@ -83,7 +60,7 @@ export default async function Page({
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
-              <th className="px-4 py-3">차시</th>
+              <th className="px-4 py-3">순서</th>
               <th className="px-4 py-3">제목</th>
               <th className="px-4 py-3">상태</th>
               <th className="px-4 py-3">업로드일</th>
