@@ -85,7 +85,7 @@ export default async function CourseClassroomPage({
   const instructor = course.instructors;
 
   return (
-    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
+    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
       <div>
         <Link
           href="/my-classroom"
@@ -93,7 +93,7 @@ export default async function CourseClassroomPage({
         >
           ← 나의 강의실
         </Link>
-        <p className="mt-4 text-sm font-semibold text-brand-dark sm:text-base">
+        <p className="mt-8 text-sm font-semibold text-brand-dark sm:mt-10 sm:text-base">
           {course.subject}
         </p>
         <h1 className="mt-1 text-3xl font-bold text-zinc-900 sm:text-4xl">
