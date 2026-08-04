@@ -36,8 +36,8 @@ export default async function Page() {
             key={i}
             className={
               i === paragraphs.length - 1
-                ? "pt-4 font-semibold text-zinc-800"
-                : undefined
+                ? "whitespace-pre-line pt-4 font-semibold text-zinc-800"
+                : "whitespace-pre-line"
             }
           >
             {paragraph}

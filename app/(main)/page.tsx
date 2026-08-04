@@ -71,7 +71,9 @@ export default async function HomePage() {
             <br />
             <span className="text-brand-dark">LEGACY EDU</span>
           </h1>
-          <p className="max-w-xl text-zinc-500">{content.hero_subtitle}</p>
+          <p className="max-w-xl whitespace-pre-line text-zinc-500">
+            {content.hero_subtitle}
+          </p>
           {!user && (
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
