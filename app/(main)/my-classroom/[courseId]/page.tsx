@@ -85,18 +85,18 @@ export default async function CourseClassroomPage({
   const instructor = course.instructors;
 
   return (
-    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 py-24 sm:px-6">
+    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
       <div>
         <Link
           href="/my-classroom"
-          className="text-xs font-medium text-zinc-400 hover:text-brand-dark"
+          className="text-sm font-semibold text-zinc-500 hover:text-brand-dark sm:text-base"
         >
           ← 나의 강의실
         </Link>
-        <p className="mt-3 text-xs font-semibold text-brand-dark">
+        <p className="mt-4 text-sm font-semibold text-brand-dark sm:text-base">
           {course.subject}
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-zinc-900">
+        <h1 className="mt-1 text-3xl font-bold text-zinc-900 sm:text-4xl">
           {course.title}
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
