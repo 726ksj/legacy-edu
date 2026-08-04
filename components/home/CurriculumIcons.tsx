@@ -4,7 +4,7 @@ const soft = "#e8f6f0";
 
 export function DiagnoseIcon() {
   return (
-    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20">
+    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
       <rect x="14" y="20" width="56" height="42" rx="6" fill="#fff" stroke={stroke} strokeWidth="2.5" />
       <rect x="14" y="20" width="56" height="12" rx="6" fill={stroke} />
       <circle cx="21" cy="26" r="1.6" fill="#fff" />
@@ -30,7 +30,7 @@ export function DiagnoseIcon() {
 
 export function VocabularyIcon() {
   return (
-    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20">
+    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
       <rect x="26" y="16" width="44" height="30" rx="6" fill={soft} stroke={stroke} strokeWidth="2" />
       <rect x="20" y="22" width="44" height="30" rx="6" fill="#fff" stroke={stroke} strokeWidth="2.5" />
       <line x1="29" y1="32" x2="55" y2="32" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" />
@@ -59,7 +59,7 @@ export function VocabularyIcon() {
 export function ChoiceAnalysisIcon() {
   const rows = [22, 34, 46, 58, 70];
   return (
-    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20">
+    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
       <rect x="18" y="12" width="46" height="64" rx="6" fill="#fff" stroke={stroke} strokeWidth="2.5" />
       {rows.map((y, i) => (
         <g key={y}>
@@ -83,7 +83,7 @@ export function ChoiceAnalysisIcon() {
 
 export function SchoolFitIcon() {
   return (
-    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20">
+    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
       <polyline
         points="16,44 48,18 80,44"
         fill="none"
@@ -106,7 +106,7 @@ export function SchoolFitIcon() {
 
 export function ErrorCorrectionIcon() {
   return (
-    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20">
+    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
       <circle cx="22" cy="30" r="13" fill="#fff" stroke="#e0685c" strokeWidth="2.5" />
       <line x1="17" y1="25" x2="27" y2="35" stroke="#e0685c" strokeWidth="2.5" strokeLinecap="round" />
       <line x1="27" y1="25" x2="17" y2="35" stroke="#e0685c" strokeWidth="2.5" strokeLinecap="round" />
@@ -131,7 +131,7 @@ export function ErrorCorrectionIcon() {
 
 export function FeedbackReportIcon() {
   return (
-    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20">
+    <svg viewBox="0 0 96 96" fill="none" className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
       <rect x="16" y="16" width="64" height="64" rx="14" fill="#fff" stroke={stroke} strokeWidth="2" />
       <rect x="28" y="48" width="8" height="20" rx="2" fill={soft} />
       <rect x="42" y="38" width="8" height="30" rx="2" fill={stroke} />
