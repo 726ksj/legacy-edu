@@ -3,7 +3,6 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import EditInstructorForm from "./EditInstructorForm";
 import DeleteInstructorButton from "../DeleteInstructorButton";
-import { deleteInstructorAndRedirect } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -46,9 +45,7 @@ export default async function Page({
           삭제하면 이 강사를 연결한 강좌에서 강사 정보가 사라집니다.
         </p>
         <div className="mt-3">
-          <DeleteInstructorButton
-            action={deleteInstructorAndRedirect.bind(null, instructor.id)}
-          />
+          <DeleteInstructorButton instructorId={instructor.id} />
         </div>
       </div>
     </div>

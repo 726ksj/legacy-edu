@@ -1,13 +1,24 @@
 "use client";
 
+import { useActionState } from "react";
+import { deleteInstructor, type DeleteInstructorState } from "./actions";
+
+const initialState: DeleteInstructorState = {};
+
 export default function DeleteInstructorButton({
-  action,
+  instructorId,
 }: {
-  action: () => Promise<void>;
+  instructorId: string;
 }) {
+  const boundDelete = deleteInstructor.bind(null, instructorId);
+  const [state, formAction, isPending] = useActionState(
+    boundDelete,
+    initialState,
+  );
+
   return (
     <form
-      action={action}
+      action={formAction}
       onSubmit={(e) => {
         if (
           !window.confirm(
@@ -20,10 +31,14 @@ export default function DeleteInstructorButton({
     >
       <button
         type="submit"
-        className="text-xs font-semibold text-red-500 hover:text-red-600"
+        disabled={isPending}
+        className="text-xs font-semibold text-red-500 hover:text-red-600 disabled:opacity-60"
       >
-        삭제
+        {isPending ? "삭제 중..." : "삭제"}
       </button>
+      {state.error && (
+        <p className="mt-2 text-xs font-medium text-red-600">{state.error}</p>
+      )}
     </form>
   );
 }

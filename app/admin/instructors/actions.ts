@@ -124,14 +124,27 @@ export async function updateInstructor(
   return { success: true };
 }
 
-export async function deleteInstructor(id: string) {
-  const supabase = createAdminClient();
-  await supabase.from("instructors").delete().eq("id", id);
-  revalidatePath("/admin/instructors");
-  revalidatePath("/admin/courses");
+export interface DeleteInstructorState {
+  error?: string;
 }
 
-export async function deleteInstructorAndRedirect(id: string) {
-  await deleteInstructor(id);
+export async function deleteInstructor(
+  id: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- required by useActionState's action signature
+  _prevState: DeleteInstructorState,
+): Promise<DeleteInstructorState> {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("instructors").delete().eq("id", id);
+
+  if (error) {
+    return {
+      error: error.message.includes("foreign key")
+        ? "이 강사를 사용 중인 강좌가 있어 삭제할 수 없습니다. 먼저 해당 강좌의 강사를 변경해주세요."
+        : error.message,
+    };
+  }
+
+  revalidatePath("/admin/instructors");
+  revalidatePath("/admin/courses");
   redirect("/admin/instructors");
 }
