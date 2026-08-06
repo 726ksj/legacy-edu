@@ -24,6 +24,24 @@ export default async function Header() {
     Boolean(process.env.ADMIN_USERNAME) &&
     user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
 
+  let hasUnreadQna = false;
+  if (user) {
+    const { data: unreadAnswer } = await supabase
+      .from("questions")
+      .select("id")
+      .eq("profile_id", user.id)
+      .not("answer", "is", null)
+      .is("answer_read_at", null)
+      .limit(1)
+      .maybeSingle();
+    hasUnreadQna = Boolean(unreadAnswer);
+  }
+
+  const navItems = NAV_ITEMS.map((item) => ({
+    ...item,
+    badge: item.href === "/my-qna" && hasUnreadQna,
+  }));
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -44,13 +62,16 @@ export default async function Header() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm font-medium text-zinc-700 transition-colors hover:text-brand-dark"
+              className="relative text-sm font-medium text-zinc-700 transition-colors hover:text-brand-dark"
             >
               {item.label}
+              {item.badge && (
+                <span className="absolute -right-2 -top-1 h-2 w-2 rounded-full bg-red-500" />
+              )}
             </Link>
           ))}
         </nav>
@@ -89,7 +110,7 @@ export default async function Header() {
               </Link>
             </>
           )}
-          <MobileNav navItems={NAV_ITEMS} />
+          <MobileNav navItems={navItems} />
         </div>
       </div>
     </header>

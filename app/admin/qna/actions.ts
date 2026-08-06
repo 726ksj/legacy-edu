@@ -22,7 +22,11 @@ export async function answerQuestion(
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("questions")
-    .update({ answer, answered_at: new Date().toISOString() })
+    .update({
+      answer,
+      answered_at: new Date().toISOString(),
+      answer_read_at: null,
+    })
     .eq("id", id);
 
   if (error) {

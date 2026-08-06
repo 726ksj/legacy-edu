@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 interface NavItem {
   label: string;
   href: string;
+  badge?: boolean;
 }
 
 export default function MobileNav({ navItems }: { navItems: NavItem[] }) {
@@ -31,9 +32,12 @@ export default function MobileNav({ navItems }: { navItems: NavItem[] }) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 hover:text-brand-dark"
+                className="flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 hover:text-brand-dark"
               >
                 {item.label}
+                {item.badge && (
+                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                )}
               </Link>
             ))}
           </nav>

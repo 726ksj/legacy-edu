@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteQuestion } from "./actions";
 import DeleteQuestionButton from "@/components/qna/DeleteQuestionButton";
 
@@ -10,6 +11,7 @@ interface QuestionRow {
   id: string;
   content: string;
   answer: string | null;
+  answer_read_at: string | null;
   created_at: string;
   lesson_id: string;
   lessons: {
@@ -39,11 +41,22 @@ export default async function MyQnaPage() {
   const { data: questions } = await supabase
     .from("questions")
     .select(
-      "id, content, answer, created_at, lesson_id, lessons(order_no, title, course_id, courses(subject, title))",
+      "id, content, answer, answer_read_at, created_at, lesson_id, lessons(order_no, title, course_id, courses(subject, title))",
     )
     .eq("profile_id", user.id)
     .order("created_at", { ascending: false })
     .returns<QuestionRow[]>();
+
+  const unreadIds = (questions ?? [])
+    .filter((q) => q.answer && !q.answer_read_at)
+    .map((q) => q.id);
+
+  if (unreadIds.length > 0) {
+    await createAdminClient()
+      .from("questions")
+      .update({ answer_read_at: new Date().toISOString() })
+      .in("id", unreadIds);
+  }
 
   const groups = new Map<string, CourseGroup>();
   for (const question of questions ?? []) {
@@ -90,7 +103,7 @@ export default async function MyQnaPage() {
                       href={`/watch/${question.lesson_id}`}
                       className="text-xs font-medium text-zinc-500 hover:text-brand-dark"
                     >
-                      {question.lessons?.order_no}강 · {question.lessons?.title}
+                      {question.lessons?.title}
                     </Link>
                     <span className="shrink-0 text-xs text-zinc-400">
                       {new Date(question.created_at).toLocaleDateString(

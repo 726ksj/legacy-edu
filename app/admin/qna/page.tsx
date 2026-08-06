@@ -87,7 +87,7 @@ export default async function Page() {
                 <div key={question.id} className="p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-xs font-medium text-zinc-500">
-                      {question.lessons?.order_no}강 · {question.lessons?.title}{" "}
+                      {question.lessons?.title}{" "}
                       · {question.profiles?.name ?? "-"} (
                       {question.profiles?.username ?? "-"})
                     </p>
