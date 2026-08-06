@@ -66,11 +66,13 @@ export default async function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="relative text-sm font-medium text-zinc-700 transition-colors hover:text-brand-dark"
+              className="flex items-center gap-1 text-sm font-medium text-zinc-700 transition-colors hover:text-brand-dark"
             >
               {item.label}
               {item.badge && (
-                <span className="absolute -right-2 -top-1 h-2 w-2 rounded-full bg-red-500" />
+                <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                  NEW
+                </span>
               )}
             </Link>
           ))}

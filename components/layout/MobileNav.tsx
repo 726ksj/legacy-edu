@@ -36,7 +36,9 @@ export default function MobileNav({ navItems }: { navItems: NavItem[] }) {
               >
                 {item.label}
                 {item.badge && (
-                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    NEW
+                  </span>
                 )}
               </Link>
             ))}
