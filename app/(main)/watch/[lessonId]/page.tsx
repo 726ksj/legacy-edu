@@ -6,6 +6,7 @@ import {
   signThumbnailToken,
   syncLessonStatuses,
 } from "@/lib/mux";
+import { isEnrolled } from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
 import QnaSection from "./QnaSection";
 
@@ -54,6 +55,10 @@ export default async function WatchPage({
     .returns<LessonRow>();
 
   if (!lesson) {
+    notFound();
+  }
+
+  if (!(await isEnrolled(supabase, user.id, lesson.course_id))) {
     notFound();
   }
 

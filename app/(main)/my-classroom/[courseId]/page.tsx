@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { syncLessonStatuses } from "@/lib/mux";
+import { isEnrolled } from "@/lib/enrollments";
 
 interface Instructor {
   name: string;
@@ -41,6 +42,10 @@ export default async function CourseClassroomPage({
 
   if (!user) {
     redirect("/login");
+  }
+
+  if (!(await isEnrolled(supabase, user.id, courseId))) {
+    notFound();
   }
 
   const { data: course } = await supabase
