@@ -7,6 +7,7 @@ interface QuestionRow {
   id: string;
   content: string;
   answer: string | null;
+  question_read_at: string | null;
   created_at: string;
   lessons: {
     order_no: number;
@@ -29,10 +30,21 @@ export default async function Page() {
   const { data: questions, error } = await supabase
     .from("questions")
     .select(
-      "id, content, answer, created_at, lessons(order_no, title, course_id, courses(subject, title)), profiles(name, username)",
+      "id, content, answer, question_read_at, created_at, lessons(order_no, title, course_id, courses(subject, title)), profiles(name, username)",
     )
     .order("created_at", { ascending: false })
     .returns<QuestionRow[]>();
+
+  const unreadIds = (questions ?? [])
+    .filter((q) => !q.question_read_at)
+    .map((q) => q.id);
+
+  if (unreadIds.length > 0) {
+    await supabase
+      .from("questions")
+      .update({ question_read_at: new Date().toISOString() })
+      .in("id", unreadIds);
+  }
 
   const groups = new Map<string, CourseGroup>();
   for (const question of questions ?? []) {

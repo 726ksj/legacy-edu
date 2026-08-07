@@ -22,7 +22,11 @@ const ADMIN_NAV_ITEMS = [
   { label: "FAQ 관리", href: "/admin/faqs" },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({
+  hasNewQuestion = false,
+}: {
+  hasNewQuestion?: boolean;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -90,13 +94,18 @@ export default function AdminSidebar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "block rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-brand-light text-brand-dark"
                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                 )}
               >
                 {item.label}
+                {item.href === "/admin/qna" && hasNewQuestion && (
+                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    NEW
+                  </span>
+                )}
               </Link>
             );
           })}
