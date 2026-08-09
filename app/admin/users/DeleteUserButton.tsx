@@ -1,17 +1,20 @@
 "use client";
 
-export default function DeleteUserButton({
-  action,
-  label = "탈퇴",
-  variant = "link",
-}: {
-  action: () => Promise<void>;
-  label?: string;
-  variant?: "link" | "button";
-}) {
+import { useActionState } from "react";
+import { deleteUser, type DeleteUserState } from "./actions";
+
+const initialState: DeleteUserState = {};
+
+export default function DeleteUserButton({ userId }: { userId: string }) {
+  const boundDelete = deleteUser.bind(null, userId);
+  const [state, formAction, isPending] = useActionState(
+    boundDelete,
+    initialState,
+  );
+
   return (
     <form
-      action={action}
+      action={formAction}
       onSubmit={(e) => {
         if (
           !window.confirm(
@@ -24,14 +27,14 @@ export default function DeleteUserButton({
     >
       <button
         type="submit"
-        className={
-          variant === "button"
-            ? "rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100"
-            : "text-xs font-semibold text-red-500 hover:text-red-600"
-        }
+        disabled={isPending}
+        className="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-60"
       >
-        {label}
+        {isPending ? "처리 중..." : "회원 탈퇴 처리"}
       </button>
+      {state.error && (
+        <p className="mt-2 text-sm font-medium text-red-600">{state.error}</p>
+      )}
     </form>
   );
 }
