@@ -139,7 +139,18 @@ export default function SignupPage() {
           </div>
         )}
 
-        <Field label="전화번호" name="phone" type="tel" />
+        <Field
+          label="본인 전화번호"
+          name="phone"
+          type="tel"
+          placeholder="010-0000-0000"
+        />
+        <Field
+          label="보호자 전화번호"
+          name="guardianPhone"
+          type="tel"
+          placeholder="010-0000-0000"
+        />
         <div className="flex gap-3">
           <div className="flex-1">
             <Field label="학교" name="school" placeholder="예: 분당고등학교" />

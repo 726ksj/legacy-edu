@@ -16,6 +16,7 @@ export async function signup(
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const guardianPhone = String(formData.get("guardianPhone") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const grade = String(formData.get("grade") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim();
@@ -26,6 +27,7 @@ export async function signup(
     !name ||
     !address ||
     !phone ||
+    !guardianPhone ||
     !school ||
     !grade ||
     !username ||
@@ -82,6 +84,7 @@ export async function signup(
     username,
     name,
     phone,
+    guardian_phone: guardianPhone,
     address,
     school,
     grade,
