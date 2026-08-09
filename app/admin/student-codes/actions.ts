@@ -35,7 +35,15 @@ export async function createStudentCode(
   return { success: true };
 }
 
-export async function deleteStudentCode(id: string) {
+export interface DeleteStudentCodeState {
+  error?: string;
+}
+
+export async function deleteStudentCode(
+  id: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- required by useActionState's action signature
+  _prevState: DeleteStudentCodeState,
+): Promise<DeleteStudentCodeState> {
   const supabase = createAdminClient();
 
   const { data: profile } = await supabase
@@ -46,9 +54,21 @@ export async function deleteStudentCode(id: string) {
 
   if (profile) {
     // auth 유저 삭제 시 profiles 행도 on delete cascade로 함께 삭제됨
-    await supabase.auth.admin.deleteUser(profile.id);
+    const { error: deleteUserError } = await supabase.auth.admin.deleteUser(
+      profile.id,
+    );
+
+    if (deleteUserError) {
+      return { error: `학생 계정 삭제에 실패했습니다: ${deleteUserError.message}` };
+    }
   }
 
-  await supabase.from("student_codes").delete().eq("id", id);
+  const { error } = await supabase.from("student_codes").delete().eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
   revalidatePath("/admin/student-codes");
+  return {};
 }

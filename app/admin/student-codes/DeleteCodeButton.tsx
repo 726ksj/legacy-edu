@@ -1,30 +1,80 @@
 "use client";
 
+import { useActionState, useEffect, useRef, useState } from "react";
+import { deleteStudentCode, type DeleteStudentCodeState } from "./actions";
+
+const initialState: DeleteStudentCodeState = {};
+
 export default function DeleteCodeButton({
-  action,
+  codeId,
   isUsed,
 }: {
-  action: () => Promise<void>;
+  codeId: string;
   isUsed: boolean;
 }) {
-  return (
-    <form
-      action={action}
-      onSubmit={(e) => {
-        const message = isUsed
-          ? "이미 사용된 코드입니다. 삭제하면 이 코드로 가입한 학생의 계정(로그인 정보, 이름, 주소 등)이 모두 함께 삭제됩니다. 계속할까요?"
-          : "이 코드를 삭제할까요?";
-        if (!window.confirm(message)) {
-          e.preventDefault();
-        }
-      }}
-    >
+  const [confirming, setConfirming] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boundDelete = deleteStudentCode.bind(null, codeId);
+  const [state, formAction, isPending] = useActionState(
+    boundDelete,
+    initialState,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  if (!confirming) {
+    return (
       <button
-        type="submit"
+        type="button"
+        onClick={() => {
+          setConfirming(true);
+          timeoutRef.current = setTimeout(() => setConfirming(false), 5000);
+        }}
         className="text-xs font-semibold text-red-500 hover:text-red-600"
       >
         삭제
       </button>
+    );
+  }
+
+  return (
+    <form
+      action={formAction}
+      className="flex flex-col items-end gap-1"
+    >
+      {isUsed && (
+        <p className="text-right text-[11px] leading-tight text-red-500">
+          이 코드로 가입한 학생 계정도 함께 삭제됩니다.
+        </p>
+      )}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            setConfirming(false);
+          }}
+          className="text-xs text-zinc-400 hover:text-zinc-600"
+        >
+          취소
+        </button>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="text-xs font-bold text-red-600 underline hover:text-red-700 disabled:opacity-60"
+        >
+          {isPending ? "삭제 중..." : "정말로 삭제하시겠습니까?"}
+        </button>
+      </div>
+      {state.error && (
+        <p className="text-right text-xs font-medium text-red-600">
+          {state.error}
+        </p>
+      )}
     </form>
   );
 }
