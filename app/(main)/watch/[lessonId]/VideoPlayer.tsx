@@ -216,11 +216,12 @@ export default function VideoPlayer({
     >
       <div
         ref={containerRef}
-        className={isFullscreen ? "w-full" : undefined}
+        className={isFullscreen ? "h-full w-full" : undefined}
         style={{ touchAction: scale > 1 ? "none" : "pan-y" }}
       >
         <div
           onMouseDown={handleMouseDown}
+          className={isFullscreen ? "h-full w-full" : undefined}
           style={{
             transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
             transformOrigin: "center center",
@@ -235,11 +236,7 @@ export default function VideoPlayer({
             metadata={{ video_title: title }}
             defaultHiddenCaptions
             playbackRates={[0.75, 1, 1.25, 1.5, 2]}
-            className={
-              isFullscreen
-                ? "aspect-video max-h-screen w-full"
-                : "aspect-video w-full"
-            }
+            className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
         </div>
       </div>
