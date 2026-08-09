@@ -25,3 +25,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/*
+ * iOS Safari에서 mux-player의 기본 전체화면(part="fullscreen")을 쓰면
+ * 웹페이지를 벗어난 OS 네이티브 동영상 플레이어로 전환되어 커스텀 핀치줌이
+ * 동작하지 않게 된다. 기본 버튼은 숨기고 VideoPlayer.tsx에서 CSS 기반의
+ * 자체 "가짜 전체화면" 버튼으로 대체한다.
+ */
+mux-player::part(fullscreen) {
+  display: none;
+}

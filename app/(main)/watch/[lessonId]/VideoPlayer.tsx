@@ -1,6 +1,7 @@
 "use client";
 
 import MuxPlayer from "@mux/mux-player-react";
+import { Maximize, Minimize } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const MIN_SCALE = 1;
@@ -28,6 +29,7 @@ export default function VideoPlayer({
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -160,6 +162,24 @@ export default function VideoPlayer({
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, [resetZoom]);
 
+  // 가짜 전체화면인 동안 배경 스크롤 방지 + Esc로 닫기
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setIsFullscreen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isFullscreen]);
+
   function handleMouseDown(e: React.MouseEvent) {
     if (scale <= 1) return;
     e.preventDefault();
@@ -187,9 +207,16 @@ export default function VideoPlayer({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-lg bg-black">
+    <div
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-[100] flex items-center justify-center bg-black"
+          : "relative overflow-hidden rounded-lg bg-black"
+      }
+    >
       <div
         ref={containerRef}
+        className={isFullscreen ? "w-full" : undefined}
         style={{ touchAction: scale > 1 ? "none" : "pan-y" }}
       >
         <div
@@ -208,10 +235,27 @@ export default function VideoPlayer({
             metadata={{ video_title: title }}
             defaultHiddenCaptions
             playbackRates={[0.75, 1, 1.25, 1.5, 2]}
-            className="aspect-video w-full"
+            className={
+              isFullscreen
+                ? "aspect-video max-h-screen w-full"
+                : "aspect-video w-full"
+            }
           />
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setIsFullscreen((prev) => !prev)}
+        className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-black/60 text-white hover:bg-black/80"
+        aria-label={isFullscreen ? "전체화면 종료" : "전체화면"}
+      >
+        {isFullscreen ? (
+          <Minimize className="h-4 w-4" />
+        ) : (
+          <Maximize className="h-4 w-4" />
+        )}
+      </button>
 
       {scale > 1 && (
         <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-1 text-white">
