@@ -24,6 +24,10 @@ export default function SignupPage() {
   const [detailAddress, setDetailAddress] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const postcodeContainerRef = useRef<HTMLDivElement>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const passwordMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword;
 
   const fullAddress =
     [roadAddress, detailAddress].filter(Boolean).join(" ") +
@@ -136,25 +140,51 @@ export default function SignupPage() {
         )}
 
         <Field label="전화번호" name="phone" type="tel" />
-        <Field label="학교" name="school" placeholder="예: 분당고등학교" />
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          학년
-          <select
-            name="grade"
-            required
-            defaultValue=""
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="" disabled>
-              선택
-            </option>
-            <option value="고1">고1</option>
-            <option value="고2">고2</option>
-            <option value="고3">고3</option>
-          </select>
-        </label>
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <Field label="학교" name="school" placeholder="예: 분당고등학교" />
+          </div>
+          <div className="w-24">
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+              학년
+              <select
+                name="grade"
+                required
+                defaultValue=""
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+              >
+                <option value="" disabled>
+                  선택
+                </option>
+                <option value="고1">고1</option>
+                <option value="고2">고2</option>
+                <option value="고3">고3</option>
+              </select>
+            </label>
+          </div>
+        </div>
         <Field label="아이디" name="username" />
-        <Field label="비밀번호" name="password" type="password" />
+        <Field
+          label="비밀번호"
+          name="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div className="flex flex-col gap-1.5">
+          <Field
+            label="비밀번호 확인"
+            name="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+          {passwordMismatch && (
+            <p className="text-xs font-medium text-red-500">
+              비밀번호가 일치하지 않습니다.
+            </p>
+          )}
+        </div>
         <Field
           label="학생코드"
           name="studentCode"
@@ -167,7 +197,7 @@ export default function SignupPage() {
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || passwordMismatch}
           className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
         >
           {isPending ? "가입 처리 중..." : "회원가입"}
@@ -182,11 +212,15 @@ function Field({
   name,
   type = "text",
   placeholder,
+  value,
+  onChange,
 }: {
   label: string;
   name: string;
   type?: string;
   placeholder?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
@@ -195,6 +229,8 @@ function Field({
         name={name}
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={onChange}
         required
         className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
       />
