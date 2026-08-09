@@ -237,6 +237,11 @@ export default function VideoPlayer({
             defaultHiddenCaptions
             playbackRates={[0.75, 1, 1.25, 1.5, 2]}
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
+            // mux-player-react가 인식 못 하는 속성이지만 그대로 전달돼서
+            // <mux-player breakpoints="sm:0">로 렌더링됨. 좁은 화면(휴대폰)에서
+            // 재생 속도·10초 이동 등 버튼을 숨기는 기본 반응형 기준(470px)을 끔
+            // @ts-expect-error -- breakpoints는 mux-player-react 타입에 없지만 실제 커스텀 엘리먼트 속성임
+            breakpoints="sm:0"
           />
         </div>
       </div>
