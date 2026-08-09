@@ -1,11 +1,13 @@
 "use client";
 
-import MuxPlayer from "@mux/mux-player-react";
+import MuxPlayer, { type MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { Maximize, Minimize } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
+const RATE_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
+const SKIP_SECONDS = 10;
 
 function clampScale(value: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
@@ -26,10 +28,44 @@ export default function VideoPlayer({
   title: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<MuxPlayerRefAttributes>(null);
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+
+  // Mux 플레이어 기본 컨트롤이 좁은 화면에서 10초 이동/배속 버튼을 숨겨서,
+  // 표준 video 엘리먼트 API(currentTime/playbackRate)를 직접 호출하는
+  // 우리만의 버튼으로 대체함
+  function skip(deltaSeconds: number) {
+    const player = playerRef.current;
+    if (!player) return;
+    const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
+    player.currentTime = Math.min(
+      duration,
+      Math.max(0, player.currentTime + deltaSeconds),
+    );
+  }
+
+  function cycleRate() {
+    const player = playerRef.current;
+    if (!player) return;
+    const currentIndex = RATE_OPTIONS.indexOf(playbackRate);
+    const next = RATE_OPTIONS[(currentIndex + 1) % RATE_OPTIONS.length];
+    player.playbackRate = next;
+    setPlaybackRate(next);
+  }
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    function handleRateChange() {
+      if (player) setPlaybackRate(player.playbackRate);
+    }
+    player.addEventListener("ratechange", handleRateChange);
+    return () => player.removeEventListener("ratechange", handleRateChange);
+  }, []);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -230,18 +266,14 @@ export default function VideoPlayer({
           }}
         >
           <MuxPlayer
+            ref={playerRef}
             playbackId={playbackId}
             tokens={{ playback: token }}
             streamType="on-demand"
             metadata={{ video_title: title }}
             defaultHiddenCaptions
-            playbackRates={[0.75, 1, 1.25, 1.5, 2]}
+            playbackRates={RATE_OPTIONS}
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
-            // mux-player-react가 인식 못 하는 속성이지만 그대로 전달돼서
-            // <mux-player breakpoints="sm:0">로 렌더링됨. 좁은 화면(휴대폰)에서
-            // 재생 속도·10초 이동 등 버튼을 숨기는 기본 반응형 기준(470px)을 끔
-            // @ts-expect-error -- breakpoints는 mux-player-react 타입에 없지만 실제 커스텀 엘리먼트 속성임
-            breakpoints="sm:0"
           />
         </div>
       </div>
@@ -258,6 +290,33 @@ export default function VideoPlayer({
           <Maximize className="h-4 w-4" />
         )}
       </button>
+
+      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-1 text-white">
+        <button
+          type="button"
+          onClick={() => skip(-SKIP_SECONDS)}
+          className="rounded px-2 py-1 text-xs font-semibold hover:bg-white/20"
+          aria-label={`${SKIP_SECONDS}초 뒤로`}
+        >
+          −{SKIP_SECONDS}초
+        </button>
+        <button
+          type="button"
+          onClick={cycleRate}
+          className="min-w-[2.5rem] rounded px-2 py-1 text-xs font-semibold hover:bg-white/20"
+          aria-label="재생 속도"
+        >
+          {playbackRate}x
+        </button>
+        <button
+          type="button"
+          onClick={() => skip(SKIP_SECONDS)}
+          className="rounded px-2 py-1 text-xs font-semibold hover:bg-white/20"
+          aria-label={`${SKIP_SECONDS}초 앞으로`}
+        >
+          +{SKIP_SECONDS}초
+        </button>
+      </div>
 
       {scale > 1 && (
         <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-1 text-white">
