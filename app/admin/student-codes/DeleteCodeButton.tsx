@@ -35,7 +35,7 @@ export default function DeleteCodeButton({
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-lg bg-white p-6 shadow-lg"
+            className="w-full max-w-sm rounded-lg bg-white p-6 text-left shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-base font-bold text-zinc-900">
