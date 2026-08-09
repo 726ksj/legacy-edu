@@ -1,13 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import Script from "next/script";
+import { useActionState, useRef, useState } from "react";
 import { signup, type SignupState } from "./actions";
 
 const initialState: SignupState = {};
 
+declare global {
+  interface Window {
+    daum: {
+      Postcode: new (options: {
+        oncomplete: (data: { zonecode: string; roadAddress: string }) => void;
+      }) => { embed: (container: HTMLElement) => void };
+    };
+  }
+}
+
 export default function SignupPage() {
   const [state, formAction, isPending] = useActionState(signup, initialState);
+  const [zonecode, setZonecode] = useState("");
+  const [roadAddress, setRoadAddress] = useState("");
+  const [detailAddress, setDetailAddress] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const postcodeContainerRef = useRef<HTMLDivElement>(null);
+
+  const fullAddress =
+    [roadAddress, detailAddress].filter(Boolean).join(" ") +
+    (zonecode ? ` (${zonecode})` : "");
+
+  function openAddressSearch() {
+    setSearchOpen(true);
+  }
+
+  // 팝업 창 대신 모달 안에 검색창을 직접 그려서, 팝업 차단의 영향을 받지 않게 함
+  function mountPostcode(container: HTMLDivElement | null) {
+    postcodeContainerRef.current = container;
+    if (!container || !window.daum) return;
+    container.innerHTML = "";
+    new window.daum.Postcode({
+      oncomplete: (data) => {
+        setZonecode(data.zonecode);
+        setRoadAddress(data.roadAddress);
+        setSearchOpen(false);
+      },
+    }).embed(container);
+  }
 
   if (state.success) {
     return (
@@ -33,9 +71,70 @@ export default function SignupPage() {
         </p>
       </div>
 
+      <Script
+        src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+        strategy="afterInteractive"
+      />
+
       <form action={formAction} className="flex flex-col gap-4">
         <Field label="이름" name="name" />
-        <Field label="주소" name="address" />
+
+        <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          주소
+          <div className="flex gap-2">
+            <input
+              value={zonecode}
+              readOnly
+              placeholder="우편번호"
+              className="w-24 rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none"
+            />
+            <button
+              type="button"
+              onClick={openAddressSearch}
+              className="shrink-0 rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
+            >
+              주소 검색
+            </button>
+          </div>
+          <input
+            value={roadAddress}
+            readOnly
+            placeholder="주소 검색을 눌러주세요"
+            className="rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none"
+          />
+          <input
+            value={detailAddress}
+            onChange={(e) => setDetailAddress(e.target.value)}
+            placeholder="상세주소 (동/호수 등)"
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+          <input type="hidden" name="address" value={fullAddress} />
+        </div>
+
+        {searchOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+            onClick={() => setSearchOpen(false)}
+          >
+            <div
+              className="w-full max-w-sm rounded-lg bg-white p-4 text-left shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-bold text-zinc-900">주소 검색</p>
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(false)}
+                  className="text-xs text-zinc-400 hover:text-zinc-600"
+                >
+                  닫기
+                </button>
+              </div>
+              <div ref={mountPostcode} className="h-96 w-full" />
+            </div>
+          </div>
+        )}
+
         <Field label="전화번호" name="phone" type="tel" />
         <Field label="학교" name="school" placeholder="예: 분당고등학교" />
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
