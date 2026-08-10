@@ -10,6 +10,12 @@ export interface CurriculumStep {
   description: string;
 }
 
+export const CURRICULUM_SECTION_ID = "curriculum";
+
+export function curriculumStepId(index: number) {
+  return `curriculum-step-${index}`;
+}
+
 function useRevealOnScroll<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const [visible, setVisible] = useState(false);
@@ -41,7 +47,8 @@ function StepCard({ step, index }: { step: CurriculumStep; index: number }) {
   return (
     <div
       ref={ref}
-      className={`relative mx-auto flex w-full max-w-sm flex-col items-center overflow-hidden rounded-3xl border border-zinc-100 bg-white px-8 py-12 text-center shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-16 lg:max-w-2xl lg:px-20 lg:py-20 ${
+      id={curriculumStepId(index)}
+      className={`relative mx-auto flex w-full max-w-sm scroll-mt-28 flex-col items-center overflow-hidden rounded-3xl border border-zinc-100 bg-white px-8 py-12 text-center shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-16 lg:max-w-2xl lg:px-20 lg:py-20 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
       }`}
     >
@@ -98,7 +105,10 @@ export default function CurriculumSection({
   steps: CurriculumStep[];
 }) {
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
+    <section
+      id={CURRICULUM_SECTION_ID}
+      className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6"
+    >
       <div className="text-center">
         <span className="text-sm font-semibold text-brand-dark">
           LEGACY ACADEMIC SYSTEM

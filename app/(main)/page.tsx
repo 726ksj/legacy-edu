@@ -2,6 +2,7 @@ import Link from "next/link";
 import ReviewSection from "@/components/home/ReviewSection";
 import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
+import CurriculumStickyNav from "@/components/home/CurriculumStickyNav";
 import MyCoursesStrip from "@/components/home/MyCoursesStrip";
 import { createClient } from "@/lib/supabase/server";
 import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
@@ -89,6 +90,7 @@ export default async function HomePage() {
       </section>
 
       <VideoSection />
+      <CurriculumStickyNav steps={curriculumSteps} />
       <CurriculumSection
         intro={content.curriculum_intro}
         steps={curriculumSteps}
