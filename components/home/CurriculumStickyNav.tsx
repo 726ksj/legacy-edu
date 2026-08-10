@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import type { CurriculumStep } from "./CurriculumSection";
-import { CURRICULUM_SECTION_ID, curriculumStepId } from "./CurriculumSection";
+import {
+  CURRICULUM_SECTION_ID,
+  CURRICULUM_STEP_SCROLL_OFFSET,
+  curriculumStepId,
+} from "./CurriculumSection";
 
 const HEADER_HEIGHT = 64;
 
@@ -26,7 +30,10 @@ export default function CurriculumStickyNav({
       let current = 0;
       steps.forEach((_, i) => {
         const stepEl = document.getElementById(curriculumStepId(i));
-        if (stepEl && stepEl.getBoundingClientRect().top <= HEADER_HEIGHT + 1) {
+        if (
+          stepEl &&
+          stepEl.getBoundingClientRect().top <= CURRICULUM_STEP_SCROLL_OFFSET + 1
+        ) {
           current = i;
         }
       });

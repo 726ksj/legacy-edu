@@ -12,6 +12,12 @@ export interface CurriculumStep {
 
 export const CURRICULUM_SECTION_ID = "curriculum";
 
+// 상단 고정 탭 바에 카드가 가리지 않도록 스크롤 착지 위치에 주는 여백.
+// CurriculumStickyNav의 활성 탭 판정 기준선도 이 값과 반드시 같아야 한다 -
+// 다르면 스크롤 착지 지점과 판정 기준선이 어긋나 클릭한 탭과 실제로
+// 하이라이트되는 탭이 달라진다.
+export const CURRICULUM_STEP_SCROLL_OFFSET = 112;
+
 export function curriculumStepId(index: number) {
   return `curriculum-step-${index}`;
 }
@@ -48,7 +54,8 @@ function StepCard({ step, index }: { step: CurriculumStep; index: number }) {
     <div
       ref={ref}
       id={curriculumStepId(index)}
-      className={`relative mx-auto flex w-full max-w-sm scroll-mt-28 flex-col items-center overflow-hidden rounded-3xl border border-zinc-100 bg-white px-8 py-12 text-center shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-16 lg:max-w-2xl lg:px-20 lg:py-20 ${
+      style={{ scrollMarginTop: CURRICULUM_STEP_SCROLL_OFFSET }}
+      className={`relative mx-auto flex w-full max-w-sm flex-col items-center overflow-hidden rounded-3xl border border-zinc-100 bg-white px-8 py-12 text-center shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-16 lg:max-w-2xl lg:px-20 lg:py-20 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
       }`}
     >
