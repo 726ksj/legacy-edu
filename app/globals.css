@@ -35,3 +35,22 @@ body {
 mux-player::part(fullscreen) {
   display: none;
 }
+
+/*
+ * Mux Player는 컨트롤러 자체 너비가 470px 미만이면(media-controller의
+ * breakpointsm 속성이 안 붙음) 10초 이동/재생 속도/재생바 시간 표시 등을
+ * CSS 변수로 숨긴다. 세로 모드 휴대폰 화면은 항상 이보다 좁아서 축소된
+ * 컨트롤만 보인다. mux-player에 breakpoints 속성을 넘겨도(예: sm:0) 내부
+ * media-controller 템플릿에는 전달되지 않고("sm:470"이 하드코딩돼 있음),
+ * 이 CSS 변수를 상속만으로 덮어써도 media-controller 자신에게 직접 값을
+ * 설정하는 내부 규칙에 밀려 무시된다 - ::part()로 내부 요소를 직접
+ * 겨냥하고 !important로 우선순위를 이겨야 실제로 반영된다.
+ */
+mux-player::part(controller) {
+  --bottom-play-button: flex !important;
+  --bottom-seek-backward-button: flex !important;
+  --bottom-seek-forward-button: flex !important;
+  --bottom-time-display: flex !important;
+  --bottom-playback-rate-menu-button: flex !important;
+  --bottom-pip-button: flex !important;
+}
