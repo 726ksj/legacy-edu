@@ -88,12 +88,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <ReviewSection reviews={reviews ?? []} />
       <VideoSection />
       <CurriculumSection
         intro={content.curriculum_intro}
         steps={curriculumSteps}
       />
+      <ReviewSection reviews={reviews ?? []} />
     </div>
   );
 }
