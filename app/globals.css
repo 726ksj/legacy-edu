@@ -37,13 +37,17 @@ mux-player::part(fullscreen) {
 }
 
 /*
- * mux-player의 "재생 전(pre-playback)" 가운데 재생 버튼은 이름과 달리
- * 재생이 시작된 뒤에도 탭해서 컨트롤이 다시 보일 때마다 함께 나타난다.
- * VideoPlayer.tsx의 더블탭 10초 이동 표시와 화면 가운데에서 겹쳐 보여
- * 마치 이동 표시가 두 개 뜨는 것처럼 보이는 원인이었다. 재생/일시정지는
- * 하단 컨트롤 바에도 있으니(위 --bottom-play-button) 이 버튼은 숨긴다.
+ * mux-player의 "재생 전(pre-playback)" 가운데 재생 버튼은 최초 재생을
+ * 시작하는 유일한 큰 탭 영역이라 무조건 숨기면 재생 자체를 시작할 수
+ * 없게 된다. 다만 이름과 달리 재생이 시작된 뒤에도 탭해서 컨트롤이 다시
+ * 보일 때마다 함께 나타나는데, 이때는 VideoPlayer.tsx의 더블탭 10초
+ * 이동 표시와 화면 가운데에서 겹쳐 보여 마치 이동 표시가 두 개 뜨는
+ * 것처럼 보인다. 그래서 "한 번이라도 재생을 시작한 뒤"에만
+ * (VideoPlayer.tsx가 붙이는 mux-has-played 클래스) 숨긴다 - 재생
+ * 전에는 그대로 노출되고, 하단 컨트롤 바에도 재생/일시정지 버튼이
+ * 있으니(위 --bottom-play-button) 재생 시작 후엔 안 보여도 문제없다.
  */
-mux-player::part(center play) {
+.mux-has-played mux-player::part(center play) {
   display: none !important;
 }
 

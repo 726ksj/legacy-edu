@@ -52,6 +52,10 @@ export default function VideoPlayer({
     side: "left" | "right";
     key: number;
   } | null>(null);
+  // mux-player의 "재생 전" 가운데 버튼은 재생을 시작하는 유일한 큰 탭
+  // 영역이라 처음엔 그대로 둬야 하고, 최초 재생 이후에만 globals.css에서
+  // 숨긴다(탭할 때마다 다시 나타나 이동 표시와 겹쳐 보이는 걸 막기 위함).
+  const [hasPlayed, setHasPlayed] = useState(false);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -359,11 +363,11 @@ export default function VideoPlayer({
 
   return (
     <div
-      className={
+      className={`${
         isFullscreen
           ? "fixed inset-0 z-[100] flex items-center justify-center bg-black"
           : "relative overflow-hidden rounded-lg bg-black"
-      }
+      } ${hasPlayed ? "mux-has-played" : ""}`}
     >
       <div
         ref={containerRef}
@@ -387,6 +391,7 @@ export default function VideoPlayer({
             streamType="on-demand"
             metadata={{ video_title: title }}
             defaultHiddenCaptions
+            onPlay={() => setHasPlayed(true)}
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
         </div>
