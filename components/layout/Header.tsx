@@ -4,12 +4,48 @@ import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import MobileNav from "./MobileNav";
 
-const NAV_ITEMS = [
+interface NavChild {
+  label: string;
+  href: string;
+  badge?: boolean;
+}
+
+interface NavItem {
+  label: string;
+  href: string;
+  badge?: boolean;
+  children?: NavChild[];
+}
+
+const NAV_ITEMS: NavItem[] = [
   { label: "LEGACY를 소개합니다", href: "/about" },
-  { label: "나의 강의실", href: "/my-classroom" },
-  { label: "NOTICE", href: "/notice" },
-  { label: "나의 Q&A", href: "/my-qna" },
-  { label: "고객센터", href: "/customer-center" },
+  {
+    label: "강좌",
+    href: "/courses",
+    children: [
+      { label: "중등", href: "/courses/middle" },
+      { label: "고등", href: "/courses/high" },
+    ],
+  },
+  { label: "커리큘럼", href: "/curriculum" },
+  {
+    label: "수강생 Review",
+    href: "/reviews/course",
+    children: [
+      { label: "수강 후기", href: "/reviews/course" },
+      { label: "강좌 후기", href: "/reviews/lecture" },
+      { label: "학원 실제 후기 유튜브 영상", href: "/reviews/youtube" },
+    ],
+  },
+  {
+    label: "고객센터",
+    href: "/customer-center",
+    children: [
+      { label: "공지사항", href: "/notice" },
+      { label: "자주하는 질문", href: "/customer-center" },
+      { label: "1:1 이용문의", href: "/consultation" },
+    ],
+  },
 ];
 
 const EMAIL_DOMAIN = "legacyedu.local";
@@ -35,15 +71,29 @@ export default async function Header() {
     hasUnreadQna = Boolean(unreadAnswer);
   }
 
-  const navItems = NAV_ITEMS.map((item) => ({
-    ...item,
-    badge: item.href === "/my-qna" && hasUnreadQna,
-  }));
+  const navItems: NavItem[] = [
+    ...NAV_ITEMS,
+    {
+      label: "마이페이지",
+      href: isAdmin ? "/admin" : "/mypage",
+      children: [
+        { label: "나의 강좌", href: "/my-classroom" },
+        { label: "나의 Q&A", href: "/my-qna", badge: hasUnreadQna },
+        { label: "나의 메모", href: "/mypage/notes" },
+        { label: "장바구니", href: "/mypage/cart" },
+        { label: "점수 리포트", href: "/mypage/score-report" },
+        { label: "회원정보 관리", href: "/settings" },
+      ],
+    },
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex min-w-0 shrink items-center gap-2">
+      {/* 상단: 로고(중앙) + 로그인/회원가입(우측) */}
+      <div className="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
+        <div className="flex-1" />
+
+        <Link href="/" className="flex shrink-0 items-center gap-2">
           <Image
             src="/logo.png"
             alt="LEGACY EDU"
@@ -59,41 +109,16 @@ export default async function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-1 text-sm font-medium text-zinc-700 transition-colors hover:text-brand-dark"
-            >
-              {item.label}
-              {item.badge && (
-                <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                  NEW
-                </span>
-              )}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+        <div className="flex flex-1 shrink-0 items-center justify-end gap-1.5 sm:gap-3">
           {user ? (
-            <>
-              <Link
-                href={isAdmin ? "/admin" : "/mypage"}
-                className="whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium text-zinc-700 hover:text-brand-dark sm:px-3 sm:text-sm"
+            <form action={logout}>
+              <button
+                type="submit"
+                className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:text-sm"
               >
-                MY PAGE
-              </Link>
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:text-sm"
-                >
-                  로그아웃
-                </button>
-              </form>
-            </>
+                로그아웃
+              </button>
+            </form>
           ) : (
             <>
               <Link
@@ -113,6 +138,46 @@ export default async function Header() {
           <MobileNav navItems={navItems} />
         </div>
       </div>
+
+      {/* 하단: 굵은 대분류 메뉴 + 커서를 올리면 나오는 세부 메뉴 */}
+      <nav className="hidden border-t border-zinc-100 bg-zinc-50 md:block">
+        <ul className="mx-auto flex max-w-6xl items-start justify-center gap-10 px-4 sm:px-6">
+          {navItems.map((item) => (
+            <li key={item.href} className="group relative">
+              <Link
+                href={item.href}
+                className="flex items-center gap-1 py-3 text-sm font-bold text-zinc-800 transition-colors hover:text-brand-dark"
+              >
+                {item.label}
+                {item.badge && (
+                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    NEW
+                  </span>
+                )}
+              </Link>
+
+              {item.children && item.children.length > 0 && (
+                <div className="pointer-events-none absolute left-1/2 top-full z-20 flex w-max min-w-40 -translate-x-1/2 flex-col items-center gap-2 rounded-b-md border border-t-0 border-zinc-100 bg-white px-4 pb-3 pt-2 opacity-0 shadow-md transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+                  {item.children.map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className="flex items-center gap-1 whitespace-nowrap text-xs font-normal text-zinc-600 transition-colors hover:text-brand-dark"
+                    >
+                      {child.label}
+                      {child.badge && (
+                        <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
+                          NEW
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </nav>
     </header>
   );
 }
