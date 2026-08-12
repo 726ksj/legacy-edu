@@ -89,32 +89,32 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
-      {/* 상단: 로고(중앙) + 로그인/회원가입(우측) */}
-      <div className="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
+      {/* 상단: 로고(중앙) + 로그인/회원가입(우측 끝) */}
+      <div className="flex h-20 w-full items-center px-5 sm:px-8 lg:px-12">
         <div className="flex-1" />
 
-        <Link href="/" className="flex shrink-0 items-center gap-2">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image
             src="/logo.png"
             alt="LEGACY EDU"
-            width={28}
-            height={28}
-            className="h-7 w-7 shrink-0"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0"
           />
-          <span className="truncate text-base font-bold tracking-tight text-brand-dark sm:text-xl">
+          <span className="truncate text-xl font-bold tracking-tight text-brand-dark sm:text-2xl">
             LEGACY EDU
           </span>
-          <span className="hidden text-xs text-zinc-500 sm:inline">
+          <span className="hidden text-sm text-zinc-500 sm:inline">
             고등 내신&수능 전문
           </span>
         </Link>
 
-        <div className="flex flex-1 shrink-0 items-center justify-end gap-1.5 sm:gap-3">
+        <div className="flex flex-1 shrink-0 items-center justify-end gap-2 sm:gap-4">
           {user ? (
             <form action={logout}>
               <button
                 type="submit"
-                className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:text-sm"
+                className="whitespace-nowrap rounded-md border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-6 sm:py-2.5 sm:text-base"
               >
                 로그아웃
               </button>
@@ -123,13 +123,13 @@ export default async function Header() {
             <>
               <Link
                 href="/login"
-                className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:text-sm"
+                className="whitespace-nowrap rounded-md border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-6 sm:py-2.5 sm:text-base"
               >
                 로그인
               </Link>
               <Link
                 href="/signup"
-                className="whitespace-nowrap rounded-md bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-dark sm:px-4 sm:text-sm"
+                className="whitespace-nowrap rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-dark sm:px-6 sm:py-2.5 sm:text-base"
               >
                 회원가입
               </Link>
@@ -141,12 +141,12 @@ export default async function Header() {
 
       {/* 하단: 굵은 대분류 메뉴 + 커서를 올리면 나오는 세부 메뉴 */}
       <nav className="hidden border-t border-zinc-100 bg-zinc-50 md:block">
-        <ul className="mx-auto flex max-w-6xl items-start justify-center gap-10 px-4 sm:px-6">
+        <ul className="flex w-full items-start justify-between gap-6 px-5 sm:px-8 lg:px-12">
           {navItems.map((item) => (
             <li key={item.href} className="group relative">
               <Link
                 href={item.href}
-                className="flex items-center gap-1 py-3 text-sm font-bold text-zinc-800 transition-colors hover:text-brand-dark"
+                className="flex items-center gap-1 py-4 text-base font-bold text-zinc-800 transition-colors hover:text-brand-dark lg:text-lg"
               >
                 {item.label}
                 {item.badge && (
@@ -157,12 +157,12 @@ export default async function Header() {
               </Link>
 
               {item.children && item.children.length > 0 && (
-                <div className="pointer-events-none absolute left-1/2 top-full z-20 flex w-max min-w-40 -translate-x-1/2 flex-col items-center gap-2 rounded-b-md border border-t-0 border-zinc-100 bg-white px-4 pb-3 pt-2 opacity-0 shadow-md transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+                <div className="pointer-events-none absolute left-1/2 top-full z-20 flex w-max min-w-44 -translate-x-1/2 flex-col items-center gap-2 rounded-b-md border border-t-0 border-zinc-100 bg-white px-4 pb-3 pt-2 opacity-0 shadow-md transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
                   {item.children.map((child) => (
                     <Link
                       key={child.href}
                       href={child.href}
-                      className="flex items-center gap-1 whitespace-nowrap text-xs font-normal text-zinc-600 transition-colors hover:text-brand-dark"
+                      className="flex items-center gap-1 whitespace-nowrap text-sm font-normal text-zinc-600 transition-colors hover:text-brand-dark"
                     >
                       {child.label}
                       {child.badge && (
