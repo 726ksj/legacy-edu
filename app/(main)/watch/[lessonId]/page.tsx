@@ -110,6 +110,10 @@ export default async function WatchPage({
     createdAt: new Date(question.created_at).toLocaleString("ko-KR"),
   }));
 
+  const currentIndex = upNext.findIndex((sibling) => sibling.id === lesson.id);
+  const nextLesson =
+    currentIndex >= 0 ? upNext[currentIndex + 1] : undefined;
+
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-16 sm:px-6 lg:flex-row lg:items-start">
       <div className="flex flex-1 flex-col gap-4">
@@ -129,6 +133,7 @@ export default async function WatchPage({
             playbackId={lesson.mux_playback_id}
             token={await signPlaybackToken(lesson.mux_playback_id)}
             title={lesson.title}
+            nextLessonHref={nextLesson ? `/watch/${nextLesson.id}` : undefined}
           />
         ) : (
           <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-zinc-100">
