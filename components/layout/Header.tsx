@@ -18,7 +18,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "LEGACY를 소개합니다", href: "/about" },
+  {
+    label: "LEGACY를 소개합니다",
+    href: "/about",
+    children: [{ label: "대표 인사말", href: "/about/greeting" }],
+  },
   {
     label: "강좌",
     href: "/courses",
@@ -27,7 +31,11 @@ const NAV_ITEMS: NavItem[] = [
       { label: "고등", href: "/courses/high" },
     ],
   },
-  { label: "커리큘럼", href: "/curriculum" },
+  {
+    label: "커리큘럼",
+    href: "/curriculum",
+    children: [{ label: "LEGACY 커리큘럼", href: "/curriculum/legacy" }],
+  },
   {
     label: "수강생 Review",
     href: "/reviews/course",

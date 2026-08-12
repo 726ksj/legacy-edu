@@ -4,7 +4,7 @@ export default function Page() {
   return (
     <PagePlaceholder
       title="커리큘럼"
-      description="LEGACY EDU 커리큘럼 소개 페이지입니다."
+      description="LEGACY EDU 커리큘럼 카테고리 페이지입니다."
     />
   );
 }

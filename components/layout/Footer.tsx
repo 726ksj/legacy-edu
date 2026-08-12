@@ -18,7 +18,7 @@ export default function Footer() {
           <div className="flex gap-10 text-sm">
             <div className="flex flex-col gap-2">
               <span className="font-semibold text-zinc-700">바로가기</span>
-              <Link href="/about" className="text-zinc-500 hover:text-brand-dark">
+              <Link href="/about/greeting" className="text-zinc-500 hover:text-brand-dark">
                 LEGACY 소개
               </Link>
               <Link href="/notice" className="text-zinc-500 hover:text-brand-dark">
