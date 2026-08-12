@@ -284,12 +284,28 @@ export default function VideoPlayer({
       seekFromTapPosition(e.clientX);
     }
 
+    // mux-player의 컨트롤 표시/숨김 토글은 click이 아니라 media-controller에
+    // 직접 붙는 pointerup(pointerType: touch)으로 동작해서, touchend에서
+    // preventDefault를 해도 전혀 영향을 못 준다. 컨트롤이 이미 보이는
+    // 상태에서 탭하면 다시 숨겨버리는데, 이게 더블탭의 두 번째 탭에서도
+    // 그대로 발생해 "표시→숨김"이 우리 이동 표시와 겹쳐 깜빡이는 것처럼
+    // 보였다. touchend가 이 pointerup보다 먼저 실행되므로, 방금 그
+    // touchend에서 더블탭을 처리했다면(touchHandledAtRef) 이 pointerup이
+    // media-controller에 도달하기 전에 capture 단계에서 막는다.
+    function handlePointerUp(e: PointerEvent) {
+      if (e.pointerType !== "touch") return;
+      if (Date.now() - touchHandledAtRef.current < 100) {
+        e.stopPropagation();
+      }
+    }
+
     el.addEventListener("wheel", handleWheel, { passive: false });
     el.addEventListener("touchstart", handleTouchStart, { passive: true });
     el.addEventListener("touchmove", handleTouchMove, { passive: false });
     el.addEventListener("touchend", handleTouchEnd);
     el.addEventListener("touchcancel", handleTouchEnd);
     el.addEventListener("dblclick", handleDoubleClick, { capture: true });
+    el.addEventListener("pointerup", handlePointerUp, { capture: true });
 
     return () => {
       el.removeEventListener("wheel", handleWheel);
@@ -298,6 +314,7 @@ export default function VideoPlayer({
       el.removeEventListener("touchend", handleTouchEnd);
       el.removeEventListener("touchcancel", handleTouchEnd);
       el.removeEventListener("dblclick", handleDoubleClick, { capture: true });
+      el.removeEventListener("pointerup", handlePointerUp, { capture: true });
     };
   }, [applyScale, clampTranslate, seekFromTapPosition, togglePlayPause]);
 
