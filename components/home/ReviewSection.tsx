@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Play, Rss, X } from "lucide-react";
+import { Camera, Play, Quote, Rss, X } from "lucide-react";
 
 interface Review {
   id: string;
@@ -11,14 +11,6 @@ interface Review {
   summary: string;
   detail: string;
 }
-
-const NOTE_COLORS = [
-  "bg-amber-100",
-  "bg-rose-100",
-  "bg-sky-100",
-  "bg-lime-100",
-  "bg-violet-100",
-];
 
 export default function ReviewSection({ reviews }: { reviews: Review[] }) {
   const [selected, setSelected] = useState<Review | null>(null);
@@ -53,26 +45,33 @@ export default function ReviewSection({ reviews }: { reviews: Review[] }) {
         </p>
       )}
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {reviews.map((review, i) => (
+      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {reviews.map((review) => (
           <div
             key={review.id}
-            className={`relative flex flex-col justify-between rounded-sm p-4 shadow-sm transition-all duration-200 hover:z-10 hover:-translate-y-1 hover:scale-[1.04] hover:shadow-lg ${NOTE_COLORS[i % NOTE_COLORS.length]}`}
+            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-200 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg hover:shadow-brand/5"
           >
-            <div>
-              <p className="text-xs font-semibold text-zinc-500">
-                {review.name} · {review.school}
-              </p>
-              <p className="mt-2 text-sm font-medium leading-snug text-zinc-800">
+            <Quote
+              className="absolute -right-2 -top-2 h-16 w-16 text-brand-light"
+              strokeWidth={1}
+            />
+            <div className="relative">
+              <span className="inline-flex rounded-full bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand-dark">
+                {review.subject}
+              </span>
+              <p className="mt-4 text-base font-semibold leading-snug text-zinc-900">
                 {review.summary}
+              </p>
+              <p className="mt-3 text-xs font-medium text-zinc-400">
+                {review.name} · {review.school}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setSelected(review)}
-              className="mt-4 self-start text-xs font-semibold text-zinc-500 underline underline-offset-2 hover:text-brand-dark"
+              className="relative mt-5 self-start text-xs font-semibold text-brand-dark transition-colors hover:text-brand-dark/80"
             >
-              View
+              자세히 보기 →
             </button>
           </div>
         ))}
@@ -80,32 +79,38 @@ export default function ReviewSection({ reviews }: { reviews: Review[] }) {
 
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/50 px-4 backdrop-blur-sm"
           onClick={() => setSelected(null)}
         >
           <div
-            className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg"
+            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-7 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-semibold text-zinc-500">
-                  {selected.name} · {selected.school} · {selected.subject}
-                </p>
-                <h3 className="mt-1 text-lg font-bold text-zinc-900">
-                  {selected.summary}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                aria-label="닫기"
-                className="text-zinc-400 hover:text-zinc-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
+            <Quote
+              className="absolute -right-3 -top-3 h-20 w-20 text-brand-light"
+              strokeWidth={1}
+            />
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              aria-label="닫기"
+              className="absolute right-5 top-5 text-zinc-400 hover:text-zinc-700"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="relative">
+              <span className="inline-flex rounded-full bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand-dark">
+                {selected.subject}
+              </span>
+              <h3 className="mt-4 text-lg font-bold leading-snug text-zinc-900">
+                {selected.summary}
+              </h3>
+              <p className="mt-1 text-xs font-medium text-zinc-400">
+                {selected.name} · {selected.school}
+              </p>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-600">
+            <p className="relative mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-600">
               {selected.detail}
             </p>
           </div>
