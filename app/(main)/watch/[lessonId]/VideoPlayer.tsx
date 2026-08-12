@@ -1,7 +1,14 @@
 "use client";
 
 import MuxPlayer, { type MuxPlayerRefAttributes } from "@mux/mux-player-react";
-import { Maximize, Minimize, RotateCcw, RotateCw, SkipForward } from "lucide-react";
+import {
+  Maximize,
+  Minimize,
+  RotateCcw,
+  RotateCw,
+  SkipBack,
+  SkipForward,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -25,11 +32,13 @@ export default function VideoPlayer({
   playbackId,
   token,
   title,
+  prevLessonHref,
   nextLessonHref,
 }: {
   playbackId: string;
   token: string;
   title: string;
+  prevLessonHref?: string;
   nextLessonHref?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -209,6 +218,11 @@ export default function VideoPlayer({
             lastTapRef.current &&
             now - lastTapRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS
           ) {
+            // 더블탭을 완성하는 이 touchend의 기본 동작(합성 click/dblclick)을
+            // 막지 않으면, 브라우저가 이 탭 시퀀스로 dblclick을 합성해
+            // 아래 dblclick 리스너가 한 번 더 반응해서 20초씩 이동하는
+            // 버그가 생긴다.
+            e.preventDefault();
             seekFromTapPosition(touch.clientX);
             lastTapRef.current = null;
           } else {
@@ -356,6 +370,15 @@ export default function VideoPlayer({
       )}
 
       <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
+        {prevLessonHref && (
+          <Link
+            href={prevLessonHref}
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-black/60 text-white hover:bg-black/80"
+            aria-label="이전 강의"
+          >
+            <SkipBack className="h-4 w-4" />
+          </Link>
+        )}
         {nextLessonHref && (
           <Link
             href={nextLessonHref}

@@ -111,6 +111,8 @@ export default async function WatchPage({
   }));
 
   const currentIndex = upNext.findIndex((sibling) => sibling.id === lesson.id);
+  const prevLesson =
+    currentIndex > 0 ? upNext[currentIndex - 1] : undefined;
   const nextLesson =
     currentIndex >= 0 ? upNext[currentIndex + 1] : undefined;
 
@@ -133,6 +135,7 @@ export default async function WatchPage({
             playbackId={lesson.mux_playback_id}
             token={await signPlaybackToken(lesson.mux_playback_id)}
             title={lesson.title}
+            prevLessonHref={prevLesson ? `/watch/${prevLesson.id}` : undefined}
             nextLessonHref={nextLesson ? `/watch/${nextLesson.id}` : undefined}
           />
         ) : (
