@@ -96,6 +96,12 @@ export default function VideoPlayer({
   // 아래 마우스 dblclick 핸들러가 또 반응해 20초씩 이동하는 문제가
   // 있었다 - 방금 터치로 처리했다면 dblclick은 무조건 무시한다.
   const touchHandledAtRef = useRef(0);
+  // pointerup을 통한 mux-player 컨트롤 표시/숨김 차단은 touchend가
+  // pointerup보다 먼저 실행된다는 가정(touchHandledAtRef 참고)에
+  // 의존했는데, 실기기 디버그 카운터로 확인해보니 그 가정이 맞지
+  // 않아 전혀 차단되지 않고 있었다. touchend 쪽 상태에 기대지 않고
+  // pointerup 이벤트만으로 독립적으로 더블탭 여부를 판정한다.
+  const lastPointerUpRef = useRef<{ x: number; time: number } | null>(null);
   const seekFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -283,15 +289,24 @@ export default function VideoPlayer({
     // preventDefault를 해도 전혀 영향을 못 준다. 컨트롤이 이미 보이는
     // 상태에서 탭하면 다시 숨겨버리는데, 이게 더블탭의 두 번째 탭에서도
     // 그대로 발생해 "표시→숨김"이 우리 이동 표시와 겹쳐 깜빡이는 것처럼
-    // 보였다. touchend가 이 pointerup보다 먼저 실행되므로, 방금 그
-    // touchend에서 더블탭을 처리했다면(touchHandledAtRef) 이 pointerup이
-    // media-controller에 도달하기 전에 capture 단계에서 막는다.
+    // 보였다. touchend가 이 pointerup보다 먼저 실행된다고 가정하고
+    // touchHandledAtRef를 참조했었는데, 실기기에서는 순서가 보장되지
+    // 않아 전혀 차단되지 않았다 - touchend 상태에 기대지 않고
+    // pointerup 이벤트만으로 독립적으로 더블탭 여부를 판정한다.
     function handlePointerUp(e: PointerEvent) {
       if (e.pointerType !== "touch") return;
       bumpDebug("pointerupFired");
-      if (Date.now() - touchHandledAtRef.current < 100) {
+      const now = Date.now();
+      const isDoubleTap =
+        lastPointerUpRef.current &&
+        now - lastPointerUpRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS &&
+        Math.abs(e.clientX - lastPointerUpRef.current.x) < TAP_MOVE_THRESHOLD_PX * 3;
+      if (isDoubleTap) {
         bumpDebug("pointerupBlocked");
         e.stopPropagation();
+        lastPointerUpRef.current = null;
+      } else {
+        lastPointerUpRef.current = { x: e.clientX, time: now };
       }
     }
 
