@@ -24,8 +24,10 @@ const ADMIN_NAV_ITEMS = [
 
 export default function AdminSidebar({
   hasNewQuestion = false,
+  pendingConsultationCount = 0,
 }: {
   hasNewQuestion?: boolean;
+  pendingConsultationCount?: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -106,6 +108,14 @@ export default function AdminSidebar({
                     NEW
                   </span>
                 )}
+                {item.href === "/admin/consultations" &&
+                  pendingConsultationCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
+                      {pendingConsultationCount > 99
+                        ? "99+"
+                        : pendingConsultationCount}
+                    </span>
+                  )}
               </Link>
             );
           })}

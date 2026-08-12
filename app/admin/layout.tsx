@@ -24,16 +24,26 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  const { data: newQuestion } = await createAdminClient()
+  const adminSupabase = createAdminClient();
+
+  const { data: newQuestion } = await adminSupabase
     .from("questions")
     .select("id")
     .is("question_read_at", null)
     .limit(1)
     .maybeSingle();
 
+  const { count: pendingConsultationCount } = await adminSupabase
+    .from("consultation_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <AdminSidebar hasNewQuestion={Boolean(newQuestion)} />
+      <AdminSidebar
+        hasNewQuestion={Boolean(newQuestion)}
+        pendingConsultationCount={pendingConsultationCount ?? 0}
+      />
       <div className="flex flex-1 flex-col bg-zinc-50">{children}</div>
     </div>
   );
