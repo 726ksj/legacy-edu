@@ -4,7 +4,7 @@ import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
 import CurriculumStickyNav from "@/components/home/CurriculumStickyNav";
 import MyCoursesStrip from "@/components/home/MyCoursesStrip";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
 
 const EMAIL_DOMAIN = "legacyedu.local";
@@ -20,9 +20,16 @@ interface Enrollment {
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  // user 정보와 리뷰/사이트 콘텐츠는 서로 무관하니 병렬로 요청한다.
+  const [user, { data: reviews }, { data: contentRows }] = await Promise.all([
+    getAuthUser(),
+    supabase
+      .from("reviews")
+      .select("id, name, school, subject, summary, detail")
+      .order("created_at", { ascending: false }),
+    supabase.from("site_content").select("key, value"),
+  ]);
 
   const isAdmin =
     Boolean(process.env.ADMIN_USERNAME) &&
@@ -39,15 +46,6 @@ export default async function HomePage() {
       .map((enrollment) => enrollment.courses)
       .filter((course): course is NonNullable<typeof course> => Boolean(course));
   }
-
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("id, name, school, subject, summary, detail")
-    .order("created_at", { ascending: false });
-
-  const { data: contentRows } = await supabase
-    .from("site_content")
-    .select("key, value");
 
   const content: SiteContentMap = { ...CONTENT_DEFAULTS };
   for (const row of contentRows ?? []) {

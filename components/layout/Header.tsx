@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import MobileNav from "./MobileNav";
 
@@ -15,10 +15,7 @@ const NAV_ITEMS = [
 const EMAIL_DOMAIN = "legacyedu.local";
 
 export default async function Header() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const isAdmin =
     Boolean(process.env.ADMIN_USERNAME) &&
@@ -26,6 +23,7 @@ export default async function Header() {
 
   let hasUnreadQna = false;
   if (user) {
+    const supabase = await createClient();
     const { data: unreadAnswer } = await supabase
       .from("questions")
       .select("id")

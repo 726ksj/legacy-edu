@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { syncLessonStatuses } from "@/lib/mux";
 import { isEnrolled } from "@/lib/enrollments";
 
@@ -36,37 +36,38 @@ export default async function CourseClassroomPage({
 }) {
   const { courseId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  if (!(await isEnrolled(supabase, user.id, courseId))) {
+  // 셋 다 courseId만 있으면 되고 서로 의존하지 않으니 병렬로 요청한다.
+  const [enrolled, { data: course }, { data: allLessons }] = await Promise.all([
+    isEnrolled(supabase, user.id, courseId),
+    supabase
+      .from("courses")
+      .select(
+        "id, subject, title, teacher_name, overview, thumbnail_url, instructors(name, photo_url, bio)",
+      )
+      .eq("id", courseId)
+      .maybeSingle()
+      .returns<Course>(),
+    supabase
+      .from("lessons")
+      .select("id, order_no, title, description, status, mux_asset_id")
+      .eq("course_id", courseId)
+      .order("order_no", { ascending: true })
+      .returns<Lesson[]>(),
+  ]);
+
+  if (!enrolled) {
     notFound();
   }
-
-  const { data: course } = await supabase
-    .from("courses")
-    .select(
-      "id, subject, title, teacher_name, overview, thumbnail_url, instructors(name, photo_url, bio)",
-    )
-    .eq("id", courseId)
-    .maybeSingle()
-    .returns<Course>();
 
   if (!course) {
     notFound();
   }
-
-  const { data: allLessons } = await supabase
-    .from("lessons")
-    .select("id, order_no, title, description, status, mux_asset_id")
-    .eq("course_id", courseId)
-    .order("order_no", { ascending: true })
-    .returns<Lesson[]>();
 
   if (allLessons?.length) {
     await syncLessonStatuses(supabase, allLessons);

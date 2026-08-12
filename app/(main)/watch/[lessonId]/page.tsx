@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getAuthUser } from "@/lib/supabase/server";
 import {
   signPlaybackToken,
   signThumbnailToken,
@@ -37,9 +37,7 @@ export default async function WatchPage({
 }) {
   const { lessonId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   if (!user) {
     redirect("/login");
@@ -58,26 +56,39 @@ export default async function WatchPage({
     notFound();
   }
 
-  if (!(await isEnrolled(supabase, user.id, lesson.course_id))) {
+  // 셋 다 lesson.course_id/lessonId/user.id만 있으면 되고 서로 의존하지
+  // 않으니 병렬로 요청한다.
+  const [enrolled, { data: allSiblings }, { data: questionRows }] =
+    await Promise.all([
+      isEnrolled(supabase, user.id, lesson.course_id),
+      supabase
+        .from("lessons")
+        .select("id, order_no, title, status, mux_asset_id, mux_playback_id")
+        .eq("course_id", lesson.course_id)
+        .order("order_no", { ascending: true })
+        .returns<SiblingLesson[]>(),
+      supabase
+        .from("questions")
+        .select("id, content, answer, created_at")
+        .eq("lesson_id", lessonId)
+        .eq("profile_id", user.id)
+        .order("created_at", { ascending: false }),
+    ]);
+
+  if (!enrolled) {
     notFound();
   }
 
-  if (lesson.status === "preparing") {
-    await syncLessonStatuses(supabase, [lesson]);
-  }
+  await Promise.all([
+    lesson.status === "preparing"
+      ? syncLessonStatuses(supabase, [lesson])
+      : Promise.resolve(),
+    allSiblings?.length
+      ? syncLessonStatuses(supabase, allSiblings)
+      : Promise.resolve(),
+  ]);
 
   const course = lesson.courses;
-
-  const { data: allSiblings } = await supabase
-    .from("lessons")
-    .select("id, order_no, title, status, mux_asset_id, mux_playback_id")
-    .eq("course_id", lesson.course_id)
-    .order("order_no", { ascending: true })
-    .returns<SiblingLesson[]>();
-
-  if (allSiblings?.length) {
-    await syncLessonStatuses(supabase, allSiblings);
-  }
 
   const siblingLessons = allSiblings?.filter(
     (sibling) => sibling.status === "ready",
@@ -91,13 +102,6 @@ export default async function WatchPage({
         : null,
     })),
   );
-
-  const { data: questionRows } = await supabase
-    .from("questions")
-    .select("id, content, answer, created_at")
-    .eq("lesson_id", lessonId)
-    .eq("profile_id", user.id)
-    .order("created_at", { ascending: false });
 
   const questions = (questionRows ?? []).map((question) => ({
     id: question.id,

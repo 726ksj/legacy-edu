@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import AdminSidebar from "@/components/layout/AdminSidebar";
 
@@ -10,10 +10,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   const adminUsername = process.env.ADMIN_USERNAME;
   const isAdmin =
@@ -26,17 +23,20 @@ export default async function AdminLayout({
 
   const adminSupabase = createAdminClient();
 
-  const { data: newQuestion } = await adminSupabase
-    .from("questions")
-    .select("id")
-    .is("question_read_at", null)
-    .limit(1)
-    .maybeSingle();
-
-  const { count: pendingConsultationCount } = await adminSupabase
-    .from("consultation_requests")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "pending");
+  // 서로 무관한 두 집계 쿼리라 병렬로 요청한다.
+  const [{ data: newQuestion }, { count: pendingConsultationCount }] =
+    await Promise.all([
+      adminSupabase
+        .from("questions")
+        .select("id")
+        .is("question_read_at", null)
+        .limit(1)
+        .maybeSingle(),
+      adminSupabase
+        .from("consultation_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
