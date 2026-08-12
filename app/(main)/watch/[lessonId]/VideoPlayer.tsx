@@ -18,6 +18,7 @@ const SEEK_SECONDS = 10;
 const DOUBLE_TAP_MAX_INTERVAL_MS = 300;
 const TAP_MOVE_THRESHOLD_PX = 12;
 const SEEK_FLASH_DURATION_MS = 650;
+const TOUCH_SEEK_GUARD_MS = 500;
 
 function clampScale(value: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
@@ -74,6 +75,11 @@ export default function VideoPlayer({
   // 짧은 시간 안에 같은 자리를 다시 탭하면 더블탭(좌우 10초 이동)으로 판정한다.
   const tapStartRef = useRef<{ x: number; y: number } | null>(null);
   const lastTapRef = useRef<{ x: number; time: number } | null>(null);
+  // 터치로 더블탭 이동을 처리한 시각을 기록해둔다. 일부 브라우저는
+  // touchend에서 preventDefault를 호출해도 뒤이어 합성 dblclick을 쏴서
+  // 아래 마우스 dblclick 핸들러가 또 반응해 20초씩 이동하는 문제가
+  // 있었다 - 방금 터치로 처리했다면 dblclick은 무조건 무시한다.
+  const touchHandledAtRef = useRef(0);
   const seekFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -218,11 +224,11 @@ export default function VideoPlayer({
             lastTapRef.current &&
             now - lastTapRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS
           ) {
-            // 더블탭을 완성하는 이 touchend의 기본 동작(합성 click/dblclick)을
-            // 막지 않으면, 브라우저가 이 탭 시퀀스로 dblclick을 합성해
-            // 아래 dblclick 리스너가 한 번 더 반응해서 20초씩 이동하는
-            // 버그가 생긴다.
+            // 이 touchend가 만들어낼 수 있는 합성 click/dblclick을 최대한
+            // 막는다 (완전히 막아준다는 보장은 브라우저마다 달라서,
+            // 아래 dblclick 핸들러에도 touchHandledAtRef 가드를 둔다).
             e.preventDefault();
+            touchHandledAtRef.current = Date.now();
             seekFromTapPosition(touch.clientX);
             lastTapRef.current = null;
           } else {
@@ -238,9 +244,11 @@ export default function VideoPlayer({
 
     // 데스크톱에서도 더블클릭으로 10초 이동을 지원한다. capture 단계에서
     // 가로채 stopPropagation하지 않으면 mux-player 자체의 더블클릭 핸들러가
-    // 함께 반응할 수 있다.
+    // 함께 반응할 수 있다. 방금 터치 더블탭으로 이미 처리했다면(모바일
+    // 브라우저가 뒤이어 합성 dblclick을 쐈을 뿐이므로) 여기서는 무시한다.
     function handleDoubleClick(e: MouseEvent) {
       if (scaleRef.current > 1) return;
+      if (Date.now() - touchHandledAtRef.current < TOUCH_SEEK_GUARD_MS) return;
       e.stopPropagation();
       seekFromTapPosition(e.clientX);
     }
