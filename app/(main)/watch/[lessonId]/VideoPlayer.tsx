@@ -80,6 +80,13 @@ export default function VideoPlayer({
   // 아래 마우스 dblclick 핸들러가 또 반응해 20초씩 이동하는 문제가
   // 있었다 - 방금 터치로 처리했다면 dblclick은 무조건 무시한다.
   const touchHandledAtRef = useRef(0);
+  // 더블탭의 "첫 번째 탭"이 될 수도 있으므로 바로 재생/일시정지를
+  // 토글하지 않고, 두 번째 탭이 안 오면 그때 토글한다. (첫 탭에서
+  // 곧바로 mux-player 기본 탭 동작이 실행되게 두면, 더블탭으로
+  // 시크할 때마다 일시정지 아이콘이 잠깐 겹쳐 보이는 문제가 있었다.)
+  const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const seekFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -116,6 +123,13 @@ export default function VideoPlayer({
     setTranslate({ x: 0, y: 0 });
   }, []);
 
+  const togglePlayPause = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (player.paused) player.play();
+    else player.pause();
+  }, []);
+
   const seekBy = useCallback((deltaSeconds: number) => {
     const player = playerRef.current;
     if (!player) return;
@@ -150,6 +164,7 @@ export default function VideoPlayer({
   useEffect(() => {
     return () => {
       if (seekFlashTimeoutRef.current) clearTimeout(seekFlashTimeoutRef.current);
+      if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
     };
   }, []);
 
@@ -219,20 +234,36 @@ export default function VideoPlayer({
         const dx = touch.clientX - tapStartRef.current.x;
         const dy = touch.clientY - tapStartRef.current.y;
         if (Math.hypot(dx, dy) < TAP_MOVE_THRESHOLD_PX) {
+          // 탭을 인식한 이상 mux-player의 기본 탭 동작(재생/일시정지
+          // 토글)에 항상 맡기지 않고 우리가 직접 처리한다. 그렇지
+          // 않으면 더블탭의 "첫 번째 탭"에서 곧바로 일시정지가
+          // 걸리면서 그 아이콘이 우리 10초 이동 표시와 겹쳐 보인다.
+          e.preventDefault();
           const now = Date.now();
           if (
             lastTapRef.current &&
             now - lastTapRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS
           ) {
-            // 이 touchend가 만들어낼 수 있는 합성 click/dblclick을 최대한
-            // 막는다 (완전히 막아준다는 보장은 브라우저마다 달라서,
-            // 아래 dblclick 핸들러에도 touchHandledAtRef 가드를 둔다).
-            e.preventDefault();
+            // 더블탭 완성: 예약해둔 첫 탭의 재생/일시정지 토글은 취소한다.
+            if (singleTapTimeoutRef.current) {
+              clearTimeout(singleTapTimeoutRef.current);
+              singleTapTimeoutRef.current = null;
+            }
             touchHandledAtRef.current = Date.now();
             seekFromTapPosition(touch.clientX);
             lastTapRef.current = null;
           } else {
+            // 아직은 싱글탭일 수도, 더블탭의 첫 탭일 수도 있다. 더블탭
+            // 인식 시간(300ms) 안에 두 번째 탭이 안 오면 그때 가서
+            // 재생/일시정지를 토글한다.
             lastTapRef.current = { x: touch.clientX, time: now };
+            if (singleTapTimeoutRef.current) {
+              clearTimeout(singleTapTimeoutRef.current);
+            }
+            singleTapTimeoutRef.current = setTimeout(() => {
+              singleTapTimeoutRef.current = null;
+              togglePlayPause();
+            }, DOUBLE_TAP_MAX_INTERVAL_MS);
           }
         }
       }
@@ -268,7 +299,7 @@ export default function VideoPlayer({
       el.removeEventListener("touchcancel", handleTouchEnd);
       el.removeEventListener("dblclick", handleDoubleClick, { capture: true });
     };
-  }, [applyScale, clampTranslate, seekFromTapPosition]);
+  }, [applyScale, clampTranslate, seekFromTapPosition, togglePlayPause]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
