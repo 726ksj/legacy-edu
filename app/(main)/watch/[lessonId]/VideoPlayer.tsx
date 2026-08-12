@@ -52,6 +52,22 @@ export default function VideoPlayer({
     side: "left" | "right";
     key: number;
   } | null>(null);
+  // TODO(디버그용, 원인 파악되면 제거): 더블탭 이동 표시가 중복으로
+  // 보인다는 제보의 실제 원인을 찾기 위해 각 이벤트가 실제로 몇 번
+  // 발생하는지 화면에 직접 표시한다.
+  const [debugCounts, setDebugCounts] = useState({
+    touchstart: 0,
+    tapRecognized: 0,
+    doubleTapFired: 0,
+    seekByCalls: 0,
+    dblclickFired: 0,
+    dblclickBlocked: 0,
+    pointerupFired: 0,
+    pointerupBlocked: 0,
+  });
+  const bumpDebug = useCallback((key: keyof typeof debugCounts) => {
+    setDebugCounts((prev) => ({ ...prev, [key]: prev[key] + 1 }));
+  }, []);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -80,13 +96,6 @@ export default function VideoPlayer({
   // 아래 마우스 dblclick 핸들러가 또 반응해 20초씩 이동하는 문제가
   // 있었다 - 방금 터치로 처리했다면 dblclick은 무조건 무시한다.
   const touchHandledAtRef = useRef(0);
-  // 더블탭의 "첫 번째 탭"이 될 수도 있으므로 바로 재생/일시정지를
-  // 토글하지 않고, 두 번째 탭이 안 오면 그때 토글한다. (첫 탭에서
-  // 곧바로 mux-player 기본 탭 동작이 실행되게 두면, 더블탭으로
-  // 시크할 때마다 일시정지 아이콘이 잠깐 겹쳐 보이는 문제가 있었다.)
-  const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
   const seekFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -123,14 +132,8 @@ export default function VideoPlayer({
     setTranslate({ x: 0, y: 0 });
   }, []);
 
-  const togglePlayPause = useCallback(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (player.paused) player.play();
-    else player.pause();
-  }, []);
-
   const seekBy = useCallback((deltaSeconds: number) => {
+    bumpDebug("seekByCalls");
     const player = playerRef.current;
     if (!player) return;
     const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
@@ -138,7 +141,7 @@ export default function VideoPlayer({
       duration,
       Math.max(0, player.currentTime + deltaSeconds),
     );
-  }, []);
+  }, [bumpDebug]);
 
   const flashSeek = useCallback((side: "left" | "right") => {
     setSeekFlash((prev) => ({ side, key: (prev?.key ?? 0) + 1 }));
@@ -164,7 +167,6 @@ export default function VideoPlayer({
   useEffect(() => {
     return () => {
       if (seekFlashTimeoutRef.current) clearTimeout(seekFlashTimeoutRef.current);
-      if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
     };
   }, []);
 
@@ -179,6 +181,7 @@ export default function VideoPlayer({
     }
 
     function handleTouchStart(e: TouchEvent) {
+      bumpDebug("touchstart");
       if (e.touches.length === 2) {
         setIsGesturing(true);
         pinchRef.current = {
@@ -234,36 +237,23 @@ export default function VideoPlayer({
         const dx = touch.clientX - tapStartRef.current.x;
         const dy = touch.clientY - tapStartRef.current.y;
         if (Math.hypot(dx, dy) < TAP_MOVE_THRESHOLD_PX) {
-          // 탭을 인식한 이상 mux-player의 기본 탭 동작(재생/일시정지
-          // 토글)에 항상 맡기지 않고 우리가 직접 처리한다. 그렇지
-          // 않으면 더블탭의 "첫 번째 탭"에서 곧바로 일시정지가
-          // 걸리면서 그 아이콘이 우리 10초 이동 표시와 겹쳐 보인다.
-          e.preventDefault();
+          bumpDebug("tapRecognized");
           const now = Date.now();
           if (
             lastTapRef.current &&
             now - lastTapRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS
           ) {
-            // 더블탭 완성: 예약해둔 첫 탭의 재생/일시정지 토글은 취소한다.
-            if (singleTapTimeoutRef.current) {
-              clearTimeout(singleTapTimeoutRef.current);
-              singleTapTimeoutRef.current = null;
-            }
+            // 더블탭 완성: 이동만 처리하고, 한 번 탭에 대해서는 아무
+            // 것도 하지 않는다 (mux-player 기본 컨트롤 표시만 그대로 둠).
+            bumpDebug("doubleTapFired");
+            e.preventDefault();
             touchHandledAtRef.current = Date.now();
             seekFromTapPosition(touch.clientX);
             lastTapRef.current = null;
           } else {
             // 아직은 싱글탭일 수도, 더블탭의 첫 탭일 수도 있다. 더블탭
-            // 인식 시간(300ms) 안에 두 번째 탭이 안 오면 그때 가서
-            // 재생/일시정지를 토글한다.
+            // 판정을 위해 시각만 기록해두고 별도 동작은 하지 않는다.
             lastTapRef.current = { x: touch.clientX, time: now };
-            if (singleTapTimeoutRef.current) {
-              clearTimeout(singleTapTimeoutRef.current);
-            }
-            singleTapTimeoutRef.current = setTimeout(() => {
-              singleTapTimeoutRef.current = null;
-              togglePlayPause();
-            }, DOUBLE_TAP_MAX_INTERVAL_MS);
           }
         }
       }
@@ -278,8 +268,12 @@ export default function VideoPlayer({
     // 함께 반응할 수 있다. 방금 터치 더블탭으로 이미 처리했다면(모바일
     // 브라우저가 뒤이어 합성 dblclick을 쐈을 뿐이므로) 여기서는 무시한다.
     function handleDoubleClick(e: MouseEvent) {
+      bumpDebug("dblclickFired");
       if (scaleRef.current > 1) return;
-      if (Date.now() - touchHandledAtRef.current < TOUCH_SEEK_GUARD_MS) return;
+      if (Date.now() - touchHandledAtRef.current < TOUCH_SEEK_GUARD_MS) {
+        bumpDebug("dblclickBlocked");
+        return;
+      }
       e.stopPropagation();
       seekFromTapPosition(e.clientX);
     }
@@ -294,7 +288,9 @@ export default function VideoPlayer({
     // media-controller에 도달하기 전에 capture 단계에서 막는다.
     function handlePointerUp(e: PointerEvent) {
       if (e.pointerType !== "touch") return;
+      bumpDebug("pointerupFired");
       if (Date.now() - touchHandledAtRef.current < 100) {
+        bumpDebug("pointerupBlocked");
         e.stopPropagation();
       }
     }
@@ -316,7 +312,7 @@ export default function VideoPlayer({
       el.removeEventListener("dblclick", handleDoubleClick, { capture: true });
       el.removeEventListener("pointerup", handlePointerUp, { capture: true });
     };
-  }, [applyScale, clampTranslate, seekFromTapPosition, togglePlayPause]);
+  }, [applyScale, clampTranslate, seekFromTapPosition, bumpDebug]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -405,6 +401,34 @@ export default function VideoPlayer({
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
         </div>
+      </div>
+
+      {/* TODO(디버그용, 원인 파악되면 제거) */}
+      <div className="absolute left-3 top-3 z-20 rounded-md bg-black/70 px-2 py-1.5 font-mono text-[10px] leading-tight text-lime-300">
+        <div>touchstart: {debugCounts.touchstart}</div>
+        <div>tap 인식: {debugCounts.tapRecognized}</div>
+        <div>더블탭 발동: {debugCounts.doubleTapFired}</div>
+        <div>seekBy 호출: {debugCounts.seekByCalls}</div>
+        <div>dblclick 발생/차단: {debugCounts.dblclickFired}/{debugCounts.dblclickBlocked}</div>
+        <div>pointerup 발생/차단: {debugCounts.pointerupFired}/{debugCounts.pointerupBlocked}</div>
+        <button
+          type="button"
+          onClick={() =>
+            setDebugCounts({
+              touchstart: 0,
+              tapRecognized: 0,
+              doubleTapFired: 0,
+              seekByCalls: 0,
+              dblclickFired: 0,
+              dblclickBlocked: 0,
+              pointerupFired: 0,
+              pointerupBlocked: 0,
+            })
+          }
+          className="mt-1 rounded bg-white/20 px-1.5 py-0.5 text-white"
+        >
+          리셋
+        </button>
       </div>
 
       {seekFlash && (
