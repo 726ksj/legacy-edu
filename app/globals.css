@@ -37,6 +37,17 @@ mux-player::part(fullscreen) {
 }
 
 /*
+ * mux-player의 "재생 전(pre-playback)" 가운데 재생 버튼은 이름과 달리
+ * 재생이 시작된 뒤에도 탭해서 컨트롤이 다시 보일 때마다 함께 나타난다.
+ * VideoPlayer.tsx의 더블탭 10초 이동 표시와 화면 가운데에서 겹쳐 보여
+ * 마치 이동 표시가 두 개 뜨는 것처럼 보이는 원인이었다. 재생/일시정지는
+ * 하단 컨트롤 바에도 있으니(위 --bottom-play-button) 이 버튼은 숨긴다.
+ */
+mux-player::part(center play) {
+  display: none !important;
+}
+
+/*
  * Mux Player는 컨트롤러 자체 너비가 470px 미만이면(media-controller의
  * breakpointsm 속성이 안 붙음) 10초 이동/재생 속도/재생바 시간 표시 등을
  * CSS 변수로 숨긴다. 세로 모드 휴대폰 화면은 항상 이보다 좁아서 축소된

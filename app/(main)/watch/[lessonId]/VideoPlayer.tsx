@@ -52,22 +52,6 @@ export default function VideoPlayer({
     side: "left" | "right";
     key: number;
   } | null>(null);
-  // TODO(디버그용, 원인 파악되면 제거): 더블탭 이동 표시가 중복으로
-  // 보인다는 제보의 실제 원인을 찾기 위해 각 이벤트가 실제로 몇 번
-  // 발생하는지 화면에 직접 표시한다.
-  const [debugCounts, setDebugCounts] = useState({
-    touchstart: 0,
-    tapRecognized: 0,
-    doubleTapFired: 0,
-    seekByCalls: 0,
-    dblclickFired: 0,
-    dblclickBlocked: 0,
-    pointerupFired: 0,
-    pointerupBlocked: 0,
-  });
-  const bumpDebug = useCallback((key: keyof typeof debugCounts) => {
-    setDebugCounts((prev) => ({ ...prev, [key]: prev[key] + 1 }));
-  }, []);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -139,7 +123,6 @@ export default function VideoPlayer({
   }, []);
 
   const seekBy = useCallback((deltaSeconds: number) => {
-    bumpDebug("seekByCalls");
     const player = playerRef.current;
     if (!player) return;
     const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
@@ -147,7 +130,7 @@ export default function VideoPlayer({
       duration,
       Math.max(0, player.currentTime + deltaSeconds),
     );
-  }, [bumpDebug]);
+  }, []);
 
   const flashSeek = useCallback((side: "left" | "right") => {
     setSeekFlash((prev) => ({ side, key: (prev?.key ?? 0) + 1 }));
@@ -187,7 +170,6 @@ export default function VideoPlayer({
     }
 
     function handleTouchStart(e: TouchEvent) {
-      bumpDebug("touchstart");
       if (e.touches.length === 2) {
         setIsGesturing(true);
         pinchRef.current = {
@@ -243,7 +225,6 @@ export default function VideoPlayer({
         const dx = touch.clientX - tapStartRef.current.x;
         const dy = touch.clientY - tapStartRef.current.y;
         if (Math.hypot(dx, dy) < TAP_MOVE_THRESHOLD_PX) {
-          bumpDebug("tapRecognized");
           const now = Date.now();
           if (
             lastTapRef.current &&
@@ -251,7 +232,6 @@ export default function VideoPlayer({
           ) {
             // 더블탭 완성: 이동만 처리하고, 한 번 탭에 대해서는 아무
             // 것도 하지 않는다 (mux-player 기본 컨트롤 표시만 그대로 둠).
-            bumpDebug("doubleTapFired");
             e.preventDefault();
             touchHandledAtRef.current = Date.now();
             seekFromTapPosition(touch.clientX);
@@ -274,12 +254,8 @@ export default function VideoPlayer({
     // 함께 반응할 수 있다. 방금 터치 더블탭으로 이미 처리했다면(모바일
     // 브라우저가 뒤이어 합성 dblclick을 쐈을 뿐이므로) 여기서는 무시한다.
     function handleDoubleClick(e: MouseEvent) {
-      bumpDebug("dblclickFired");
       if (scaleRef.current > 1) return;
-      if (Date.now() - touchHandledAtRef.current < TOUCH_SEEK_GUARD_MS) {
-        bumpDebug("dblclickBlocked");
-        return;
-      }
+      if (Date.now() - touchHandledAtRef.current < TOUCH_SEEK_GUARD_MS) return;
       e.stopPropagation();
       seekFromTapPosition(e.clientX);
     }
@@ -295,14 +271,12 @@ export default function VideoPlayer({
     // pointerup 이벤트만으로 독립적으로 더블탭 여부를 판정한다.
     function handlePointerUp(e: PointerEvent) {
       if (e.pointerType !== "touch") return;
-      bumpDebug("pointerupFired");
       const now = Date.now();
       const isDoubleTap =
         lastPointerUpRef.current &&
         now - lastPointerUpRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS &&
         Math.abs(e.clientX - lastPointerUpRef.current.x) < TAP_MOVE_THRESHOLD_PX * 3;
       if (isDoubleTap) {
-        bumpDebug("pointerupBlocked");
         e.stopPropagation();
         lastPointerUpRef.current = null;
       } else {
@@ -327,7 +301,7 @@ export default function VideoPlayer({
       el.removeEventListener("dblclick", handleDoubleClick, { capture: true });
       el.removeEventListener("pointerup", handlePointerUp, { capture: true });
     };
-  }, [applyScale, clampTranslate, seekFromTapPosition, bumpDebug]);
+  }, [applyScale, clampTranslate, seekFromTapPosition]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -416,34 +390,6 @@ export default function VideoPlayer({
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
         </div>
-      </div>
-
-      {/* TODO(디버그용, 원인 파악되면 제거) */}
-      <div className="absolute left-3 top-3 z-20 rounded-md bg-black/70 px-2 py-1.5 font-mono text-[10px] leading-tight text-lime-300">
-        <div>touchstart: {debugCounts.touchstart}</div>
-        <div>tap 인식: {debugCounts.tapRecognized}</div>
-        <div>더블탭 발동: {debugCounts.doubleTapFired}</div>
-        <div>seekBy 호출: {debugCounts.seekByCalls}</div>
-        <div>dblclick 발생/차단: {debugCounts.dblclickFired}/{debugCounts.dblclickBlocked}</div>
-        <div>pointerup 발생/차단: {debugCounts.pointerupFired}/{debugCounts.pointerupBlocked}</div>
-        <button
-          type="button"
-          onClick={() =>
-            setDebugCounts({
-              touchstart: 0,
-              tapRecognized: 0,
-              doubleTapFired: 0,
-              seekByCalls: 0,
-              dblclickFired: 0,
-              dblclickBlocked: 0,
-              pointerupFired: 0,
-              pointerupBlocked: 0,
-            })
-          }
-          className="mt-1 rounded bg-white/20 px-1.5 py-0.5 text-white"
-        >
-          리셋
-        </button>
       </div>
 
       {seekFlash && (
