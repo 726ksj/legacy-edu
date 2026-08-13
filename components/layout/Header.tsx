@@ -42,7 +42,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: "수강 후기", href: "/reviews/course" },
       { label: "강좌 후기", href: "/reviews/lecture" },
-      { label: "학원 실제 후기 유튜브 영상", href: "/reviews/youtube" },
+      { label: "학원 실제 후기", href: "/reviews/youtube" },
     ],
   },
   {
