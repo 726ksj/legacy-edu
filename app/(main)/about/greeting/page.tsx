@@ -24,26 +24,36 @@ export default async function Page() {
     .map((p: string) => p.trim())
     .filter(Boolean);
 
+  const signature = paragraphs.length > 1 ? paragraphs[paragraphs.length - 1] : null;
+  const bodyParagraphs = signature ? paragraphs.slice(0, -1) : paragraphs;
+
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-start justify-center gap-6 px-4 py-24 sm:px-6">
-      <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl">
-        대표 인사말
-      </h1>
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-10 px-4 py-24 sm:px-6">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          Greeting
+        </span>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+          대표 인사말
+        </h1>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
+      </div>
 
       <div className="space-y-5 text-base leading-relaxed text-zinc-600">
-        {paragraphs.map((paragraph: string, i: number) => (
-          <p
-            key={i}
-            className={
-              i === paragraphs.length - 1
-                ? "whitespace-pre-line pt-4 font-semibold text-zinc-800"
-                : "whitespace-pre-line"
-            }
-          >
+        {bodyParagraphs.map((paragraph: string, i: number) => (
+          <p key={i} className="whitespace-pre-line">
             {paragraph}
           </p>
         ))}
       </div>
+
+      {signature && (
+        <div className="flex flex-col items-end gap-1 border-t border-zinc-100 pt-6 text-right">
+          <p className="whitespace-pre-line text-base font-semibold tracking-tight text-zinc-900">
+            {signature}
+          </p>
+        </div>
+      )}
     </section>
   );
 }

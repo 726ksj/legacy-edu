@@ -50,7 +50,7 @@ export default function SiteContentForm({
 
       <div className="flex flex-col gap-1.5 border-t border-zinc-100 pt-6 text-sm font-medium text-zinc-700">
         <p className="text-sm font-semibold text-zinc-900">
-          LEGACY를 소개합니다 (본문)
+          대표 인사말 (본문)
         </p>
         <textarea
           name="about_body"

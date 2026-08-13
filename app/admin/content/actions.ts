@@ -31,6 +31,6 @@ export async function updateSiteContent(
 
   revalidatePath("/admin/content");
   revalidatePath("/");
-  revalidatePath("/about");
+  revalidatePath("/about/greeting");
   return { success: true };
 }
