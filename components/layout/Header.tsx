@@ -97,11 +97,12 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
-      {/* 상단: 로고 + 로그인/회원가입. 데스크톱은 로고 중앙 정렬, 모바일은 좌우 분리 배치 */}
-      <div className="flex h-16 w-full items-center justify-between px-4 sm:px-8 md:h-20 lg:px-12">
-        <div className="hidden md:block md:flex-1" />
-
-        <Link href="/" className="flex min-w-0 shrink items-center gap-1.5 md:shrink-0 md:gap-2.5">
+      {/* 상단: 로고 + 로그인/회원가입. 데스크톱은 로고 정중앙, 모바일은 좌우 분리 배치 */}
+      <div className="relative flex h-16 w-full items-center justify-between px-4 sm:px-8 md:h-20 md:justify-end lg:px-12">
+        <Link
+          href="/"
+          className="flex min-w-0 shrink items-center gap-1.5 md:absolute md:left-1/2 md:top-1/2 md:shrink-0 md:-translate-x-1/2 md:-translate-y-1/2 md:gap-2.5"
+        >
           <Image
             src="/logo.png"
             alt="LEGACY EDU"
@@ -112,12 +113,9 @@ export default async function Header() {
           <span className="truncate text-base font-bold tracking-tight text-brand-dark sm:text-lg md:text-xl lg:text-2xl">
             LEGACY EDU
           </span>
-          <span className="hidden text-sm text-zinc-500 sm:inline">
-            고등 내신&수능 전문
-          </span>
         </Link>
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:flex-1 md:justify-end md:gap-4">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
           {user ? (
             <form action={logout}>
               <button
