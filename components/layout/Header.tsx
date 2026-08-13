@@ -51,7 +51,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: "공지사항", href: "/notice" },
       { label: "자주하는 질문", href: "/customer-center" },
-      { label: "1:1 이용문의", href: "/consultation" },
+      { label: "1:1 이용문의", href: "/customer-center/inquiry" },
     ],
   },
 ];
