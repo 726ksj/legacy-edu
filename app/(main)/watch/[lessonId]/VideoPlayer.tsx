@@ -33,12 +33,14 @@ export default function VideoPlayer({
   playbackId,
   token,
   title,
+  poster,
   prevLessonHref,
   nextLessonHref,
 }: {
   playbackId: string;
   token: string;
   title: string;
+  poster?: string;
   prevLessonHref?: string;
   nextLessonHref?: string;
 }) {
@@ -388,6 +390,7 @@ export default function VideoPlayer({
             ref={playerRef}
             playbackId={playbackId}
             tokens={{ playback: token }}
+            poster={poster}
             streamType="on-demand"
             metadata={{ video_title: title }}
             defaultHiddenCaptions

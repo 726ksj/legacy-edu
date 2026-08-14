@@ -115,6 +115,9 @@ export default async function WatchPage({
     currentIndex > 0 ? upNext[currentIndex - 1] : undefined;
   const nextLesson =
     currentIndex >= 0 ? upNext[currentIndex + 1] : undefined;
+  const posterUrl =
+    (currentIndex >= 0 ? upNext[currentIndex].thumbnailUrl : undefined) ??
+    undefined;
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-16 sm:px-6 lg:flex-row lg:items-start">
@@ -135,6 +138,7 @@ export default async function WatchPage({
             playbackId={lesson.mux_playback_id}
             token={await signPlaybackToken(lesson.mux_playback_id)}
             title={lesson.title}
+            poster={posterUrl}
             prevLessonHref={prevLesson ? `/watch/${prevLesson.id}` : undefined}
             nextLessonHref={nextLesson ? `/watch/${nextLesson.id}` : undefined}
           />
