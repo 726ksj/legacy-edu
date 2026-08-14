@@ -111,15 +111,48 @@ export default function VideoPlayer({
     setTranslate({ x: 0, y: 0 });
   }, []);
 
-  const seekBy = useCallback((deltaSeconds: number) => {
+  // 우리 중앙 컨트롤 버튼(-10/재생·일시정지/+10)은 mux-player DOM 바깥에
+  // 있어서 눌러도 mux-player 자신은 "사용자가 조작 중"이라는 걸 모른다.
+  // 그 상태로 두면 mux-player의 자동 숨김 타이머(기본 2초)가 우리 버튼
+  // 조작과 무관하게 계속 돌아가다가, 하필 버튼을 누른 순간과 겹쳐서
+  // "누르면 사라진다"처럼 보인다. mux-player 내부의 media-controller에
+  // 직접 pointermove를 흉내내 활동을 알려주면, mux-player 자신의 로직이
+  // 컨트롤을 계속 보여주다가 정해진 시간(기본 2초) 후 자동으로 숨긴다 -
+  // 우리 컨트롤은 여전히 그 상태를 그대로 반영만 하므로 항상 같이 움직인다.
+  const pokeMuxActivity = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
-    const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
-    player.currentTime = Math.min(
-      duration,
-      Math.max(0, player.currentTime + deltaSeconds),
-    );
+    try {
+      const mediaController = player.shadowRoot
+        ?.querySelector("media-theme")
+        ?.shadowRoot?.querySelector("media-controller");
+      mediaController?.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          composed: true,
+          pointerType: "mouse",
+        }),
+      );
+    } catch {
+      // mux-player 내부 구조가 바뀌어 위 경로를 못 찾아도 조용히 무시한다 -
+      // 이건 "컨트롤을 계속 보여주는" 부가 동작일 뿐, 탐색/재생 자체는
+      // 영향받지 않는다.
+    }
   }, []);
+
+  const seekBy = useCallback(
+    (deltaSeconds: number) => {
+      const player = playerRef.current;
+      if (!player) return;
+      const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
+      player.currentTime = Math.min(
+        duration,
+        Math.max(0, player.currentTime + deltaSeconds),
+      );
+      pokeMuxActivity();
+    },
+    [pokeMuxActivity],
+  );
 
   const togglePlayPause = useCallback(() => {
     const player = playerRef.current;
@@ -129,7 +162,8 @@ export default function VideoPlayer({
     } else {
       player.pause();
     }
-  }, []);
+    pokeMuxActivity();
+  }, [pokeMuxActivity]);
 
   // mux-player 자신의 하단 컨트롤 바는 자체적으로 탭/호버에 따라 표시·자동
   // 숨김을 관리한다(일시정지 중엔 안 숨는 것까지 포함). 우리 중앙 컨트롤을
