@@ -132,6 +132,16 @@ export default function VideoPlayer({
   // 직접 pointermove를 흉내내 활동을 알려주면, mux-player 자신의 로직이
   // 컨트롤을 계속 보여주다가 정해진 시간(기본 2초) 후 자동으로 숨긴다 -
   // 우리 컨트롤은 여전히 그 상태를 그대로 반영만 하므로 항상 같이 움직인다.
+  //
+  // 이 함수는 각 버튼의 onMouseEnter에도 그대로 걸어둔다: 우리 버튼들은
+  // mux-player 위에 얹힌 형제 엘리먼트라서, 마우스 커서가 버튼 위로
+  // 올라오면 브라우저 히트테스트 대상이 mux-player에서 버튼으로 바뀌며
+  // mux-player 쪽에 mouseleave가 발생한다. mux-player는 mouseleave를
+  // 받으면 즉시 컨트롤을 숨기는데, 그러면 우리 버튼도 같이 사라지고
+  // (controlsVisible이 mux 상태를 그대로 반영하므로) 사라진 자리에 다시
+  // mux-player가 드러나 pointermove가 발생해 다시 나타나기를 반복해
+  // 깜빡이며 클릭이 안 되는 문제가 있었다. onMouseEnter에서 즉시 poke해
+  // mux-player를 계속 활성 상태로 붙잡아두면 이 루프가 끊긴다.
   const pokeMuxActivity = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
@@ -376,6 +386,7 @@ export default function VideoPlayer({
           <button
             type="button"
             onClick={() => seekBy(-SEEK_SECONDS)}
+            onMouseEnter={pokeMuxActivity}
             className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={`${SEEK_SECONDS}초 뒤로`}
           >
@@ -384,6 +395,7 @@ export default function VideoPlayer({
           <button
             type="button"
             onClick={togglePlayPause}
+            onMouseEnter={pokeMuxActivity}
             className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={isPaused ? "재생" : "일시정지"}
           >
@@ -396,6 +408,7 @@ export default function VideoPlayer({
           <button
             type="button"
             onClick={() => seekBy(SEEK_SECONDS)}
+            onMouseEnter={pokeMuxActivity}
             className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={`${SEEK_SECONDS}초 앞으로`}
           >
@@ -404,7 +417,10 @@ export default function VideoPlayer({
         </div>
       )}
 
-      <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
+      <div
+        className="absolute right-3 top-3 z-10 flex items-center gap-2"
+        onMouseEnter={pokeMuxActivity}
+      >
         {prevLessonHref && (
           <Link
             href={prevLessonHref}
@@ -438,7 +454,10 @@ export default function VideoPlayer({
       </div>
 
       {scale > 1 && (
-        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-1 text-white">
+        <div
+          className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-1 text-white"
+          onMouseEnter={pokeMuxActivity}
+        >
           <button
             type="button"
             onClick={() => applyScale(scale - 0.5)}
