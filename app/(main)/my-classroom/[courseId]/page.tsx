@@ -77,7 +77,7 @@ export default async function CourseClassroomPage({
   const instructor = course.instructors;
 
   return (
-    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
+    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-16">
       <div>
         <Link
           href="/my-classroom"

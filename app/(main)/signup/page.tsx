@@ -53,7 +53,7 @@ export default function SignupPage() {
 
   if (state.success) {
     return (
-      <section className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center sm:px-6 sm:py-24">
+      <section className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center sm:px-6 sm:py-16">
         <h1 className="text-2xl font-bold text-zinc-900">회원가입 완료</h1>
         <p className="text-zinc-500">가입이 완료되었습니다. 로그인해주세요.</p>
         <Link
@@ -67,7 +67,7 @@ export default function SignupPage() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-4 py-6 sm:px-6 sm:py-24">
+    <section className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-4 py-6 sm:px-6 sm:py-16">
       <div>
         <h1 className="text-3xl font-bold text-zinc-900">회원가입</h1>
         <p className="mt-2 text-sm text-zinc-500">

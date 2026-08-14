@@ -12,7 +12,7 @@ export default function PagePlaceholder({
   description,
 }: PagePlaceholderProps) {
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start px-4 py-6 sm:px-6 sm:py-20">
+    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start px-4 py-6 sm:px-6 sm:py-16">
       <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl">{title}</h1>
       {description && (
         <p className="mt-3 max-w-2xl text-zinc-500">{description}</p>

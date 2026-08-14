@@ -27,6 +27,19 @@ function getTouchDistance(touches: TouchList) {
   return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 }
 
+// mux-player는 데스크톱에서 영상을 클릭하면(터치는 해당 없음) 자체적으로
+// 재생/일시정지를 토글한다. 우리 중앙 컨트롤을 열어보려는 클릭 한 번에도
+// 이게 같이 발동해서, 컨트롤을 펼치기만 해도 영상이 멈춰버린다. 순수 영상
+// 영역 클릭일 때만 이 토글이 먹지 않도록 막고, 자막/볼륨 등 mux 자체
+// 버튼 클릭은 그대로 mux-player가 처리하게 둔다. composedPath()의 가장
+// 안쪽 요소로 확인하는 이유는 shadow DOM 밖에서는 target이 항상
+// <mux-player>로 재타겟팅돼 버튼 클릭과 구분이 안 되기 때문이다.
+function isPlainVideoSurfaceTarget(e: Event): boolean {
+  const innermost = e.composedPath()[0];
+  if (!(innermost instanceof Element)) return false;
+  return innermost.localName === "video" || innermost.localName === "media-controller";
+}
+
 export default function VideoPlayer({
   playbackId,
   token,
@@ -239,11 +252,22 @@ export default function VideoPlayer({
       if (e.touches.length === 0) setIsGesturing(false);
     }
 
+    // capture 단계에서 가로채 stopPropagation하지 않으면 mux-player 자체의
+    // click 리스너(media-gesture-receiver)까지 이벤트가 전달돼 재생/일시정지가
+    // 같이 토글된다. pointerup 기반 컨트롤 표시/숨김 동기화와는 별개의
+    // 이벤트라 여기서 막아도 그쪽엔 영향이 없다.
+    function handleClick(e: MouseEvent) {
+      if (scaleRef.current > 1) return;
+      if (!isPlainVideoSurfaceTarget(e)) return;
+      e.stopPropagation();
+    }
+
     el.addEventListener("wheel", handleWheel, { passive: false });
     el.addEventListener("touchstart", handleTouchStart, { passive: true });
     el.addEventListener("touchmove", handleTouchMove, { passive: false });
     el.addEventListener("touchend", handleTouchEnd);
     el.addEventListener("touchcancel", handleTouchEnd);
+    el.addEventListener("click", handleClick, { capture: true });
 
     return () => {
       el.removeEventListener("wheel", handleWheel);
@@ -251,6 +275,7 @@ export default function VideoPlayer({
       el.removeEventListener("touchmove", handleTouchMove);
       el.removeEventListener("touchend", handleTouchEnd);
       el.removeEventListener("touchcancel", handleTouchEnd);
+      el.removeEventListener("click", handleClick, { capture: true });
     };
   }, [applyScale, clampTranslate]);
 

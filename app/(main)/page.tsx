@@ -63,7 +63,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <section className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-10 px-4 py-6 sm:px-6 sm:py-24 lg:flex-row lg:items-center">
+      <section className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-10 px-4 py-6 sm:px-6 sm:py-16 lg:flex-row lg:items-center">
         <div className="flex w-full flex-col items-start gap-6">
           <h1 className="text-4xl font-bold leading-tight text-zinc-900 sm:text-5xl">
             {content.hero_heading}

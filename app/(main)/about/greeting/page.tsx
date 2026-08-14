@@ -28,7 +28,7 @@ export default async function Page() {
   const bodyParagraphs = signature ? paragraphs.slice(0, -1) : paragraphs;
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-10 px-4 py-6 sm:px-6 sm:py-24">
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-10 px-4 py-6 sm:px-6 sm:py-16">
       <div className="flex flex-col gap-4">
         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
           Greeting
