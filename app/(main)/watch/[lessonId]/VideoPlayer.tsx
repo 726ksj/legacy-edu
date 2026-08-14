@@ -17,11 +17,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
 const SEEK_SECONDS = 10;
-const TAP_MOVE_THRESHOLD_PX = 12;
-const CONTROLS_AUTO_HIDE_MS = 3000;
-// touchend 처리 직후 브라우저가 뒤이어 쏘는 합성 click을 또 처리하지
-// 않도록 무시하는 시간 (모바일에서 터치가 click으로 한 번 더 들어옴).
-const TOUCH_CLICK_GUARD_MS = 500;
 
 function clampScale(value: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
@@ -30,18 +25,6 @@ function clampScale(value: number) {
 function getTouchDistance(touches: TouchList) {
   const [a, b] = [touches[0], touches[1]];
   return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-}
-
-// mux-player는 자기 자신의 컨트롤(볼륨/자막/화질 등) 버튼을 눌렀을 때도
-// 이벤트가 media-controller까지 버블링되므로, e.target만으로는 "영상 자체를
-// 탭한 것"과 "버튼을 탭한 것"을 구분할 수 없다(shadow DOM 밖에서는 target이
-// 항상 <mux-player>로 재타겟팅됨). composedPath()의 가장 안쪽 요소로 실제
-// 클릭된 지점을 확인한다 - mux-player 내부 gesture 처리기도 같은 방식으로
-// "video"/"media-controller"인지를 검사해 순수 영상 탭만 골라낸다.
-function isPlainVideoSurfaceTarget(e: Event): boolean {
-  const innermost = e.composedPath()[0];
-  if (!(innermost instanceof Element)) return false;
-  return innermost.localName === "video" || innermost.localName === "media-controller";
 }
 
 export default function VideoPlayer({
@@ -66,10 +49,16 @@ export default function VideoPlayer({
   const [isGesturing, setIsGesturing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
-  // 넷플릭스 스타일 중앙 컨트롤(-10 / 재생·일시정지 / +10) 노출 여부.
-  // mux-player 자체 중앙 버튼은 globals.css에서 항상 숨기고, 이 버튼들로
-  // 완전히 대체한다.
-  const [controlsVisible, setControlsVisible] = useState(false);
+  // mux-player가 "사용자 비활성"으로 판단했는지 여부. mux-player 자신의
+  // 하단 컨트롤 바와 같은 타이밍에 나타났다 사라지게 하기 위해, 우리가
+  // 따로 탭을 감지해서 토글하지 않고 mux-player가 쏘는 userinactivechange
+  // 이벤트를 그대로 반영한다(아래 useEffect 참고) - 둘 다 같은 신호를
+  // 보는 셈이라 항상 같이 움직인다.
+  const [mediaInactive, setMediaInactive] = useState(false);
+  // mux-player는 일시정지 중엔 userinactive여도 자기 컨트롤을 CSS로 계속
+  // 보여준다(재생 중에만 자동 숨김). 우리 넷플릭스식 컨트롤도 똑같은
+  // 규칙을 따라야 진짜로 같이 움직인다.
+  const controlsVisible = isPaused || !mediaInactive;
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -89,13 +78,6 @@ export default function VideoPlayer({
     startY: number;
     startTranslate: { x: number; y: number };
   } | null>(null);
-  // 확대하지 않은 상태에서 한 손가락 탭 시작 위치를 기억해뒀다가, 손을 뗄 때
-  // 크게 움직이지 않았으면 "탭"으로 인정한다(스크롤/드래그와 구분).
-  const tapStartRef = useRef<{ x: number; y: number } | null>(null);
-  const touchHandledAtRef = useRef(0);
-  const controlsHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
   const clampTranslate = useCallback(
     (t: { x: number; y: number }, s: number) => {
@@ -139,63 +121,34 @@ export default function VideoPlayer({
     );
   }, []);
 
-  const clearAutoHideTimer = useCallback(() => {
-    if (controlsHideTimeoutRef.current) {
-      clearTimeout(controlsHideTimeoutRef.current);
-      controlsHideTimeoutRef.current = null;
-    }
-  }, []);
-
-  // 재생 중일 때만 일정 시간 후 자동으로 숨긴다. 일시정지 중에는 계속
-  // 보여줘야 다시 재생할 방법이 사라지지 않는다.
-  const scheduleAutoHide = useCallback(
-    (paused: boolean) => {
-      clearAutoHideTimer();
-      if (paused) return;
-      controlsHideTimeoutRef.current = setTimeout(() => {
-        setControlsVisible(false);
-      }, CONTROLS_AUTO_HIDE_MS);
-    },
-    [clearAutoHideTimer],
-  );
-
-  const toggleControls = useCallback(() => {
-    setControlsVisible((prev) => {
-      const next = !prev;
-      if (next) {
-        scheduleAutoHide(playerRef.current?.paused ?? true);
-      } else {
-        clearAutoHideTimer();
-      }
-      return next;
-    });
-  }, [scheduleAutoHide, clearAutoHideTimer]);
-
   const togglePlayPause = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
-    const wasPaused = player.paused;
-    if (wasPaused) {
+    if (player.paused) {
       player.play();
     } else {
       player.pause();
     }
-    scheduleAutoHide(!wasPaused);
-  }, [scheduleAutoHide]);
+  }, []);
 
-  const seekAndKeepControls = useCallback(
-    (deltaSeconds: number) => {
-      seekBy(deltaSeconds);
-      scheduleAutoHide(playerRef.current?.paused ?? true);
-    },
-    [seekBy, scheduleAutoHide],
-  );
-
+  // mux-player 자신의 하단 컨트롤 바는 자체적으로 탭/호버에 따라 표시·자동
+  // 숨김을 관리한다(일시정지 중엔 안 숨는 것까지 포함). 우리 중앙 컨트롤을
+  // 별도 타이머로 독립적으로 열고 닫으면 서로 다른 타이밍에 나타났다
+  // 사라져 따로 노는 것처럼 보이므로, mux-player가 상태를 바꿀 때마다
+  // 쏘는 userinactivechange 이벤트를 그대로 반영해 항상 같이 움직이게 한다.
   useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    function handleUserInactiveChange(e: Event) {
+      setMediaInactive(Boolean((e as CustomEvent<boolean>).detail));
+    }
+
+    player.addEventListener("userinactivechange", handleUserInactiveChange);
     return () => {
-      clearAutoHideTimer();
+      player.removeEventListener("userinactivechange", handleUserInactiveChange);
     };
-  }, [clearAutoHideTimer]);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -215,18 +168,12 @@ export default function VideoPlayer({
           startScale: scaleRef.current,
         };
         panRef.current = null;
-        tapStartRef.current = null;
       } else if (e.touches.length === 1 && scaleRef.current > 1) {
         setIsGesturing(true);
         panRef.current = {
           startX: e.touches[0].clientX,
           startY: e.touches[0].clientY,
           startTranslate: translateRef.current,
-        };
-      } else if (e.touches.length === 1) {
-        tapStartRef.current = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
         };
       }
     }
@@ -253,45 +200,9 @@ export default function VideoPlayer({
     }
 
     function handleTouchEnd(e: TouchEvent) {
-      if (
-        tapStartRef.current &&
-        scaleRef.current === 1 &&
-        e.touches.length === 0 &&
-        e.changedTouches.length === 1
-      ) {
-        const touch = e.changedTouches[0];
-        const dx = touch.clientX - tapStartRef.current.x;
-        const dy = touch.clientY - tapStartRef.current.y;
-        if (
-          Math.hypot(dx, dy) < TAP_MOVE_THRESHOLD_PX &&
-          isPlainVideoSurfaceTarget(e)
-        ) {
-          // 순수 영상 영역 탭 확정: 우리 넷플릭스식 컨트롤만 토글한다.
-          // mux-player 자체의 재생/정지 토글(데스크톱 클릭 시 발생)이나
-          // 컨트롤 표시 토글(모바일 pointerup)과는 겹치지 않도록 막는다.
-          e.preventDefault();
-          e.stopPropagation();
-          touchHandledAtRef.current = Date.now();
-          toggleControls();
-        }
-      }
-      tapStartRef.current = null;
       if (e.touches.length < 2) pinchRef.current = null;
       if (e.touches.length < 1) panRef.current = null;
       if (e.touches.length === 0) setIsGesturing(false);
-    }
-
-    // 데스크톱 클릭. capture 단계에서 가로채 stopPropagation하지 않으면
-    // mux-player 자체의 "클릭하면 재생/정지" 제스처가 같이 반응해서, 컨트롤을
-    // 열어보려는 탭만으로도 영상이 멈춰버린다. 순수 영상 영역 클릭일 때만
-    // 가로채고, 버튼(자막/볼륨/화질 등) 클릭은 그대로 mux-player가 처리하게
-    // 둔다.
-    function handleClick(e: MouseEvent) {
-      if (scaleRef.current > 1) return;
-      if (Date.now() - touchHandledAtRef.current < TOUCH_CLICK_GUARD_MS) return;
-      if (!isPlainVideoSurfaceTarget(e)) return;
-      e.stopPropagation();
-      toggleControls();
     }
 
     el.addEventListener("wheel", handleWheel, { passive: false });
@@ -299,7 +210,6 @@ export default function VideoPlayer({
     el.addEventListener("touchmove", handleTouchMove, { passive: false });
     el.addEventListener("touchend", handleTouchEnd);
     el.addEventListener("touchcancel", handleTouchEnd);
-    el.addEventListener("click", handleClick, { capture: true });
 
     return () => {
       el.removeEventListener("wheel", handleWheel);
@@ -307,9 +217,8 @@ export default function VideoPlayer({
       el.removeEventListener("touchmove", handleTouchMove);
       el.removeEventListener("touchend", handleTouchEnd);
       el.removeEventListener("touchcancel", handleTouchEnd);
-      el.removeEventListener("click", handleClick, { capture: true });
     };
-  }, [applyScale, clampTranslate, toggleControls]);
+  }, [applyScale, clampTranslate]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -407,7 +316,7 @@ export default function VideoPlayer({
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-6">
           <button
             type="button"
-            onClick={() => seekAndKeepControls(-SEEK_SECONDS)}
+            onClick={() => seekBy(-SEEK_SECONDS)}
             className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={`${SEEK_SECONDS}초 뒤로`}
           >
@@ -427,7 +336,7 @@ export default function VideoPlayer({
           </button>
           <button
             type="button"
-            onClick={() => seekAndKeepControls(SEEK_SECONDS)}
+            onClick={() => seekBy(SEEK_SECONDS)}
             className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={`${SEEK_SECONDS}초 앞으로`}
           >
