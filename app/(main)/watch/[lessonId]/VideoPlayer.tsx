@@ -58,6 +58,11 @@ export default function VideoPlayer({
   // 영역이라 처음엔 그대로 둬야 하고, 최초 재생 이후에만 globals.css에서
   // 숨긴다(탭할 때마다 다시 나타나 이동 표시와 겹쳐 보이는 걸 막기 위함).
   const [hasPlayed, setHasPlayed] = useState(false);
+  // 탭 한 번이 싱글탭인지 더블탭의 첫 탭인지 아직 모르는 동안에는 mux-player의
+  // 중앙 재생/일시정지 버튼을 잠시 숨긴다. 더블탭으로 확정되면 이동 표시가
+  // 끝날 때까지 계속 숨겨서 두 표시가 겹쳐 보이는 걸 막고, 싱글탭으로
+  // 확정되면(DOUBLE_TAP_MAX_INTERVAL_MS 후) 그제야 보여준다.
+  const [suppressCenterButton, setSuppressCenterButton] = useState(false);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -95,6 +100,9 @@ export default function VideoPlayer({
   const seekFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const suppressCenterButtonTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const clampTranslate = useCallback(
     (t: { x: number; y: number }, s: number) => {
@@ -159,9 +167,25 @@ export default function VideoPlayer({
     [seekBy, flashSeek],
   );
 
+  // delayMs 후에 mux-player 중앙 버튼 숨김을 해제한다. 그 전에 다시 호출되면
+  // 타이머를 뒤로 미룬다(더블탭의 두 번째 탭이 오면 이동 표시가 끝날 때까지
+  // 계속 숨겨야 하므로).
+  const suppressCenterButtonThenReveal = useCallback((delayMs: number) => {
+    setSuppressCenterButton(true);
+    if (suppressCenterButtonTimeoutRef.current) {
+      clearTimeout(suppressCenterButtonTimeoutRef.current);
+    }
+    suppressCenterButtonTimeoutRef.current = setTimeout(() => {
+      setSuppressCenterButton(false);
+    }, delayMs);
+  }, []);
+
   useEffect(() => {
     return () => {
       if (seekFlashTimeoutRef.current) clearTimeout(seekFlashTimeoutRef.current);
+      if (suppressCenterButtonTimeoutRef.current) {
+        clearTimeout(suppressCenterButtonTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -236,16 +260,19 @@ export default function VideoPlayer({
             lastTapRef.current &&
             now - lastTapRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS
           ) {
-            // 더블탭 완성: 이동만 처리하고, 한 번 탭에 대해서는 아무
-            // 것도 하지 않는다 (mux-player 기본 컨트롤 표시만 그대로 둠).
+            // 더블탭 완성: 이동 표시가 끝날 때까지 mux-player 중앙 버튼을
+            // 계속 숨겨서 두 표시가 겹쳐 보이지 않게 한다.
             e.preventDefault();
             touchHandledAtRef.current = Date.now();
             seekFromTapPosition(touch.clientX);
+            suppressCenterButtonThenReveal(SEEK_FLASH_DURATION_MS);
             lastTapRef.current = null;
           } else {
             // 아직은 싱글탭일 수도, 더블탭의 첫 탭일 수도 있다. 더블탭
-            // 판정을 위해 시각만 기록해두고 별도 동작은 하지 않는다.
+            // 판정을 위해 시각만 기록해두고, 그 사이엔 mux-player 중앙
+            // 버튼을 숨겨둔다 - 싱글탭으로 확정되면(타이머 만료) 보여준다.
             lastTapRef.current = { x: touch.clientX, time: now };
+            suppressCenterButtonThenReveal(DOUBLE_TAP_MAX_INTERVAL_MS);
           }
         }
       }
@@ -307,7 +334,7 @@ export default function VideoPlayer({
       el.removeEventListener("dblclick", handleDoubleClick, { capture: true });
       el.removeEventListener("pointerup", handlePointerUp, { capture: true });
     };
-  }, [applyScale, clampTranslate, seekFromTapPosition]);
+  }, [applyScale, clampTranslate, seekFromTapPosition, suppressCenterButtonThenReveal]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -369,7 +396,9 @@ export default function VideoPlayer({
         isFullscreen
           ? "fixed inset-0 z-[100] flex items-center justify-center bg-black"
           : "relative overflow-hidden rounded-lg bg-black"
-      } ${hasPlayed ? "mux-has-played" : ""}`}
+      } ${hasPlayed ? "mux-has-played" : ""} ${
+        hasPlayed && suppressCenterButton ? "suppress-center-button" : ""
+      }`}
     >
       <div
         ref={containerRef}

@@ -52,6 +52,19 @@ mux-player::part(fullscreen) {
 }
 
 /*
+ * 모바일의 진짜 토글 버튼(위 주석 참고)은 살려뒀지만, 탭 한 번이 싱글탭인지
+ * 더블탭의 첫 탭인지 구분이 안 되는 짧은 순간에 mux-player가 먼저 컨트롤을
+ * 표시해버리면, 뒤이어 더블탭이 확정됐을 때 VideoPlayer.tsx의 10초 이동
+ * 표시와 화면 가운데서 겹쳐 보인다. VideoPlayer.tsx가 탭이 끝날 때마다
+ * 이 버튼을 잠깐 숨겼다가(suppress-center-button 클래스), 싱글탭으로
+ * 확정되면 그제야 보여주고, 더블탭으로 확정되면 이동 표시가 끝날 때까지
+ * 계속 숨겨서 항상 표시가 하나만 보이게 한다.
+ */
+.suppress-center-button mux-player::part(center play) {
+  display: none !important;
+}
+
+/*
  * Mux Player는 컨트롤러 자체 너비가 470px 미만이면(media-controller의
  * breakpointsm 속성이 안 붙음) 10초 이동/재생 속도/재생바 시간 표시 등을
  * CSS 변수로 숨긴다. 세로 모드 휴대폰 화면은 항상 이보다 좁아서 축소된
