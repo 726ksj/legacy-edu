@@ -4,6 +4,8 @@ import MuxPlayer, { type MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import {
   Maximize,
   Minimize,
+  Pause,
+  Play,
   RotateCcw,
   RotateCw,
   SkipBack,
@@ -15,10 +17,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
 const SEEK_SECONDS = 10;
-const DOUBLE_TAP_MAX_INTERVAL_MS = 300;
 const TAP_MOVE_THRESHOLD_PX = 12;
-const SEEK_FLASH_DURATION_MS = 650;
-const TOUCH_SEEK_GUARD_MS = 500;
+const CONTROLS_AUTO_HIDE_MS = 3000;
+// touchend 처리 직후 브라우저가 뒤이어 쏘는 합성 click을 또 처리하지
+// 않도록 무시하는 시간 (모바일에서 터치가 click으로 한 번 더 들어옴).
+const TOUCH_CLICK_GUARD_MS = 500;
 
 function clampScale(value: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
@@ -27,6 +30,18 @@ function clampScale(value: number) {
 function getTouchDistance(touches: TouchList) {
   const [a, b] = [touches[0], touches[1]];
   return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+
+// mux-player는 자기 자신의 컨트롤(볼륨/자막/화질 등) 버튼을 눌렀을 때도
+// 이벤트가 media-controller까지 버블링되므로, e.target만으로는 "영상 자체를
+// 탭한 것"과 "버튼을 탭한 것"을 구분할 수 없다(shadow DOM 밖에서는 target이
+// 항상 <mux-player>로 재타겟팅됨). composedPath()의 가장 안쪽 요소로 실제
+// 클릭된 지점을 확인한다 - mux-player 내부 gesture 처리기도 같은 방식으로
+// "video"/"media-controller"인지를 검사해 순수 영상 탭만 골라낸다.
+function isPlainVideoSurfaceTarget(e: Event): boolean {
+  const innermost = e.composedPath()[0];
+  if (!(innermost instanceof Element)) return false;
+  return innermost.localName === "video" || innermost.localName === "media-controller";
 }
 
 export default function VideoPlayer({
@@ -50,19 +65,11 @@ export default function VideoPlayer({
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [seekFlash, setSeekFlash] = useState<{
-    side: "left" | "right";
-    key: number;
-  } | null>(null);
-  // mux-player의 "재생 전" 가운데 버튼은 재생을 시작하는 유일한 큰 탭
-  // 영역이라 처음엔 그대로 둬야 하고, 최초 재생 이후에만 globals.css에서
-  // 숨긴다(탭할 때마다 다시 나타나 이동 표시와 겹쳐 보이는 걸 막기 위함).
-  const [hasPlayed, setHasPlayed] = useState(false);
-  // 탭 한 번이 싱글탭인지 더블탭의 첫 탭인지 아직 모르는 동안에는 mux-player의
-  // 중앙 재생/일시정지 버튼을 잠시 숨긴다. 더블탭으로 확정되면 이동 표시가
-  // 끝날 때까지 계속 숨겨서 두 표시가 겹쳐 보이는 걸 막고, 싱글탭으로
-  // 확정되면(DOUBLE_TAP_MAX_INTERVAL_MS 후) 그제야 보여준다.
-  const [suppressCenterButton, setSuppressCenterButton] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
+  // 넷플릭스 스타일 중앙 컨트롤(-10 / 재생·일시정지 / +10) 노출 여부.
+  // mux-player 자체 중앙 버튼은 globals.css에서 항상 숨기고, 이 버튼들로
+  // 완전히 대체한다.
+  const [controlsVisible, setControlsVisible] = useState(false);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -82,27 +89,13 @@ export default function VideoPlayer({
     startY: number;
     startTranslate: { x: number; y: number };
   } | null>(null);
-  // 확대하지 않은 상태에서 한 손가락 탭 위치/시각을 기억해뒀다가
-  // 짧은 시간 안에 같은 자리를 다시 탭하면 더블탭(좌우 10초 이동)으로 판정한다.
+  // 확대하지 않은 상태에서 한 손가락 탭 시작 위치를 기억해뒀다가, 손을 뗄 때
+  // 크게 움직이지 않았으면 "탭"으로 인정한다(스크롤/드래그와 구분).
   const tapStartRef = useRef<{ x: number; y: number } | null>(null);
-  const lastTapRef = useRef<{ x: number; time: number } | null>(null);
-  // 터치로 더블탭 이동을 처리한 시각을 기록해둔다. 일부 브라우저는
-  // touchend에서 preventDefault를 호출해도 뒤이어 합성 dblclick을 쏴서
-  // 아래 마우스 dblclick 핸들러가 또 반응해 20초씩 이동하는 문제가
-  // 있었다 - 방금 터치로 처리했다면 dblclick은 무조건 무시한다.
   const touchHandledAtRef = useRef(0);
-  // pointerup을 통한 mux-player 컨트롤 표시/숨김 차단은 touchend가
-  // pointerup보다 먼저 실행된다는 가정(touchHandledAtRef 참고)에
-  // 의존했는데, 실기기 디버그 카운터로 확인해보니 그 가정이 맞지
-  // 않아 전혀 차단되지 않고 있었다. touchend 쪽 상태에 기대지 않고
-  // pointerup 이벤트만으로 독립적으로 더블탭 여부를 판정한다.
-  const lastPointerUpRef = useRef<{ x: number; time: number } | null>(null);
-  const seekFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+  const controlsHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
-  const suppressCenterButtonTimeoutRef = useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
 
   const clampTranslate = useCallback(
     (t: { x: number; y: number }, s: number) => {
@@ -146,48 +139,63 @@ export default function VideoPlayer({
     );
   }, []);
 
-  const flashSeek = useCallback((side: "left" | "right") => {
-    setSeekFlash((prev) => ({ side, key: (prev?.key ?? 0) + 1 }));
-    if (seekFlashTimeoutRef.current) clearTimeout(seekFlashTimeoutRef.current);
-    seekFlashTimeoutRef.current = setTimeout(
-      () => setSeekFlash(null),
-      SEEK_FLASH_DURATION_MS,
-    );
+  const clearAutoHideTimer = useCallback(() => {
+    if (controlsHideTimeoutRef.current) {
+      clearTimeout(controlsHideTimeoutRef.current);
+      controlsHideTimeoutRef.current = null;
+    }
   }, []);
 
-  const seekFromTapPosition = useCallback(
-    (clientX: number) => {
-      const el = containerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const isLeft = clientX - rect.left < rect.width / 2;
-      seekBy(isLeft ? -SEEK_SECONDS : SEEK_SECONDS);
-      flashSeek(isLeft ? "left" : "right");
+  // 재생 중일 때만 일정 시간 후 자동으로 숨긴다. 일시정지 중에는 계속
+  // 보여줘야 다시 재생할 방법이 사라지지 않는다.
+  const scheduleAutoHide = useCallback(
+    (paused: boolean) => {
+      clearAutoHideTimer();
+      if (paused) return;
+      controlsHideTimeoutRef.current = setTimeout(() => {
+        setControlsVisible(false);
+      }, CONTROLS_AUTO_HIDE_MS);
     },
-    [seekBy, flashSeek],
+    [clearAutoHideTimer],
   );
 
-  // delayMs 후에 mux-player 중앙 버튼 숨김을 해제한다. 그 전에 다시 호출되면
-  // 타이머를 뒤로 미룬다(더블탭의 두 번째 탭이 오면 이동 표시가 끝날 때까지
-  // 계속 숨겨야 하므로).
-  const suppressCenterButtonThenReveal = useCallback((delayMs: number) => {
-    setSuppressCenterButton(true);
-    if (suppressCenterButtonTimeoutRef.current) {
-      clearTimeout(suppressCenterButtonTimeoutRef.current);
+  const toggleControls = useCallback(() => {
+    setControlsVisible((prev) => {
+      const next = !prev;
+      if (next) {
+        scheduleAutoHide(playerRef.current?.paused ?? true);
+      } else {
+        clearAutoHideTimer();
+      }
+      return next;
+    });
+  }, [scheduleAutoHide, clearAutoHideTimer]);
+
+  const togglePlayPause = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    const wasPaused = player.paused;
+    if (wasPaused) {
+      player.play();
+    } else {
+      player.pause();
     }
-    suppressCenterButtonTimeoutRef.current = setTimeout(() => {
-      setSuppressCenterButton(false);
-    }, delayMs);
-  }, []);
+    scheduleAutoHide(!wasPaused);
+  }, [scheduleAutoHide]);
+
+  const seekAndKeepControls = useCallback(
+    (deltaSeconds: number) => {
+      seekBy(deltaSeconds);
+      scheduleAutoHide(playerRef.current?.paused ?? true);
+    },
+    [seekBy, scheduleAutoHide],
+  );
 
   useEffect(() => {
     return () => {
-      if (seekFlashTimeoutRef.current) clearTimeout(seekFlashTimeoutRef.current);
-      if (suppressCenterButtonTimeoutRef.current) {
-        clearTimeout(suppressCenterButtonTimeoutRef.current);
-      }
+      clearAutoHideTimer();
     };
-  }, []);
+  }, [clearAutoHideTimer]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -254,26 +262,17 @@ export default function VideoPlayer({
         const touch = e.changedTouches[0];
         const dx = touch.clientX - tapStartRef.current.x;
         const dy = touch.clientY - tapStartRef.current.y;
-        if (Math.hypot(dx, dy) < TAP_MOVE_THRESHOLD_PX) {
-          const now = Date.now();
-          if (
-            lastTapRef.current &&
-            now - lastTapRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS
-          ) {
-            // 더블탭 완성: 이동 표시가 끝날 때까지 mux-player 중앙 버튼을
-            // 계속 숨겨서 두 표시가 겹쳐 보이지 않게 한다.
-            e.preventDefault();
-            touchHandledAtRef.current = Date.now();
-            seekFromTapPosition(touch.clientX);
-            suppressCenterButtonThenReveal(SEEK_FLASH_DURATION_MS);
-            lastTapRef.current = null;
-          } else {
-            // 아직은 싱글탭일 수도, 더블탭의 첫 탭일 수도 있다. 더블탭
-            // 판정을 위해 시각만 기록해두고, 그 사이엔 mux-player 중앙
-            // 버튼을 숨겨둔다 - 싱글탭으로 확정되면(타이머 만료) 보여준다.
-            lastTapRef.current = { x: touch.clientX, time: now };
-            suppressCenterButtonThenReveal(DOUBLE_TAP_MAX_INTERVAL_MS);
-          }
+        if (
+          Math.hypot(dx, dy) < TAP_MOVE_THRESHOLD_PX &&
+          isPlainVideoSurfaceTarget(e)
+        ) {
+          // 순수 영상 영역 탭 확정: 우리 넷플릭스식 컨트롤만 토글한다.
+          // mux-player 자체의 재생/정지 토글(데스크톱 클릭 시 발생)이나
+          // 컨트롤 표시 토글(모바일 pointerup)과는 겹치지 않도록 막는다.
+          e.preventDefault();
+          e.stopPropagation();
+          touchHandledAtRef.current = Date.now();
+          toggleControls();
         }
       }
       tapStartRef.current = null;
@@ -282,39 +281,17 @@ export default function VideoPlayer({
       if (e.touches.length === 0) setIsGesturing(false);
     }
 
-    // 데스크톱에서도 더블클릭으로 10초 이동을 지원한다. capture 단계에서
-    // 가로채 stopPropagation하지 않으면 mux-player 자체의 더블클릭 핸들러가
-    // 함께 반응할 수 있다. 방금 터치 더블탭으로 이미 처리했다면(모바일
-    // 브라우저가 뒤이어 합성 dblclick을 쐈을 뿐이므로) 여기서는 무시한다.
-    function handleDoubleClick(e: MouseEvent) {
+    // 데스크톱 클릭. capture 단계에서 가로채 stopPropagation하지 않으면
+    // mux-player 자체의 "클릭하면 재생/정지" 제스처가 같이 반응해서, 컨트롤을
+    // 열어보려는 탭만으로도 영상이 멈춰버린다. 순수 영상 영역 클릭일 때만
+    // 가로채고, 버튼(자막/볼륨/화질 등) 클릭은 그대로 mux-player가 처리하게
+    // 둔다.
+    function handleClick(e: MouseEvent) {
       if (scaleRef.current > 1) return;
-      if (Date.now() - touchHandledAtRef.current < TOUCH_SEEK_GUARD_MS) return;
+      if (Date.now() - touchHandledAtRef.current < TOUCH_CLICK_GUARD_MS) return;
+      if (!isPlainVideoSurfaceTarget(e)) return;
       e.stopPropagation();
-      seekFromTapPosition(e.clientX);
-    }
-
-    // mux-player의 컨트롤 표시/숨김 토글은 click이 아니라 media-controller에
-    // 직접 붙는 pointerup(pointerType: touch)으로 동작해서, touchend에서
-    // preventDefault를 해도 전혀 영향을 못 준다. 컨트롤이 이미 보이는
-    // 상태에서 탭하면 다시 숨겨버리는데, 이게 더블탭의 두 번째 탭에서도
-    // 그대로 발생해 "표시→숨김"이 우리 이동 표시와 겹쳐 깜빡이는 것처럼
-    // 보였다. touchend가 이 pointerup보다 먼저 실행된다고 가정하고
-    // touchHandledAtRef를 참조했었는데, 실기기에서는 순서가 보장되지
-    // 않아 전혀 차단되지 않았다 - touchend 상태에 기대지 않고
-    // pointerup 이벤트만으로 독립적으로 더블탭 여부를 판정한다.
-    function handlePointerUp(e: PointerEvent) {
-      if (e.pointerType !== "touch") return;
-      const now = Date.now();
-      const isDoubleTap =
-        lastPointerUpRef.current &&
-        now - lastPointerUpRef.current.time < DOUBLE_TAP_MAX_INTERVAL_MS &&
-        Math.abs(e.clientX - lastPointerUpRef.current.x) < TAP_MOVE_THRESHOLD_PX * 3;
-      if (isDoubleTap) {
-        e.stopPropagation();
-        lastPointerUpRef.current = null;
-      } else {
-        lastPointerUpRef.current = { x: e.clientX, time: now };
-      }
+      toggleControls();
     }
 
     el.addEventListener("wheel", handleWheel, { passive: false });
@@ -322,8 +299,7 @@ export default function VideoPlayer({
     el.addEventListener("touchmove", handleTouchMove, { passive: false });
     el.addEventListener("touchend", handleTouchEnd);
     el.addEventListener("touchcancel", handleTouchEnd);
-    el.addEventListener("dblclick", handleDoubleClick, { capture: true });
-    el.addEventListener("pointerup", handlePointerUp, { capture: true });
+    el.addEventListener("click", handleClick, { capture: true });
 
     return () => {
       el.removeEventListener("wheel", handleWheel);
@@ -331,10 +307,9 @@ export default function VideoPlayer({
       el.removeEventListener("touchmove", handleTouchMove);
       el.removeEventListener("touchend", handleTouchEnd);
       el.removeEventListener("touchcancel", handleTouchEnd);
-      el.removeEventListener("dblclick", handleDoubleClick, { capture: true });
-      el.removeEventListener("pointerup", handlePointerUp, { capture: true });
+      el.removeEventListener("click", handleClick, { capture: true });
     };
-  }, [applyScale, clampTranslate, seekFromTapPosition, suppressCenterButtonThenReveal]);
+  }, [applyScale, clampTranslate, toggleControls]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -392,13 +367,11 @@ export default function VideoPlayer({
 
   return (
     <div
-      className={`${
+      className={
         isFullscreen
           ? "fixed inset-0 z-[100] flex items-center justify-center bg-black"
           : "relative overflow-hidden rounded-lg bg-black"
-      } ${hasPlayed ? "mux-has-played" : ""} ${
-        hasPlayed && suppressCenterButton ? "suppress-center-button" : ""
-      }`}
+      }
     >
       <div
         ref={containerRef}
@@ -423,27 +396,43 @@ export default function VideoPlayer({
             streamType="on-demand"
             metadata={{ video_title: title }}
             defaultHiddenCaptions
-            onPlay={() => setHasPlayed(true)}
+            onPlay={() => setIsPaused(false)}
+            onPause={() => setIsPaused(true)}
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
         </div>
       </div>
 
-      {seekFlash && (
-        <div
-          key={seekFlash.key}
-          className={`pointer-events-none absolute inset-y-0 z-10 flex w-1/2 items-center justify-center ${
-            seekFlash.side === "left" ? "left-0" : "right-0"
-          }`}
-        >
-          <div className="animate-seek-flash flex flex-col items-center gap-1 rounded-full bg-black/60 px-5 py-4 text-white">
-            {seekFlash.side === "left" ? (
-              <RotateCcw className="h-6 w-6" />
+      {controlsVisible && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-6">
+          <button
+            type="button"
+            onClick={() => seekAndKeepControls(-SEEK_SECONDS)}
+            className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            aria-label={`${SEEK_SECONDS}초 뒤로`}
+          >
+            <RotateCcw className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={togglePlayPause}
+            className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            aria-label={isPaused ? "재생" : "일시정지"}
+          >
+            {isPaused ? (
+              <Play className="h-7 w-7" />
             ) : (
-              <RotateCw className="h-6 w-6" />
+              <Pause className="h-7 w-7" />
             )}
-            <span className="text-xs font-semibold">{SEEK_SECONDS}초</span>
-          </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => seekAndKeepControls(SEEK_SECONDS)}
+            className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            aria-label={`${SEEK_SECONDS}초 앞으로`}
+          >
+            <RotateCw className="h-5 w-5" />
+          </button>
         </div>
       )}
 
