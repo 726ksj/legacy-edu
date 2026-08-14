@@ -2,7 +2,7 @@ import ConsultationForm from "./ConsultationForm";
 
 export default function ConsultationPage() {
   return (
-    <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-16 sm:px-6">
+    <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-16">
       <div className="flex flex-col gap-4">
         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
           Consultation

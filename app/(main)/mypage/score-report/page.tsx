@@ -12,7 +12,7 @@ const REPORT_LINKS = [
 
 export default function Page() {
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start justify-center px-4 py-20 sm:px-6">
+    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-start px-4 py-6 sm:px-6 sm:py-20">
       <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl">
         점수 리포트
       </h1>
