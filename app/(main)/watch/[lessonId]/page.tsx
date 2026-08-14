@@ -8,7 +8,7 @@ import {
 } from "@/lib/mux";
 import { isEnrolled } from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
-import QnaSection from "./QnaSection";
+import NoteSection from "./NoteSection";
 
 interface LessonRow {
   id: string;
@@ -58,7 +58,7 @@ export default async function WatchPage({
 
   // 셋 다 lesson.course_id/lessonId/user.id만 있으면 되고 서로 의존하지
   // 않으니 병렬로 요청한다.
-  const [enrolled, { data: allSiblings }, { data: questionRows }] =
+  const [enrolled, { data: allSiblings }, { data: noteRows }] =
     await Promise.all([
       isEnrolled(supabase, user.id, lesson.course_id),
       supabase
@@ -69,7 +69,7 @@ export default async function WatchPage({
         .returns<SiblingLesson[]>(),
       supabase
         .from("questions")
-        .select("id, content, answer, created_at")
+        .select("id, content, created_at")
         .eq("lesson_id", lessonId)
         .eq("profile_id", user.id)
         .order("created_at", { ascending: false }),
@@ -103,11 +103,10 @@ export default async function WatchPage({
     })),
   );
 
-  const questions = (questionRows ?? []).map((question) => ({
-    id: question.id,
-    content: question.content,
-    answer: question.answer,
-    createdAt: new Date(question.created_at).toLocaleString("ko-KR"),
+  const notes = (noteRows ?? []).map((note) => ({
+    id: note.id,
+    content: note.content,
+    createdAt: new Date(note.created_at).toLocaleString("ko-KR"),
   }));
 
   const currentIndex = upNext.findIndex((sibling) => sibling.id === lesson.id);
@@ -152,7 +151,7 @@ export default async function WatchPage({
           </div>
         )}
 
-        <QnaSection lessonId={lesson.id} questions={questions} />
+        <NoteSection lessonId={lesson.id} notes={notes} />
       </div>
 
       <aside className="flex w-full flex-col gap-3 lg:w-80 lg:shrink-0">

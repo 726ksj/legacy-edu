@@ -24,7 +24,7 @@ export default async function AdminLayout({
   const adminSupabase = createAdminClient();
 
   // 서로 무관한 두 집계 쿼리라 병렬로 요청한다.
-  const [{ data: newQuestion }, { count: pendingConsultationCount }] =
+  const [{ data: newNote }, { count: pendingConsultationCount }] =
     await Promise.all([
       adminSupabase
         .from("questions")
@@ -41,7 +41,7 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <AdminSidebar
-        hasNewQuestion={Boolean(newQuestion)}
+        hasNewNote={Boolean(newNote)}
         pendingConsultationCount={pendingConsultationCount ?? 0}
       />
       <div className="flex flex-1 flex-col bg-zinc-50">{children}</div>

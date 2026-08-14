@@ -1,12 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import AnswerForm from "./AnswerForm";
 
 export const dynamic = "force-dynamic";
 
-interface QuestionRow {
+interface NoteRow {
   id: string;
   content: string;
-  answer: string | null;
   question_read_at: string | null;
   created_at: string;
   lessons: {
@@ -21,23 +19,23 @@ interface QuestionRow {
 interface CourseGroup {
   subject: string;
   title: string;
-  items: QuestionRow[];
+  items: NoteRow[];
 }
 
 export default async function Page() {
   const supabase = createAdminClient();
 
-  const { data: questions, error } = await supabase
+  const { data: notes, error } = await supabase
     .from("questions")
     .select(
-      "id, content, answer, question_read_at, created_at, lessons(order_no, title, course_id, courses(subject, title)), profiles(name, username)",
+      "id, content, question_read_at, created_at, lessons(order_no, title, course_id, courses(subject, title)), profiles(name, username)",
     )
     .order("created_at", { ascending: false })
-    .returns<QuestionRow[]>();
+    .returns<NoteRow[]>();
 
-  const unreadIds = (questions ?? [])
-    .filter((q) => !q.question_read_at)
-    .map((q) => q.id);
+  const unreadIds = (notes ?? [])
+    .filter((n) => !n.question_read_at)
+    .map((n) => n.id);
 
   if (unreadIds.length > 0) {
     await supabase
@@ -47,9 +45,9 @@ export default async function Page() {
   }
 
   const groups = new Map<string, CourseGroup>();
-  for (const question of questions ?? []) {
-    const course = question.lessons?.courses;
-    const key = question.lessons?.course_id ?? "unknown";
+  for (const note of notes ?? []) {
+    const course = note.lessons?.courses;
+    const key = note.lessons?.course_id ?? "unknown";
     if (!groups.has(key)) {
       groups.set(key, {
         subject: course?.subject ?? "",
@@ -57,21 +55,14 @@ export default async function Page() {
         items: [],
       });
     }
-    groups.get(key)!.items.push(question);
+    groups.get(key)!.items.push(note);
   }
-
-  const unansweredCount = (questions ?? []).filter((q) => !q.answer).length;
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <h1 className="text-2xl font-bold text-zinc-900">Q&amp;A 답변 관리</h1>
+      <h1 className="text-2xl font-bold text-zinc-900">학생 메모 보기</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        학생이 강좌별로 남긴 질문에 답변하는 페이지입니다.
-        {unansweredCount > 0 && (
-          <span className="ml-2 font-semibold text-brand-dark">
-            미답변 {unansweredCount}건
-          </span>
-        )}
+        학생이 강좌별로 남긴 메모를 확인할 수 있는 페이지입니다.
       </p>
 
       {error && (
@@ -95,32 +86,28 @@ export default async function Page() {
               </span>
             </div>
             <div className="flex flex-col divide-y divide-zinc-100">
-              {group.items.map((question) => (
-                <div key={question.id} className="p-4">
+              {group.items.map((note) => (
+                <div key={note.id} className="p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-xs font-medium text-zinc-500">
-                      {question.lessons?.title}{" "}
-                      · {question.profiles?.name ?? "-"} (
-                      {question.profiles?.username ?? "-"})
+                      {note.lessons?.title}{" "}
+                      · {note.profiles?.name ?? "-"} (
+                      {note.profiles?.username ?? "-"})
                     </p>
                     <span className="shrink-0 text-xs text-zinc-400">
-                      {new Date(question.created_at).toLocaleString("ko-KR")}
+                      {new Date(note.created_at).toLocaleString("ko-KR")}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-zinc-900">
-                    {question.content}
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-900">
+                    {note.content}
                   </p>
-                  <AnswerForm
-                    questionId={question.id}
-                    existingAnswer={question.answer}
-                  />
                 </div>
               ))}
             </div>
           </div>
         ))}
-        {(!questions || questions.length === 0) && (
-          <p className="text-sm text-zinc-400">등록된 질문이 없습니다.</p>
+        {(!notes || notes.length === 0) && (
+          <p className="text-sm text-zinc-400">등록된 메모가 없습니다.</p>
         )}
       </div>
     </div>

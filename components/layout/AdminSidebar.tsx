@@ -18,15 +18,15 @@ const ADMIN_NAV_ITEMS = [
   { label: "강좌 관리", href: "/admin/courses" },
   { label: "수강 권한 관리", href: "/admin/enrollments" },
   { label: "학습 자료 관리", href: "/admin/materials" },
-  { label: "Q&A 답변 관리", href: "/admin/qna" },
+  { label: "학생 메모 보기", href: "/admin/notes" },
   { label: "FAQ 관리", href: "/admin/faqs" },
 ];
 
 export default function AdminSidebar({
-  hasNewQuestion = false,
+  hasNewNote = false,
   pendingConsultationCount = 0,
 }: {
-  hasNewQuestion?: boolean;
+  hasNewNote?: boolean;
   pendingConsultationCount?: number;
 }) {
   const pathname = usePathname();
@@ -103,7 +103,7 @@ export default function AdminSidebar({
                 )}
               >
                 {item.label}
-                {item.href === "/admin/qna" && hasNewQuestion && (
+                {item.href === "/admin/notes" && hasNewNote && (
                   <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                     NEW
                   </span>

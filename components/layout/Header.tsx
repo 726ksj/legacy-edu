@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import MobileNav from "./MobileNav";
 
@@ -65,20 +65,6 @@ export default async function Header() {
     Boolean(process.env.ADMIN_USERNAME) &&
     user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
 
-  let hasUnreadQna = false;
-  if (user) {
-    const supabase = await createClient();
-    const { data: unreadAnswer } = await supabase
-      .from("questions")
-      .select("id")
-      .eq("profile_id", user.id)
-      .not("answer", "is", null)
-      .is("answer_read_at", null)
-      .limit(1)
-      .maybeSingle();
-    hasUnreadQna = Boolean(unreadAnswer);
-  }
-
   const navItems: NavItem[] = [
     ...NAV_ITEMS,
     {
@@ -86,7 +72,6 @@ export default async function Header() {
       href: isAdmin ? "/admin" : "/mypage",
       children: [
         { label: "나의 강좌", href: "/my-classroom" },
-        { label: "나의 Q&A", href: "/my-qna", badge: hasUnreadQna },
         { label: "나의 메모", href: "/mypage/notes" },
         { label: "장바구니", href: "/mypage/cart" },
         { label: "점수 리포트", href: "/mypage/score-report" },
