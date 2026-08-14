@@ -98,7 +98,7 @@ export default async function WatchPage({
     (siblingLessons ?? []).map(async (sibling) => ({
       ...sibling,
       thumbnailUrl: sibling.mux_playback_id
-        ? `https://image.mux.com/${sibling.mux_playback_id}/thumbnail.jpg?width=320&token=${await signThumbnailToken(sibling.mux_playback_id)}`
+        ? `https://image.mux.com/${sibling.mux_playback_id}/thumbnail.jpg?width=320&time=0&token=${await signThumbnailToken(sibling.mux_playback_id)}`
         : null,
     })),
   );
