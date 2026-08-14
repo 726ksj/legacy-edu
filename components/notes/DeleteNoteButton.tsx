@@ -13,6 +13,7 @@ export default function DeleteNoteButton({
           e.preventDefault();
         }
       }}
+      className="contents"
     >
       <button
         type="submit"

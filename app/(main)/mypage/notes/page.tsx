@@ -56,8 +56,15 @@ export default async function MyNotesPage() {
     groups.get(key)!.items.push(note);
   }
 
+  // 강좌 안에서는 최신순이 아니라 차시 순서(1강, 2강, ...)대로 보여준다.
+  for (const group of groups.values()) {
+    group.items.sort(
+      (a, b) => (a.lessons?.order_no ?? 0) - (b.lessons?.order_no ?? 0),
+    );
+  }
+
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-16 sm:px-6">
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-16">
       <div>
         <h1 className="text-3xl font-bold text-zinc-900">나의 메모</h1>
         <p className="mt-2 text-sm text-zinc-500">

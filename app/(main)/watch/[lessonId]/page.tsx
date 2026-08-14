@@ -119,7 +119,7 @@ export default async function WatchPage({
     undefined;
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-16 sm:px-6 lg:flex-row lg:items-start">
+    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-16 lg:flex-row lg:items-start">
       <div className="flex flex-1 flex-col gap-4">
         <div>
           {course && (
