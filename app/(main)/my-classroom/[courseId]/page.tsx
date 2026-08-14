@@ -14,7 +14,6 @@ interface Course {
   id: string;
   subject: string;
   title: string;
-  teacher_name: string;
   overview: string | null;
   thumbnail_url: string | null;
   instructors: Instructor | null;
@@ -48,7 +47,7 @@ export default async function CourseClassroomPage({
     supabase
       .from("courses")
       .select(
-        "id, subject, title, teacher_name, overview, thumbnail_url, instructors(name, photo_url, bio)",
+        "id, subject, title, overview, thumbnail_url, instructors(name, photo_url, bio)",
       )
       .eq("id", courseId)
       .maybeSingle()
@@ -92,40 +91,40 @@ export default async function CourseClassroomPage({
         <h1 className="mt-1 text-3xl font-bold text-zinc-900 sm:text-4xl">
           {course.title}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {course.teacher_name} 선생님
-        </p>
+        {course.overview && (
+          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-600">
+            {course.overview}
+          </p>
+        )}
       </div>
 
-      {(course.thumbnail_url || course.overview) && (
-        <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6 sm:flex-row">
-          {course.thumbnail_url && (
-            <div className="aspect-video w-full shrink-0 overflow-hidden rounded-md bg-zinc-100 sm:w-56">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={course.thumbnail_url}
-                alt={course.title}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          )}
-          {course.overview && (
-            <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-600">
-              {course.overview}
-            </p>
-          )}
+      {course.thumbnail_url && (
+        <div className="aspect-video w-full overflow-hidden rounded-lg bg-zinc-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={course.thumbnail_url}
+            alt={course.title}
+            className="h-full w-full object-cover"
+          />
         </div>
       )}
 
       <div>
-        <h2 className="text-lg font-bold text-zinc-900">커리큘럼</h2>
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-lg font-bold text-zinc-900">커리큘럼</h2>
+          {lessons && lessons.length > 0 && (
+            <span className="text-xs text-zinc-400">
+              총 {lessons.length}개 차시
+            </span>
+          )}
+        </div>
         <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
           {(!lessons || lessons.length === 0) && (
             <p className="px-6 py-8 text-center text-sm text-zinc-400">
               아직 업로드된 영상이 없습니다.
             </p>
           )}
-          <ul className="divide-y divide-zinc-100">
+          <ul className="max-h-[26rem] divide-y divide-zinc-100 overflow-y-auto">
             {lessons?.map((lesson) => (
               <li key={lesson.id}>
                 <Link
