@@ -1,4 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { updateNote } from "./actions";
+import NoteCard from "@/components/notes/NoteCard";
 
 export const dynamic = "force-dynamic";
 
@@ -85,23 +87,25 @@ export default async function Page() {
                 {group.items.length}건
               </span>
             </div>
-            <div className="flex flex-col divide-y divide-zinc-100">
+            <div className="flex flex-col gap-3 bg-zinc-50 p-4">
               {group.items.map((note) => (
-                <div key={note.id} className="p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-medium text-zinc-500">
-                      {note.lessons?.title}{" "}
-                      · {note.profiles?.name ?? "-"} (
-                      {note.profiles?.username ?? "-"})
-                    </p>
-                    <span className="shrink-0 text-xs text-zinc-400">
-                      {new Date(note.created_at).toLocaleString("ko-KR")}
-                    </span>
-                  </div>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-900">
-                    {note.content}
-                  </p>
-                </div>
+                <NoteCard
+                  key={note.id}
+                  content={note.content}
+                  updateAction={updateNote.bind(null, note.id, {})}
+                  header={
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-medium text-zinc-500">
+                        {note.lessons?.title}{" "}
+                        · {note.profiles?.name ?? "-"} (
+                        {note.profiles?.username ?? "-"})
+                      </p>
+                      <span className="shrink-0 text-xs text-zinc-400">
+                        {new Date(note.created_at).toLocaleString("ko-KR")}
+                      </span>
+                    </div>
+                  }
+                />
               ))}
             </div>
           </div>

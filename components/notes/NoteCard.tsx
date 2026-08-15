@@ -17,7 +17,7 @@ export default function NoteCard({
 }: {
   content: string;
   updateAction: (formData: FormData) => Promise<UpdateNoteResult>;
-  deleteAction: () => Promise<void>;
+  deleteAction?: () => Promise<void>;
   header?: ReactNode;
   footer?: ReactNode;
 }) {
@@ -88,7 +88,7 @@ export default function NoteCard({
               >
                 수정
               </button>
-              <DeleteNoteButton action={deleteAction} />
+              {deleteAction && <DeleteNoteButton action={deleteAction} />}
             </div>
           </div>
           {footer}
