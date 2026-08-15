@@ -7,18 +7,15 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ADMIN_NAV_ITEMS = [
-  { label: "대시보드", href: "/admin" },
   { label: "홈/소개 문구 관리", href: "/admin/content" },
   { label: "상담 신청 관리", href: "/admin/consultations" },
   { label: "학생코드 관리", href: "/admin/student-codes" },
   { label: "회원 관리", href: "/admin/users" },
-  { label: "공지/이벤트 관리", href: "/admin/notices" },
-  { label: "수강생 리뷰 관리", href: "/admin/reviews" },
+  { label: "고객센터 관리", href: "/admin/notices" },
+  { label: "수강생 Review 관리", href: "/admin/reviews" },
   { label: "강사 관리", href: "/admin/instructors" },
   { label: "강좌 관리", href: "/admin/courses" },
   { label: "수강 권한 관리", href: "/admin/enrollments" },
-  { label: "학습 자료 관리", href: "/admin/materials" },
-  { label: "학생 메모 보기", href: "/admin/notes" },
   { label: "FAQ 관리", href: "/admin/faqs" },
 ];
 
@@ -85,10 +82,7 @@ export default function AdminSidebar({
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {ADMIN_NAV_ITEMS.map((item) => {
-            const isActive =
-              item.href === "/admin"
-                ? pathname === "/admin"
-                : pathname.startsWith(item.href);
+            const isActive = pathname.startsWith(item.href);
 
             return (
               <Link
@@ -103,7 +97,7 @@ export default function AdminSidebar({
                 )}
               >
                 {item.label}
-                {item.href === "/admin/notes" && hasNewNote && (
+                {item.href === "/admin/users" && hasNewNote && (
                   <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                     NEW
                   </span>

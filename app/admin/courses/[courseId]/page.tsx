@@ -50,12 +50,18 @@ export default async function Page({
         <EditCourseForm course={course} instructors={instructors ?? []} />
       </div>
 
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-6 flex max-w-2xl flex-col gap-2">
         <Link
           href={`/admin/courses/${course.id}/lessons`}
           className="text-sm font-semibold text-brand-dark hover:underline"
         >
           차시 관리로 이동 →
+        </Link>
+        <Link
+          href={`/admin/courses/${course.id}/materials`}
+          className="text-sm font-semibold text-brand-dark hover:underline"
+        >
+          학습 자료 관리로 이동 →
         </Link>
       </div>
 

@@ -69,6 +69,8 @@ export async function deleteEnrollment(id: string) {
   }
 
   revalidatePath("/admin/enrollments");
-  revalidatePath("/admin/notes");
   revalidatePath("/mypage/notes");
+  if (enrollment) {
+    revalidatePath(`/admin/users/${enrollment.profile_id}`);
+  }
 }
