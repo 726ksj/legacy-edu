@@ -130,7 +130,7 @@ export default async function Page({
         <ResetPasswordForm userId={user.id} />
       </div>
 
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-6 max-w-lg">
         <h2 className="text-lg font-bold text-zinc-900">수강 중인 강좌</h2>
         <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
           {(!enrollments || enrollments.length === 0) && (
@@ -167,7 +167,7 @@ export default async function Page({
         </div>
       </div>
 
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-6 max-w-lg">
         <h2 className="text-lg font-bold text-zinc-900">메모장</h2>
         <div className="mt-3 flex flex-col gap-3">
           {(!notes || notes.length === 0) && (
@@ -196,7 +196,7 @@ export default async function Page({
         </div>
       </div>
 
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-6 max-w-lg">
         <h2 className="text-lg font-bold text-zinc-900">리포트</h2>
         <div className="mt-3 flex flex-col gap-4">
           {REPORT_TYPES.map((reportType) => (
