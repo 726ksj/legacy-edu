@@ -27,7 +27,7 @@ export default function ResetPasswordForm({ userId }: { userId: string }) {
       </p>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         새 비밀번호
-        <div className="flex gap-2">
+        <div className="flex max-w-sm gap-2">
           <input
             ref={inputRef}
             name="password"

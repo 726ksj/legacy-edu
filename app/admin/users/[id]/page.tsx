@@ -122,52 +122,80 @@ export default async function Page({
         {new Date(user.created_at).toLocaleString("ko-KR")}
       </p>
 
-      <div className="mt-6 max-w-lg">
-        <EditUserForm user={user} />
-      </div>
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="flex flex-col gap-6">
+          <div>
+            <h2 className="text-lg font-bold text-zinc-900">회원 정보</h2>
+            <div className="mt-3">
+              <EditUserForm user={user} />
+            </div>
+          </div>
 
-      <div className="mt-6 max-w-lg">
-        <ResetPasswordForm userId={user.id} />
-      </div>
+          <div>
+            <h2 className="text-lg font-bold text-zinc-900">비밀번호 초기화</h2>
+            <div className="mt-3">
+              <ResetPasswordForm userId={user.id} />
+            </div>
+          </div>
+        </div>
 
-      <div className="mt-6 max-w-lg">
-        <h2 className="text-lg font-bold text-zinc-900">수강 중인 강좌</h2>
-        <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
-          {(!enrollments || enrollments.length === 0) && (
-            <p className="px-4 py-6 text-center text-sm text-zinc-400">
-              수강 중인 강좌가 없습니다.
-            </p>
-          )}
-          {enrollments && enrollments.length > 0 && (
-            <ul className="divide-y divide-zinc-100">
-              {enrollments.map((enrollment) => (
-                <li
-                  key={enrollment.id}
-                  className="flex items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-zinc-900">
-                      [{enrollment.courses?.subject}]{" "}
-                      {enrollment.courses?.title}
-                    </p>
-                    <p className="text-xs text-zinc-400">
-                      등록일{" "}
-                      {new Date(enrollment.enrolled_at).toLocaleString(
-                        "ko-KR",
-                      )}
-                    </p>
-                  </div>
-                  <DeleteEnrollmentButton
-                    action={deleteEnrollment.bind(null, enrollment.id)}
-                  />
-                </li>
+        <div className="flex flex-col gap-6">
+          <div>
+            <h2 className="text-lg font-bold text-zinc-900">수강 중인 강좌</h2>
+            <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+              {(!enrollments || enrollments.length === 0) && (
+                <p className="px-4 py-6 text-center text-sm text-zinc-400">
+                  수강 중인 강좌가 없습니다.
+                </p>
+              )}
+              {enrollments && enrollments.length > 0 && (
+                <ul className="divide-y divide-zinc-100">
+                  {enrollments.map((enrollment) => (
+                    <li
+                      key={enrollment.id}
+                      className="flex items-center justify-between gap-3 px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-zinc-900">
+                          [{enrollment.courses?.subject}]{" "}
+                          {enrollment.courses?.title}
+                        </p>
+                        <p className="text-xs text-zinc-400">
+                          등록일{" "}
+                          {new Date(enrollment.enrolled_at).toLocaleString(
+                            "ko-KR",
+                          )}
+                        </p>
+                      </div>
+                      <DeleteEnrollmentButton
+                        action={deleteEnrollment.bind(null, enrollment.id)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-lg font-bold text-zinc-900">리포트</h2>
+            <div className="mt-3 flex flex-col gap-4">
+              {REPORT_TYPES.map((reportType) => (
+                <ScoreReportSection
+                  key={reportType}
+                  label={REPORT_TYPE_LABELS[reportType]}
+                  entries={scoreReportsByType.get(reportType) ?? []}
+                  addAction={addScoreReport.bind(null, user.id, reportType)}
+                  updateAction={updateScoreReport.bind(null, user.id)}
+                  deleteAction={deleteScoreReport.bind(null, user.id)}
+                />
               ))}
-            </ul>
-          )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mt-6 max-w-lg">
+      <div className="mt-6 max-w-4xl">
         <h2 className="text-lg font-bold text-zinc-900">메모장</h2>
         <div className="mt-3 flex flex-col gap-3">
           {(!notes || notes.length === 0) && (
@@ -196,23 +224,7 @@ export default async function Page({
         </div>
       </div>
 
-      <div className="mt-6 max-w-lg">
-        <h2 className="text-lg font-bold text-zinc-900">리포트</h2>
-        <div className="mt-3 flex flex-col gap-4">
-          {REPORT_TYPES.map((reportType) => (
-            <ScoreReportSection
-              key={reportType}
-              label={REPORT_TYPE_LABELS[reportType]}
-              entries={scoreReportsByType.get(reportType) ?? []}
-              addAction={addScoreReport.bind(null, user.id, reportType)}
-              updateAction={updateScoreReport.bind(null, user.id)}
-              deleteAction={deleteScoreReport.bind(null, user.id)}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-6 max-w-lg rounded-lg border border-red-200 bg-red-50 p-4">
+      <div className="mt-6 max-w-4xl rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="text-sm font-semibold text-red-700">위험 구역</p>
         <p className="mt-1 text-xs text-red-600">
           탈퇴 처리하면 로그인 계정과 프로필, 수강 등록 정보가 모두 삭제되며
