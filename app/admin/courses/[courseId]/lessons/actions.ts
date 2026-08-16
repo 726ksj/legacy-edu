@@ -4,6 +4,19 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createMuxClient } from "@/lib/mux";
 
+// 차시 제목은 "1강 - 문법 정리"처럼 앞에 번호가 붙는 관례라, 제목에서 첫
+// 숫자를 뽑아 그 숫자로 비교한다. 단순 문자열 정렬로는 "10강"이 "2강"보다
+// 앞에 오는 문제가 생긴다.
+function compareLessonTitles(a: string, b: string): number {
+  const numA = a.match(/\d+/);
+  const numB = b.match(/\d+/);
+  if (numA && numB) {
+    const diff = Number(numA[0]) - Number(numB[0]);
+    if (diff !== 0) return diff;
+  }
+  return a.localeCompare(b, "ko");
+}
+
 export async function createDirectUpload(courseId: string) {
   const mux = createMuxClient();
   const upload = await mux.video.uploads.create({
@@ -24,24 +37,39 @@ export async function saveLesson(
   const upload = await mux.video.uploads.retrieve(uploadId);
 
   const supabase = createAdminClient();
-  const { data: existing } = await supabase
+  const { data: existingLessons } = await supabase
     .from("lessons")
-    .select("order_no")
-    .eq("course_id", courseId)
-    .order("order_no", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .select("id, title")
+    .eq("course_id", courseId);
 
-  const nextOrderNo = (existing?.order_no ?? 0) + 1;
+  const { data: inserted } = await supabase
+    .from("lessons")
+    .insert({
+      course_id: courseId,
+      title,
+      order_no: (existingLessons?.length ?? 0) + 1,
+      mux_asset_id: upload.asset_id ?? null,
+      status: "preparing",
+      description: description || null,
+    })
+    .select("id")
+    .single();
 
-  await supabase.from("lessons").insert({
-    course_id: courseId,
-    title,
-    order_no: nextOrderNo,
-    mux_asset_id: upload.asset_id ?? null,
-    status: "preparing",
-    description: description || null,
-  });
+  // 업로드할 때마다 강좌의 모든 차시를 제목 기준 오름차순으로 다시 매겨서,
+  // 어떤 순서로 업로드하든 항상 제목 순서대로 나열되게 한다.
+  const allLessons = [
+    ...(existingLessons ?? []),
+    ...(inserted ? [{ id: inserted.id, title }] : []),
+  ].sort((a, b) => compareLessonTitles(a.title, b.title));
+
+  await Promise.all(
+    allLessons.map((lesson, index) =>
+      supabase
+        .from("lessons")
+        .update({ order_no: index + 1 })
+        .eq("id", lesson.id),
+    ),
+  );
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath(`/my-classroom/${courseId}`);
