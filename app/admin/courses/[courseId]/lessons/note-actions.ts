@@ -10,7 +10,7 @@ export interface UpdateNoteState {
 
 export async function updateNote(
   id: string,
-  userId: string,
+  courseId: string,
   _prevState: UpdateNoteState,
   formData: FormData,
 ): Promise<UpdateNoteState> {
@@ -30,7 +30,7 @@ export async function updateNote(
     return { error: error.message };
   }
 
-  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath("/mypage/notes");
   return { success: true };
 }

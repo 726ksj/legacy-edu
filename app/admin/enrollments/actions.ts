@@ -72,5 +72,6 @@ export async function deleteEnrollment(id: string) {
   revalidatePath("/mypage/notes");
   if (enrollment) {
     revalidatePath(`/admin/users/${enrollment.profile_id}`);
+    revalidatePath(`/admin/courses/${enrollment.course_id}/lessons`);
   }
 }

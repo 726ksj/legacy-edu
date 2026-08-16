@@ -4,6 +4,8 @@ import { syncLessonStatuses } from "@/lib/mux";
 import UploadLessonForm from "./UploadLessonForm";
 import LessonRow from "./LessonRow";
 import { deleteLesson } from "./actions";
+import { updateNote } from "./note-actions";
+import NoteCard from "@/components/notes/NoteCard";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,21 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   ready: { label: "재생 가능", className: "bg-brand-light text-brand-dark" },
   errored: { label: "처리 실패", className: "bg-red-100 text-red-600" },
 };
+
+interface NoteRow {
+  id: string;
+  content: string;
+  created_at: string;
+  lesson_id: string;
+  profiles: { name: string; username: string } | null;
+}
+
+interface LessonWithNotes {
+  id: string;
+  order_no: number;
+  title: string;
+  notes: NoteRow[];
+}
 
 export default async function Page({
   params,
@@ -41,6 +58,34 @@ export default async function Page({
 
   if (lessons?.length) {
     await syncLessonStatuses(supabase, lessons);
+  }
+
+  const lessonIds = (lessons ?? []).map((lesson) => lesson.id);
+  let lessonsWithNotes: LessonWithNotes[] = [];
+
+  if (lessonIds.length > 0) {
+    const { data: notes } = await supabase
+      .from("questions")
+      .select("id, content, created_at, lesson_id, profiles(name, username)")
+      .in("lesson_id", lessonIds)
+      .order("created_at", { ascending: false })
+      .returns<NoteRow[]>();
+
+    const notesByLesson = new Map<string, NoteRow[]>();
+    for (const note of notes ?? []) {
+      const list = notesByLesson.get(note.lesson_id) ?? [];
+      list.push(note);
+      notesByLesson.set(note.lesson_id, list);
+    }
+
+    lessonsWithNotes = (lessons ?? [])
+      .map((lesson) => ({
+        id: lesson.id,
+        order_no: lesson.order_no,
+        title: lesson.title,
+        notes: notesByLesson.get(lesson.id) ?? [],
+      }))
+      .filter((lesson) => lesson.notes.length > 0);
   }
 
   return (
@@ -90,6 +135,44 @@ export default async function Page({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-6 max-w-2xl">
+        <h2 className="text-lg font-bold text-zinc-900">학생 메모</h2>
+        <div className="mt-3 flex flex-col gap-6">
+          {lessonsWithNotes.length === 0 && (
+            <p className="rounded-lg border border-zinc-200 bg-white px-4 py-6 text-center text-sm text-zinc-400">
+              학생이 남긴 메모가 없습니다.
+            </p>
+          )}
+          {lessonsWithNotes.map((lesson) => (
+            <div key={lesson.id}>
+              <p className="text-sm font-semibold text-zinc-700">
+                {lesson.order_no}강 · {lesson.title}
+              </p>
+              <div className="mt-2 flex flex-col gap-3">
+                {lesson.notes.map((note) => (
+                  <NoteCard
+                    key={note.id}
+                    content={note.content}
+                    updateAction={updateNote.bind(null, note.id, courseId, {})}
+                    header={
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs font-medium text-zinc-500">
+                          {note.profiles?.name ?? "-"} (
+                          {note.profiles?.username ?? "-"})
+                        </p>
+                        <span className="shrink-0 text-xs text-zinc-400">
+                          {new Date(note.created_at).toLocaleString("ko-KR")}
+                        </span>
+                      </div>
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
