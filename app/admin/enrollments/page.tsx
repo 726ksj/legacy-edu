@@ -3,6 +3,8 @@ import EnrollmentForm from "./EnrollmentForm";
 import DeleteEnrollmentButton from "./DeleteEnrollmentButton";
 import { deleteEnrollment } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 interface EnrollmentRow {
   id: string;
   course_id: string;

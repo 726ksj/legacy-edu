@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import UsersTable from "./UsersTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const supabase = createAdminClient();
   const { data: users, error } = await supabase

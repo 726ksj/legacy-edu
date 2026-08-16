@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { updateNote } from "./actions";
 import LessonNotesList, { type LessonItem } from "./LessonNotesList";
 
+export const dynamic = "force-dynamic";
+
 interface NoteRow {
   id: string;
   content: string;

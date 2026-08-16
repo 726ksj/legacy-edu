@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ADMIN_NAV_ITEMS = [
@@ -115,6 +115,17 @@ export default function AdminSidebar({
             );
           })}
         </nav>
+
+        <div className="border-t border-zinc-200 p-3">
+          <Link
+            href="/"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            <Home className="h-4 w-4" />
+            사이트 홈으로 돌아가기
+          </Link>
+        </div>
       </aside>
     </>
   );

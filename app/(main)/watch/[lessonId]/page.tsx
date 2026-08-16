@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,7 +10,6 @@ import {
 import { isEnrolled } from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
 import NoteSection from "./NoteSection";
-import PageLoading from "@/components/layout/PageLoading";
 
 interface LessonRow {
   id: string;
@@ -33,19 +31,7 @@ interface SiblingLesson {
   mux_playback_id: string | null;
 }
 
-export default function WatchPage({
-  params,
-}: {
-  params: Promise<{ lessonId: string }>;
-}) {
-  return (
-    <Suspense fallback={<PageLoading />}>
-      <WatchPageContent params={params} />
-    </Suspense>
-  );
-}
-
-async function WatchPageContent({
+export default async function WatchPage({
   params,
 }: {
   params: Promise<{ lessonId: string }>;

@@ -1,10 +1,10 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { updateNote, deleteNote } from "./actions";
 import NoteCard from "@/components/notes/NoteCard";
-import PageLoading from "@/components/layout/PageLoading";
+
+export const dynamic = "force-dynamic";
 
 interface NoteRow {
   id: string;
@@ -25,15 +25,7 @@ interface CourseGroup {
   items: NoteRow[];
 }
 
-export default function MyNotesPage() {
-  return (
-    <Suspense fallback={<PageLoading />}>
-      <MyNotesContent />
-    </Suspense>
-  );
-}
-
-async function MyNotesContent() {
+export default async function MyNotesPage() {
   const supabase = await createClient();
   const user = await getAuthUser();
 

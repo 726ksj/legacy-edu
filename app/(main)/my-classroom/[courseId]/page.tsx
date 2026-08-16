@@ -1,11 +1,9 @@
-import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { syncLessonStatuses } from "@/lib/mux";
 import { isEnrolled } from "@/lib/enrollments";
-import PageLoading from "@/components/layout/PageLoading";
 
 interface Instructor {
   name: string;
@@ -31,19 +29,7 @@ interface Lesson {
   mux_asset_id: string | null;
 }
 
-export default function CourseClassroomPage({
-  params,
-}: {
-  params: Promise<{ courseId: string }>;
-}) {
-  return (
-    <Suspense fallback={<PageLoading />}>
-      <CourseClassroomContent params={params} />
-    </Suspense>
-  );
-}
-
-async function CourseClassroomContent({
+export default async function CourseClassroomPage({
   params,
 }: {
   params: Promise<{ courseId: string }>;

@@ -1,4 +1,4 @@
-import { createPublicClient } from "@/lib/supabase/public";
+import { createClient } from "@/lib/supabase/server";
 
 const DEFAULT_ABOUT_BODY = `안녕하세요. 레가시 에듀 대표 박정근입니다.
 
@@ -10,21 +10,15 @@ const DEFAULT_ABOUT_BODY = `안녕하세요. 레가시 에듀 대표 박정근�
 
 레가시 대표 박정근 배상`;
 
-// 로그인 여부와 무관한 공개 텍스트라 캐시한다.
-async function getAboutBody() {
-  "use cache";
-  const supabase = createPublicClient();
+export default async function Page() {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("site_content")
     .select("value")
     .eq("key", "about_body")
     .maybeSingle();
 
-  return data?.value ?? DEFAULT_ABOUT_BODY;
-}
-
-export default async function Page() {
-  const aboutBody = await getAboutBody();
+  const aboutBody: string = data?.value ?? DEFAULT_ABOUT_BODY;
   const paragraphs = aboutBody
     .split(/\n{2,}/)
     .map((p: string) => p.trim())

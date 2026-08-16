@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import EditInstructorForm from "./EditInstructorForm";
 import DeleteInstructorButton from "../DeleteInstructorButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   params,
 }: {

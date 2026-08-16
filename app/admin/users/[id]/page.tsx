@@ -16,6 +16,8 @@ import ScoreReportSection, {
 } from "@/components/admin/ScoreReportSection";
 import { REPORT_TYPES, REPORT_TYPE_LABELS } from "@/lib/scoreReports";
 
+export const dynamic = "force-dynamic";
+
 interface EnrollmentRow {
   id: string;
   course_id: string;
