@@ -9,9 +9,8 @@ export interface UpdateNoteState {
 }
 
 export async function updateNote(
-  id: string,
   courseId: string,
-  _prevState: UpdateNoteState,
+  id: string,
   formData: FormData,
 ): Promise<UpdateNoteState> {
   const content = String(formData.get("content") ?? "").trim();
@@ -30,7 +29,7 @@ export async function updateNote(
     return { error: error.message };
   }
 
-  revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/admin/notes/${courseId}`);
   revalidatePath("/mypage/notes");
   return { success: true };
 }

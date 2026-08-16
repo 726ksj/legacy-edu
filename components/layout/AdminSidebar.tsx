@@ -15,6 +15,7 @@ const ADMIN_NAV_ITEMS = [
   { label: "수강생 Review 관리", href: "/admin/reviews" },
   { label: "강사 관리", href: "/admin/instructors" },
   { label: "강좌 관리", href: "/admin/courses" },
+  { label: "메모 관리", href: "/admin/notes" },
   { label: "수강 권한 관리", href: "/admin/enrollments" },
   { label: "FAQ 관리", href: "/admin/faqs" },
 ];
@@ -97,7 +98,7 @@ export default function AdminSidebar({
                 )}
               >
                 {item.label}
-                {item.href === "/admin/users" && hasNewNote && (
+                {item.href === "/admin/notes" && hasNewNote && (
                   <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                     NEW
                   </span>
