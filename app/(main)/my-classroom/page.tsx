@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import PageLoading from "@/components/layout/PageLoading";
 
 interface Enrollment {
   course_id: string;
@@ -12,7 +14,15 @@ interface Enrollment {
   } | null;
 }
 
-export default async function MyClassroomPage() {
+export default function MyClassroomPage() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <MyClassroomContent />
+    </Suspense>
+  );
+}
+
+async function MyClassroomContent() {
   const supabase = await createClient();
   const user = await getAuthUser();
 

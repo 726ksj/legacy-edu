@@ -2,8 +2,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import SiteContentForm from "./SiteContentForm";
 import { CONTENT_DEFAULTS, type SiteContentMap } from "./keys";
 
-export const dynamic = "force-dynamic";
-
 export default async function Page() {
   const supabase = createAdminClient();
   const { data: rows, error } = await supabase

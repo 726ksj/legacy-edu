@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const dynamic = "force-dynamic";
-
 export default async function Page() {
   const supabase = createAdminClient();
   const { data: courses, error } = await supabase

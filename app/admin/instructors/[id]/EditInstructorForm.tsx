@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useActionState } from "react";
 import { updateInstructor, type InstructorFormState } from "../actions";
 import { SUBJECTS } from "@/lib/subjects";
@@ -58,12 +59,13 @@ export default function EditInstructorForm({
         사진
         <div className="flex items-center gap-3">
           {instructor.photo_url && (
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-zinc-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-zinc-100">
+              <Image
                 src={instructor.photo_url}
                 alt={instructor.name}
-                className="h-full w-full object-cover"
+                fill
+                sizes="48px"
+                className="object-cover"
               />
             </div>
           )}

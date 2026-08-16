@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import {
@@ -9,6 +11,7 @@ import {
 import { isEnrolled } from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
 import NoteSection from "./NoteSection";
+import PageLoading from "@/components/layout/PageLoading";
 
 interface LessonRow {
   id: string;
@@ -30,7 +33,19 @@ interface SiblingLesson {
   mux_playback_id: string | null;
 }
 
-export default async function WatchPage({
+export default function WatchPage({
+  params,
+}: {
+  params: Promise<{ lessonId: string }>;
+}) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <WatchPageContent params={params} />
+    </Suspense>
+  );
+}
+
+async function WatchPageContent({
   params,
 }: {
   params: Promise<{ lessonId: string }>;
@@ -165,13 +180,14 @@ export default async function WatchPage({
                   sibling.id === lesson.id ? "bg-brand-light" : ""
                 }`}
               >
-                <div className="aspect-video w-32 shrink-0 overflow-hidden rounded-md bg-zinc-200">
+                <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-md bg-zinc-200">
                   {sibling.thumbnailUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={sibling.thumbnailUrl}
                       alt={sibling.title}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="128px"
+                      className="object-cover"
                     />
                   )}
                 </div>

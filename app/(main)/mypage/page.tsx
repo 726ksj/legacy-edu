@@ -1,11 +1,19 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import EditProfileForm from "./EditProfileForm";
+import PageLoading from "@/components/layout/PageLoading";
 
-export const dynamic = "force-dynamic";
+export default function MyPage() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <MyPageContent />
+    </Suspense>
+  );
+}
 
-export default async function MyPage() {
+async function MyPageContent() {
   const supabase = await createClient();
   const user = await getAuthUser();
 

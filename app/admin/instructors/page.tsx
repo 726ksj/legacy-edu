@@ -1,8 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import InstructorForm from "./InstructorForm";
-
-export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const supabase = createAdminClient();
@@ -44,13 +43,14 @@ export default async function Page() {
             {instructors?.map((row) => (
               <tr key={row.id}>
                 <td className="px-4 py-3">
-                  <div className="h-10 w-10 overflow-hidden rounded-full bg-zinc-100">
+                  <div className="relative h-10 w-10 overflow-hidden rounded-full bg-zinc-100">
                     {row.photo_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={row.photo_url}
                         alt={row.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="40px"
+                        className="object-cover"
                       />
                     )}
                   </div>

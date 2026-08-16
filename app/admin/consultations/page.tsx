@@ -2,8 +2,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { markConsultationComplete, deleteConsultation } from "./actions";
 import DeleteConsultationButton from "./DeleteConsultationButton";
 
-export const dynamic = "force-dynamic";
-
 interface ConsultationRow {
   id: string;
   role: string;

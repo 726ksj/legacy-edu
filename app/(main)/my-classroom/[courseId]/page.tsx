@@ -1,8 +1,11 @@
+import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { syncLessonStatuses } from "@/lib/mux";
 import { isEnrolled } from "@/lib/enrollments";
+import PageLoading from "@/components/layout/PageLoading";
 
 interface Instructor {
   name: string;
@@ -28,7 +31,19 @@ interface Lesson {
   mux_asset_id: string | null;
 }
 
-export default async function CourseClassroomPage({
+export default function CourseClassroomPage({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <CourseClassroomContent params={params} />
+    </Suspense>
+  );
+}
+
+async function CourseClassroomContent({
   params,
 }: {
   params: Promise<{ courseId: string }>;
@@ -99,12 +114,13 @@ export default async function CourseClassroomPage({
       </div>
 
       {course.thumbnail_url && (
-        <div className="aspect-video w-full overflow-hidden rounded-lg bg-zinc-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-100">
+          <Image
             src={course.thumbnail_url}
             alt={course.title}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(min-width: 1024px) 768px, 100vw"
+            className="object-cover"
           />
         </div>
       )}
@@ -154,12 +170,13 @@ export default async function CourseClassroomPage({
           <h2 className="text-lg font-bold text-zinc-900">강사 소개</h2>
           <div className="mt-3 flex gap-4 rounded-lg border border-zinc-200 bg-white p-6">
             {instructor.photo_url && (
-              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-zinc-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-zinc-100">
+                <Image
                   src={instructor.photo_url}
                   alt={instructor.name}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="64px"
+                  className="object-cover"
                 />
               </div>
             )}

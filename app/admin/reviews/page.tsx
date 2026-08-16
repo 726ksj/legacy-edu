@@ -4,8 +4,6 @@ import ReviewForm from "./ReviewForm";
 import DeleteReviewButton from "./DeleteReviewButton";
 import { deleteReview } from "./actions";
 
-export const dynamic = "force-dynamic";
-
 export default async function Page() {
   const supabase = createAdminClient();
   const { data: reviews, error } = await supabase

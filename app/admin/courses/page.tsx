@@ -4,8 +4,6 @@ import CourseForm from "./CourseForm";
 import DeleteCourseButton from "./DeleteCourseButton";
 import { deleteCourse } from "./actions";
 
-export const dynamic = "force-dynamic";
-
 export default async function Page() {
   const supabase = createAdminClient();
   const { data: courses, error } = await supabase

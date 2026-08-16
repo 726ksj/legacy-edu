@@ -5,8 +5,6 @@ import UploadLessonForm from "./UploadLessonForm";
 import LessonRow from "./LessonRow";
 import { deleteLesson } from "./actions";
 
-export const dynamic = "force-dynamic";
-
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   preparing: { label: "처리 중", className: "bg-amber-100 text-amber-700" },
   ready: { label: "재생 가능", className: "bg-brand-light text-brand-dark" },

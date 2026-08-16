@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import ReviewSection from "@/components/home/ReviewSection";
 import VideoSection from "@/components/home/VideoSection";
@@ -5,6 +6,7 @@ import CurriculumSection from "@/components/home/CurriculumSection";
 import CurriculumStickyNav from "@/components/home/CurriculumStickyNav";
 import MyCoursesStrip from "@/components/home/MyCoursesStrip";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
 
 const EMAIL_DOMAIN = "legacyedu.local";
@@ -18,12 +20,13 @@ interface Enrollment {
   } | null;
 }
 
-export default async function HomePage() {
-  const supabase = await createClient();
+// 리뷰/사이트 콘텐츠는 로그인 여부와 무관한 공개 데이터라 캐시한다.
+// 이 부분이 캐시되어야 홈페이지가 정적 셸로 즉시 서빙될 수 있다.
+async function getHomeContent() {
+  "use cache";
+  const supabase = createPublicClient();
 
-  // user 정보와 리뷰/사이트 콘텐츠는 서로 무관하니 병렬로 요청한다.
-  const [user, { data: reviews }, { data: contentRows }] = await Promise.all([
-    getAuthUser(),
+  const [{ data: reviews }, { data: contentRows }] = await Promise.all([
     supabase
       .from("reviews")
       .select("id, name, school, subject, summary, detail")
@@ -31,28 +34,18 @@ export default async function HomePage() {
     supabase.from("site_content").select("key, value"),
   ]);
 
-  const isAdmin =
-    Boolean(process.env.ADMIN_USERNAME) &&
-    user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
-
-  let myCourses: NonNullable<Enrollment["courses"]>[] = [];
-  if (user && !isAdmin) {
-    const { data: enrollments } = await supabase
-      .from("enrollments")
-      .select("courses(id, subject, title, teacher_name)")
-      .eq("profile_id", user.id)
-      .returns<Enrollment[]>();
-    myCourses = (enrollments ?? [])
-      .map((enrollment) => enrollment.courses)
-      .filter((course): course is NonNullable<typeof course> => Boolean(course));
-  }
-
   const content: SiteContentMap = { ...CONTENT_DEFAULTS };
   for (const row of contentRows ?? []) {
     if (row.key in content) {
       content[row.key as keyof SiteContentMap] = row.value;
     }
   }
+
+  return { reviews: reviews ?? [], content };
+}
+
+export default async function HomePage() {
+  const { reviews, content } = await getHomeContent();
 
   const curriculumSteps = [1, 2, 3, 4, 5, 6].map((n) => ({
     no: String(n).padStart(2, "0"),
@@ -73,17 +66,11 @@ export default async function HomePage() {
           <p className="max-w-xl whitespace-pre-line text-zinc-500">
             {content.hero_subtitle}
           </p>
-          {!user && (
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Link
-                href="/consultation"
-                className="rounded-md border border-zinc-300 px-8 py-4 text-base font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
-              >
-                상담 신청하기
-              </Link>
-            </div>
-          )}
-          {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
+
+          {/* 로그인 여부에 따라 달라지는 부분만 스트리밍으로 분리 */}
+          <Suspense fallback={null}>
+            <HomeUserSection />
+          </Suspense>
         </div>
       </section>
 
@@ -93,7 +80,44 @@ export default async function HomePage() {
         intro={content.curriculum_intro}
         steps={curriculumSteps}
       />
-      <ReviewSection reviews={reviews ?? []} />
+      <ReviewSection reviews={reviews} />
     </div>
+  );
+}
+
+async function HomeUserSection() {
+  const supabase = await createClient();
+  const user = await getAuthUser();
+
+  const isAdmin =
+    Boolean(process.env.ADMIN_USERNAME) &&
+    user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
+
+  let myCourses: NonNullable<Enrollment["courses"]>[] = [];
+  if (user && !isAdmin) {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("courses(id, subject, title, teacher_name)")
+      .eq("profile_id", user.id)
+      .returns<Enrollment[]>();
+    myCourses = (enrollments ?? [])
+      .map((enrollment) => enrollment.courses)
+      .filter((course): course is NonNullable<typeof course> => Boolean(course));
+  }
+
+  return (
+    <>
+      {!user && (
+        <div className="flex flex-wrap gap-3 pt-2">
+          <Link
+            href="/consultation"
+            className="rounded-md border border-zinc-300 px-8 py-4 text-base font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
+          >
+            상담 신청하기
+          </Link>
+        </div>
+      )}
+      {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
+    </>
   );
 }

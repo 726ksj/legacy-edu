@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { cacheLife } from "next/cache";
 
-export default function Footer() {
+export default async function Footer() {
+  "use cache";
+  cacheLife("days");
+
   return (
     <footer className="w-full border-t border-zinc-200 bg-zinc-50">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">

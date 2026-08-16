@@ -5,8 +5,6 @@ import EditReviewForm from "./EditReviewForm";
 import DeleteReviewButton from "../DeleteReviewButton";
 import { deleteReviewAndRedirect } from "../actions";
 
-export const dynamic = "force-dynamic";
-
 export default async function Page({
   params,
 }: {
