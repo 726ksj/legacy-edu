@@ -74,17 +74,27 @@ export default function VideoPlayer({
   // 이벤트를 그대로 반영한다(아래 useEffect 참고) - 둘 다 같은 신호를
   // 보는 셈이라 항상 같이 움직인다.
   const [mediaInactive, setMediaInactive] = useState(false);
+  // 일시정지 중에 여백(버튼이 아닌 영상 부분)을 탭하면 이 값이 토글된다.
+  // 재생이 시작되거나 다시 일시정지되면 항상 false로 리셋해서, 매번
+  // 일시정지할 때는 기본적으로 컨트롤이 보이는 상태로 시작한다.
+  const [manuallyHidden, setManuallyHidden] = useState(false);
   // mux-player는 일시정지 중엔 userinactive여도 자기 컨트롤을 CSS로 계속
-  // 보여준다(재생 중에만 자동 숨김). 우리 넷플릭스식 컨트롤도 똑같은
-  // 규칙을 따라야 진짜로 같이 움직인다.
-  const controlsVisible = isPaused || !mediaInactive;
+  // 보여준다(재생 중에만 자동 숨김). 우리 넷플릭스식 컨트롤도 재생 중엔
+  // 똑같은 규칙을 따라야 진짜로 같이 움직인다. 일시정지 중엔 mux 자신의
+  // userinactive 신호 대신 사용자가 직접 여백을 탭해 껐다 켰다 하는
+  // manuallyHidden을 따른다.
+  const controlsVisible = isPaused ? !manuallyHidden : !mediaInactive;
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
+  const isPausedRef = useRef(isPaused);
 
   useEffect(() => {
     scaleRef.current = scale;
   }, [scale]);
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
   useEffect(() => {
     translateRef.current = translate;
   }, [translate]);
@@ -303,6 +313,16 @@ export default function VideoPlayer({
           if (centerControl === "back") seekBy(-SEEK_SECONDS);
           else if (centerControl === "forward") seekBy(SEEK_SECONDS);
           else togglePlayPause();
+        } else if (
+          isPausedRef.current &&
+          isPlainVideoSurfacePoint(touch.clientX, touch.clientY)
+        ) {
+          // 일시정지 중 여백(버튼도 아니고 우측 상단 이전/다음·전체화면
+          // 버튼도 아닌 순수 영상 부분)을 탭하면 중앙 컨트롤을 껐다 켰다
+          // 토글한다.
+          e.preventDefault();
+          lastTouchHandledAtRef.current = Date.now();
+          setManuallyHidden((prev) => !prev);
         }
       }
       tapStartRef.current = null;
@@ -335,6 +355,16 @@ export default function VideoPlayer({
       return null;
     }
 
+    // 우측 상단 이전/다음 강의·전체화면 버튼처럼 여전히 pointer-events: auto인
+    // 실제 엘리먼트를 탭한 게 아니라, 순수 영상(mux-player) 자체가 그 좌표의
+    // 대상인지 확인한다. 중앙 -10/재생-일시정지/+10 버튼도 pointer-events:
+    // none이라 이 판정에서는 걸리지 않는다(그래서 그 버튼들은 getCenterControlAt로
+    // 먼저 따로 걸러낸다).
+    function isPlainVideoSurfacePoint(x: number, y: number): boolean {
+      const el = document.elementFromPoint(x, y);
+      return el?.tagName === "MUX-PLAYER";
+    }
+
     // capture 단계에서 가로채 stopPropagation하지 않으면 mux-player 자체의
     // click 리스너(media-gesture-receiver)까지 이벤트가 전달돼 재생/일시정지가
     // 같이 토글된다. pointerup 기반 컨트롤 표시/숨김 동기화와는 별개의
@@ -355,6 +385,12 @@ export default function VideoPlayer({
 
       if (!isPlainVideoSurfaceTarget(e)) return;
       e.stopPropagation();
+      // 일시정지 중 여백을 클릭하면(데스크톱) 마찬가지로 중앙 컨트롤을
+      // 껐다 켰다 토글한다. 터치는 위 handleTouchEnd에서 이미 처리하고
+      // lastTouchHandledAtRef로 막아뒀으니 여기서는 마우스 클릭만 해당된다.
+      if (isPausedRef.current) {
+        setManuallyHidden((prev) => !prev);
+      }
     }
 
     function handleMouseMove(e: MouseEvent) {
@@ -471,8 +507,14 @@ export default function VideoPlayer({
             streamType="on-demand"
             metadata={{ video_title: title }}
             defaultHiddenCaptions
-            onPlay={() => setIsPaused(false)}
-            onPause={() => setIsPaused(true)}
+            onPlay={() => {
+              setIsPaused(false);
+              setManuallyHidden(false);
+            }}
+            onPause={() => {
+              setIsPaused(true);
+              setManuallyHidden(false);
+            }}
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
         </div>
