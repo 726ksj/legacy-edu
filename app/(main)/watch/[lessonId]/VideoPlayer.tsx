@@ -97,6 +97,12 @@ export default function VideoPlayer({
     startY: number;
     startTranslate: { x: number; y: number };
   } | null>(null);
+  const tapStartRef = useRef<{ x: number; y: number } | null>(null);
+  // touchend에서 preventDefault를 걸어도 일부 브라우저는 그 뒤에 합성
+  // click을 또 쏘는 경우가 있다 - 그 click이 같은 버튼을 두 번(예: 재생 →
+  // 다시 일시정지) 누르지 않도록, 방금 touchend로 처리한 시각을 기록해뒀다가
+  // click 핸들러에서 짧은 시간 안이면 무시한다.
+  const lastTouchHandledAtRef = useRef(0);
 
   const clampTranslate = useCallback(
     (t: { x: number; y: number }, s: number) => {
@@ -215,12 +221,19 @@ export default function VideoPlayer({
           startScale: scaleRef.current,
         };
         panRef.current = null;
+        tapStartRef.current = null;
       } else if (e.touches.length === 1 && scaleRef.current > 1) {
         setIsGesturing(true);
         panRef.current = {
           startX: e.touches[0].clientX,
           startY: e.touches[0].clientY,
           startTranslate: translateRef.current,
+        };
+        tapStartRef.current = null;
+      } else if (e.touches.length === 1) {
+        tapStartRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
         };
       }
     }
@@ -243,6 +256,13 @@ export default function VideoPlayer({
             scaleRef.current,
           ),
         );
+      } else if (e.touches.length === 1 && tapStartRef.current) {
+        // 스크롤/스와이프처럼 손가락이 실제로 움직인 경우까지 탭으로
+        // 오인해 버튼을 누르면 안 되므로, 일정 거리 이상 움직이면 탭
+        // 후보에서 제외한다.
+        const dx = e.touches[0].clientX - tapStartRef.current.x;
+        const dy = e.touches[0].clientY - tapStartRef.current.y;
+        if (Math.hypot(dx, dy) > 10) tapStartRef.current = null;
       }
     }
 
@@ -250,6 +270,30 @@ export default function VideoPlayer({
       if (e.touches.length < 2) pinchRef.current = null;
       if (e.touches.length < 1) panRef.current = null;
       if (e.touches.length === 0) setIsGesturing(false);
+
+      // iOS Safari는 pointer-events: none을 통과해 그 아래(mux-player)에
+      // 떨어진 탭에 대해 합성 click 이벤트를 안정적으로 만들어주지 않는다
+      // (버튼/링크처럼 원래 클릭 가능한 요소가 아니면 특히 그렇다). click에
+      // 기대는 대신 touchend에서 직접 탭 여부(스크롤/스와이프가 아니었는지)를
+      // 판정해 버튼 좌표와 겹치면 처리하고, 뒤이어 합성될 수도 있는 click이
+      // 같은 동작을 중복 실행하지 않도록 preventDefault로 막는다.
+      if (
+        e.touches.length === 0 &&
+        tapStartRef.current &&
+        scaleRef.current === 1 &&
+        e.changedTouches.length > 0
+      ) {
+        const touch = e.changedTouches[0];
+        const centerControl = getCenterControlAt(touch.clientX, touch.clientY);
+        if (centerControl) {
+          e.preventDefault();
+          lastTouchHandledAtRef.current = Date.now();
+          if (centerControl === "back") seekBy(-SEEK_SECONDS);
+          else if (centerControl === "forward") seekBy(SEEK_SECONDS);
+          else togglePlayPause();
+        }
+      }
+      tapStartRef.current = null;
     }
 
     // 중앙 -10/재생-일시정지/+10 버튼은 pointer-events: none이라 실제 마우스
@@ -285,6 +329,7 @@ export default function VideoPlayer({
     // 이벤트라 여기서 막아도 그쪽엔 영향이 없다.
     function handleClick(e: MouseEvent) {
       if (scaleRef.current > 1) return;
+      if (Date.now() - lastTouchHandledAtRef.current < 500) return;
 
       const centerControl = getCenterControlAt(e.clientX, e.clientY);
       if (centerControl) {
