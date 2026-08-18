@@ -57,6 +57,12 @@ export default function VideoPlayer({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<MuxPlayerRefAttributes>(null);
+  const backButtonRef = useRef<HTMLButtonElement>(null);
+  const playPauseButtonRef = useRef<HTMLButtonElement>(null);
+  const forwardButtonRef = useRef<HTMLButtonElement>(null);
+  const [hoveredCenterControl, setHoveredCenterControl] = useState<
+    "back" | "playPause" | "forward" | null
+  >(null);
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
@@ -124,24 +130,11 @@ export default function VideoPlayer({
     setTranslate({ x: 0, y: 0 });
   }, []);
 
-  // 우리 중앙 컨트롤 버튼(-10/재생·일시정지/+10)은 mux-player DOM 바깥에
-  // 있어서 눌러도 mux-player 자신은 "사용자가 조작 중"이라는 걸 모른다.
-  // 그 상태로 두면 mux-player의 자동 숨김 타이머(기본 2초)가 우리 버튼
-  // 조작과 무관하게 계속 돌아가다가, 하필 버튼을 누른 순간과 겹쳐서
-  // "누르면 사라진다"처럼 보인다. mux-player 내부의 media-controller에
-  // 직접 pointermove를 흉내내 활동을 알려주면, mux-player 자신의 로직이
-  // 컨트롤을 계속 보여주다가 정해진 시간(기본 2초) 후 자동으로 숨긴다 -
-  // 우리 컨트롤은 여전히 그 상태를 그대로 반영만 하므로 항상 같이 움직인다.
-  //
-  // 이 함수는 각 버튼의 onMouseEnter에도 그대로 걸어둔다: 우리 버튼들은
-  // mux-player 위에 얹힌 형제 엘리먼트라서, 마우스 커서가 버튼 위로
-  // 올라오면 브라우저 히트테스트 대상이 mux-player에서 버튼으로 바뀌며
-  // mux-player 쪽에 mouseleave가 발생한다. mux-player는 mouseleave를
-  // 받으면 즉시 컨트롤을 숨기는데, 그러면 우리 버튼도 같이 사라지고
-  // (controlsVisible이 mux 상태를 그대로 반영하므로) 사라진 자리에 다시
-  // mux-player가 드러나 pointermove가 발생해 다시 나타나기를 반복해
-  // 깜빡이며 클릭이 안 되는 문제가 있었다. onMouseEnter에서 즉시 poke해
-  // mux-player를 계속 활성 상태로 붙잡아두면 이 루프가 끊긴다.
+  // 확대 컨트롤(우측 하단)만 mux-player 대응 슬롯이 없어 여전히 mux-player
+  // 바깥의 형제 엘리먼트로 떠 있다. 그 상태에서 마우스가 mux-player 표면에서
+  // 이 버튼으로 넘어가면 mux-player 쪽에 mouseleave가 발생해 컨트롤이
+  // 숨겨지므로, mux-player 내부에 직접 pointermove를 흉내내 활동을
+  // 알려줘 계속 활성 상태로 붙잡아둔다.
   const pokeMuxActivity = useCallback(() => {
     const player = playerRef.current;
     if (!player) return;
@@ -163,19 +156,15 @@ export default function VideoPlayer({
     }
   }, []);
 
-  const seekBy = useCallback(
-    (deltaSeconds: number) => {
-      const player = playerRef.current;
-      if (!player) return;
-      const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
-      player.currentTime = Math.min(
-        duration,
-        Math.max(0, player.currentTime + deltaSeconds),
-      );
-      pokeMuxActivity();
-    },
-    [pokeMuxActivity],
-  );
+  const seekBy = useCallback((deltaSeconds: number) => {
+    const player = playerRef.current;
+    if (!player) return;
+    const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
+    player.currentTime = Math.min(
+      duration,
+      Math.max(0, player.currentTime + deltaSeconds),
+    );
+  }, []);
 
   const togglePlayPause = useCallback(() => {
     const player = playerRef.current;
@@ -185,14 +174,15 @@ export default function VideoPlayer({
     } else {
       player.pause();
     }
-    pokeMuxActivity();
-  }, [pokeMuxActivity]);
+  }, []);
 
   // mux-player 자신의 하단 컨트롤 바는 자체적으로 탭/호버에 따라 표시·자동
   // 숨김을 관리한다(일시정지 중엔 안 숨는 것까지 포함). 우리 중앙 컨트롤을
   // 별도 타이머로 독립적으로 열고 닫으면 서로 다른 타이밍에 나타났다
   // 사라져 따로 노는 것처럼 보이므로, mux-player가 상태를 바꿀 때마다
   // 쏘는 userinactivechange 이벤트를 그대로 반영해 항상 같이 움직이게 한다.
+  // 중앙 컨트롤이 이제 pointer-events: none이라 mux 쪽 히트테스트에
+  // 전혀 관여하지 않으므로, 더 이상 디바운스 없이 그대로 반영해도 안전하다.
   useEffect(() => {
     const player = playerRef.current;
     if (!player) return;
@@ -262,14 +252,60 @@ export default function VideoPlayer({
       if (e.touches.length === 0) setIsGesturing(false);
     }
 
+    // 중앙 -10/재생-일시정지/+10 버튼은 pointer-events: none이라 실제 마우스
+    // 클릭은 이 버튼들을 그냥 통과해 mux-player 표면에 떨어진다(왜 그렇게
+    // 만들었는지는 위 pokeMuxActivity 주석 참고). 그래서 클릭 좌표가 버튼의
+    // 현재 위치와 겹치는지 직접 계산해서 대신 처리해준다.
+    function getCenterControlAt(
+      x: number,
+      y: number,
+    ): "back" | "playPause" | "forward" | null {
+      const entries: [
+        "back" | "playPause" | "forward",
+        React.RefObject<HTMLButtonElement | null>,
+      ][] = [
+        ["back", backButtonRef],
+        ["playPause", playPauseButtonRef],
+        ["forward", forwardButtonRef],
+      ];
+      for (const [name, ref] of entries) {
+        const btn = ref.current;
+        if (!btn) continue;
+        const r = btn.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+          return name;
+        }
+      }
+      return null;
+    }
+
     // capture 단계에서 가로채 stopPropagation하지 않으면 mux-player 자체의
     // click 리스너(media-gesture-receiver)까지 이벤트가 전달돼 재생/일시정지가
     // 같이 토글된다. pointerup 기반 컨트롤 표시/숨김 동기화와는 별개의
     // 이벤트라 여기서 막아도 그쪽엔 영향이 없다.
     function handleClick(e: MouseEvent) {
       if (scaleRef.current > 1) return;
+
+      const centerControl = getCenterControlAt(e.clientX, e.clientY);
+      if (centerControl) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (centerControl === "back") seekBy(-SEEK_SECONDS);
+        else if (centerControl === "forward") seekBy(SEEK_SECONDS);
+        else togglePlayPause();
+        return;
+      }
+
       if (!isPlainVideoSurfaceTarget(e)) return;
       e.stopPropagation();
+    }
+
+    function handleMouseMove(e: MouseEvent) {
+      setHoveredCenterControl(getCenterControlAt(e.clientX, e.clientY));
+    }
+
+    function handleMouseLeave() {
+      setHoveredCenterControl(null);
     }
 
     el.addEventListener("wheel", handleWheel, { passive: false });
@@ -278,6 +314,8 @@ export default function VideoPlayer({
     el.addEventListener("touchend", handleTouchEnd);
     el.addEventListener("touchcancel", handleTouchEnd);
     el.addEventListener("click", handleClick, { capture: true });
+    el.addEventListener("mousemove", handleMouseMove);
+    el.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
       el.removeEventListener("wheel", handleWheel);
@@ -286,8 +324,10 @@ export default function VideoPlayer({
       el.removeEventListener("touchend", handleTouchEnd);
       el.removeEventListener("touchcancel", handleTouchEnd);
       el.removeEventListener("click", handleClick, { capture: true });
+      el.removeEventListener("mousemove", handleMouseMove);
+      el.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [applyScale, clampTranslate]);
+  }, [applyScale, clampTranslate, seekBy, togglePlayPause]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -382,21 +422,38 @@ export default function VideoPlayer({
       </div>
 
       {controlsVisible && (
+        // 이 레이어 전체와 버튼들은 pointer-events: none이다. mux-player 위에
+        // 얹힌 형제 엘리먼트가 실제로 마우스 이벤트를 가로채면, 커서가
+        // 버튼으로 넘어가는 순간 mux-player 표면 기준 히트테스트 대상이
+        // 바뀌어 mux 쪽에 mouseleave가 발생하고, mux가 컨트롤을 숨기면 이
+        // 버튼도 같이 사라져 그 자리에 mux 표면이 다시 드러나 pointermove로
+        // 오인되어 재활성화되기를 반복한다 - 실측 결과 이 진동이 15~100ms
+        // 간격으로 10초 넘게 끊임없이 이어질 수 있었다(느슨한 poke/디바운스
+        // 로는 못 따라잡는 속도). 아예 버튼을 히트테스트에서 완전히 빼서
+        // (pointer-events: none) mux 표면이 항상 그대로 클릭 대상으로
+        // 남게 하고, 실제 클릭/호버 판정은 아래 컨테이너의 클릭 핸들러가
+        // 버튼의 현재 위치와 좌표를 직접 비교해서 처리한다 - 키보드
+        // 접근성을 위해 onClick은 남겨둔다(포커스 후 Enter/Space는
+        // pointer-events와 무관하게 동작한다).
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-6">
           <button
+            ref={backButtonRef}
             type="button"
             onClick={() => seekBy(-SEEK_SECONDS)}
-            onMouseEnter={pokeMuxActivity}
-            className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            className={`pointer-events-none flex h-11 w-11 items-center justify-center rounded-full text-white ${
+              hoveredCenterControl === "back" ? "bg-black/80" : "bg-black/60"
+            }`}
             aria-label={`${SEEK_SECONDS}초 뒤로`}
           >
             <RotateCcw className="h-5 w-5" />
           </button>
           <button
+            ref={playPauseButtonRef}
             type="button"
             onClick={togglePlayPause}
-            onMouseEnter={pokeMuxActivity}
-            className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            className={`pointer-events-none flex h-14 w-14 items-center justify-center rounded-full text-white ${
+              hoveredCenterControl === "playPause" ? "bg-black/80" : "bg-black/60"
+            }`}
             aria-label={isPaused ? "재생" : "일시정지"}
           >
             {isPaused ? (
@@ -406,10 +463,12 @@ export default function VideoPlayer({
             )}
           </button>
           <button
+            ref={forwardButtonRef}
             type="button"
             onClick={() => seekBy(SEEK_SECONDS)}
-            onMouseEnter={pokeMuxActivity}
-            className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            className={`pointer-events-none flex h-11 w-11 items-center justify-center rounded-full text-white ${
+              hoveredCenterControl === "forward" ? "bg-black/80" : "bg-black/60"
+            }`}
             aria-label={`${SEEK_SECONDS}초 앞으로`}
           >
             <RotateCw className="h-5 w-5" />
