@@ -507,6 +507,7 @@ export default function VideoPlayer({
             streamType="on-demand"
             metadata={{ video_title: title }}
             defaultHiddenCaptions
+            disablePictureInPicture
             onPlay={() => {
               setIsPaused(false);
               setManuallyHidden(false);
