@@ -56,10 +56,26 @@ async function getCachedJwks(): Promise<Jwks | undefined> {
   return jwks;
 }
 
+// getClaims()는 WebCrypto(crypto.subtle)가 없으면 우리가 건넨 JWKS를 버리고
+// 내부적으로 getUser() 폴백을 또 호출한다 — 그러면 JWKS fetch + 폴백 호출로
+// 왕복이 기존보다 오히려 늘어난다. 그 경로를 타기 전에 여기서 먼저 걸러서,
+// 지원 안 되는 런타임에서는 곧장 getUser() 1회로만 끝내 최소한 기존과
+// 동일한 왕복 수를 보장한다.
+const hasWebCrypto =
+  typeof globalThis.crypto?.subtle?.importKey === "function";
+
 // 같은 요청 안에서 레이아웃(Header)과 페이지가 각자 호출해도 React cache()로
 // 요청 1회당 1번만 실제로 검증되게 한다.
 export const getAuthUser = cache(async () => {
   const supabase = await createClient();
+
+  if (!hasWebCrypto) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user ? { id: user.id, email: user.email ?? null } : null;
+  }
+
   const jwks = await getCachedJwks();
   const { data } = await supabase.auth.getClaims(undefined, { jwks });
   if (!data) return null;
