@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import EditUserForm from "./EditUserForm";
 import ResetPasswordForm from "./ResetPasswordForm";
+import DeviceSection from "./DeviceSection";
 import DeleteUserButton from "../DeleteUserButton";
 import {
   addScoreReport,
@@ -35,6 +36,13 @@ interface ScoreReportRow {
   memo: string | null;
 }
 
+interface DeviceRow {
+  id: string;
+  user_agent: string | null;
+  created_at: string;
+  last_seen_at: string;
+}
+
 export default async function Page({
   params,
 }: {
@@ -54,20 +62,27 @@ export default async function Page({
     notFound();
   }
 
-  const [{ data: enrollments }, { data: scoreReports }] = await Promise.all([
-    supabase
-      .from("enrollments")
-      .select("id, course_id, enrolled_at, courses(subject, title)")
-      .eq("profile_id", id)
-      .order("enrolled_at", { ascending: false })
-      .returns<EnrollmentRow[]>(),
-    supabase
-      .from("score_reports")
-      .select("id, report_type, title, subject, score, exam_date, memo")
-      .eq("profile_id", id)
-      .order("exam_date", { ascending: false })
-      .returns<ScoreReportRow[]>(),
-  ]);
+  const [{ data: enrollments }, { data: scoreReports }, { data: devices }] =
+    await Promise.all([
+      supabase
+        .from("enrollments")
+        .select("id, course_id, enrolled_at, courses(subject, title)")
+        .eq("profile_id", id)
+        .order("enrolled_at", { ascending: false })
+        .returns<EnrollmentRow[]>(),
+      supabase
+        .from("score_reports")
+        .select("id, report_type, title, subject, score, exam_date, memo")
+        .eq("profile_id", id)
+        .order("exam_date", { ascending: false })
+        .returns<ScoreReportRow[]>(),
+      supabase
+        .from("user_devices")
+        .select("id, user_agent, created_at, last_seen_at")
+        .eq("user_id", id)
+        .order("last_seen_at", { ascending: false })
+        .returns<DeviceRow[]>(),
+    ]);
 
   const scoreReportsByType = new Map<string, ScoreReportEntry[]>();
   for (const row of scoreReports ?? []) {
@@ -112,6 +127,13 @@ export default async function Page({
             <h2 className="text-lg font-bold text-zinc-900">비밀번호 초기화</h2>
             <div className="mt-3">
               <ResetPasswordForm userId={user.id} />
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-lg font-bold text-zinc-900">기기 관리</h2>
+            <div className="mt-3">
+              <DeviceSection userId={user.id} devices={devices ?? []} />
             </div>
           </div>
         </div>

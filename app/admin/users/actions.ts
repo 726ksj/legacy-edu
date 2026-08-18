@@ -75,6 +75,30 @@ export async function resetUserPassword(
   return { success: true };
 }
 
+export interface ResetDevicesState {
+  error?: string;
+  success?: boolean;
+}
+
+export async function resetUserDevices(
+  id: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- required by useActionState's action signature
+  _prevState: ResetDevicesState,
+): Promise<ResetDevicesState> {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("user_devices")
+    .delete()
+    .eq("user_id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/admin/users/${id}`);
+  return { success: true };
+}
+
 export interface DeleteUserState {
   error?: string;
 }
