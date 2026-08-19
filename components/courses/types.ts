@@ -9,5 +9,4 @@ export interface CourseListItem {
   durationDays: number | null;
   lectureCount: number;
   price: number;
-  materialPrice: number | null;
 }

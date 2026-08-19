@@ -50,28 +50,9 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
           >
             맛보기
           </Link>
-          <div className="flex flex-col gap-1.5 text-sm text-zinc-700">
-            <label className="flex items-center justify-end gap-2">
-              <span>PC</span>
-              <span className="w-20 text-right font-semibold text-zinc-900">
-                {formatWon(course.price)}
-              </span>
-              <input
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 accent-brand"
-              />
-            </label>
-            {course.materialPrice != null && (
-              <label className="flex items-center justify-end gap-2">
-                <span>교재</span>
-                <span className="w-20 text-right font-semibold text-zinc-900">
-                  {formatWon(course.materialPrice)}
-                </span>
-                <input type="checkbox" className="h-4 w-4 accent-brand" />
-              </label>
-            )}
-          </div>
+          <span className="text-base font-bold text-zinc-900">
+            {formatWon(course.price)}
+          </span>
         </div>
       </div>
 

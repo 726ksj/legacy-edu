@@ -16,7 +16,6 @@ interface Course {
   subject: string;
   title: string;
   overview: string | null;
-  thumbnail_url: string | null;
   instructors: Instructor | null;
 }
 
@@ -48,7 +47,7 @@ export default async function CourseClassroomPage({
     supabase
       .from("courses")
       .select(
-        "id, subject, title, overview, thumbnail_url, instructors(name, photo_url, bio)",
+        "id, subject, title, overview, instructors(name, photo_url, bio)",
       )
       .eq("id", courseId)
       .maybeSingle()
@@ -98,18 +97,6 @@ export default async function CourseClassroomPage({
           </p>
         )}
       </div>
-
-      {course.thumbnail_url && (
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-100">
-          <Image
-            src={course.thumbnail_url}
-            alt={course.title}
-            fill
-            sizes="(min-width: 1024px) 768px, 100vw"
-            className="object-cover"
-          />
-        </div>
-      )}
 
       <div>
         <div className="flex items-baseline justify-between">

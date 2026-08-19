@@ -32,7 +32,6 @@ function readListingFields(formData: FormData) {
   const isBest = formData.get("isBest") === "on";
   const durationWeeksRaw = String(formData.get("durationWeeks") ?? "").trim();
   const priceRaw = String(formData.get("price") ?? "").trim();
-  const materialPriceRaw = String(formData.get("materialPrice") ?? "").trim();
 
   return {
     level: level || null,
@@ -40,7 +39,6 @@ function readListingFields(formData: FormData) {
     is_best: isBest,
     duration_days: durationWeeksRaw ? Number(durationWeeksRaw) * 7 : null,
     price: priceRaw ? Number(priceRaw) : 0,
-    material_price: materialPriceRaw ? Number(materialPriceRaw) : null,
   };
 }
 
@@ -51,7 +49,6 @@ export async function createCourse(
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
-  const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
   const listingFields = readListingFields(formData);
 
@@ -74,7 +71,6 @@ export async function createCourse(
     teacher_name: instructor.name,
     instructor_id: instructorId,
     school: school || null,
-    thumbnail_url: thumbnailUrl || null,
     overview: overview || null,
     ...listingFields,
   });
@@ -97,7 +93,6 @@ export async function updateCourse(
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
-  const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
   const listingFields = readListingFields(formData);
 
@@ -122,7 +117,6 @@ export async function updateCourse(
       teacher_name: instructor.name,
       instructor_id: instructorId,
       school: school || null,
-      thumbnail_url: thumbnailUrl || null,
       overview: overview || null,
       ...listingFields,
     })

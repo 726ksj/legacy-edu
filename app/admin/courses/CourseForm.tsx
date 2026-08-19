@@ -109,33 +109,11 @@ export default function CourseForm({
         </label>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3 rounded-md bg-zinc-50 p-3">
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          교재 가격(원, 선택)
-          <input
-            name="materialPrice"
-            type="number"
-            min={0}
-            placeholder="14000"
-            className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          />
-        </label>
-      </div>
-
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         목록에 보여줄 한 줄 소개 (선택)
         <input
           name="tagline"
           placeholder="예: 12가지 후치수식과 동사 7일 완성!"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
-      </label>
-
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        대표 이미지 URL (선택)
-        <input
-          name="thumbnailUrl"
-          placeholder="https://..."
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>
