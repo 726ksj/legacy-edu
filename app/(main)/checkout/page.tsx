@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getAuthUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import PaymentWidgetSection from "./PaymentWidgetSection";
 
 export const dynamic = "force-dynamic";
 
@@ -63,14 +64,7 @@ export default async function CheckoutPage({
         </div>
       </div>
 
-      <button
-        type="button"
-        disabled
-        title="결제 연동 준비 중입니다."
-        className="rounded-md bg-brand px-5 py-3 text-sm font-semibold text-white opacity-60"
-      >
-        결제하기 (준비 중)
-      </button>
+      <PaymentWidgetSection courseId={course.id} amount={course.price} />
 
       <Link
         href={`/courses/${course.id}`}
