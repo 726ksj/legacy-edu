@@ -37,7 +37,7 @@ export default function DeviceSection({
               key={device.id}
               className="flex items-center justify-between gap-3 rounded-md border border-zinc-100 bg-zinc-50 px-3 py-2 text-xs text-zinc-600"
             >
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-zinc-700">
                   {device.user_agent ?? "알 수 없는 기기"}
                 </p>
@@ -47,6 +47,7 @@ export default function DeviceSection({
                 </p>
               </div>
               <form
+                className="shrink-0"
                 action={removeUserDevice.bind(null, userId, device.id)}
                 onSubmit={(e) => {
                   if (!window.confirm("이 기기를 해제할까요?")) {
