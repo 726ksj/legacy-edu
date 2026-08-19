@@ -19,6 +19,13 @@ interface CourseData {
   school: string | null;
   thumbnail_url: string | null;
   overview: string | null;
+  level: string | null;
+  category: string | null;
+  tagline: string | null;
+  is_best: boolean;
+  duration_days: number | null;
+  price: number;
+  material_price: number | null;
 }
 
 export default function EditCourseForm({
@@ -79,6 +86,84 @@ export default function EditCourseForm({
           />
         </label>
       </div>
+
+      <div className="flex flex-wrap items-end gap-3 rounded-md bg-zinc-50 p-3">
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          과정
+          <select
+            name="level"
+            defaultValue={course.level ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="">미지정</option>
+            <option value="middle">중등</option>
+            <option value="high">고등</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          단계
+          <select
+            name="category"
+            defaultValue={course.category ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="">미지정</option>
+            <option value="기초입문">기초입문</option>
+            <option value="기본이론">기본이론</option>
+            <option value="심화이론">심화이론</option>
+            <option value="파이널">파이널</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          수강기간(일)
+          <input
+            name="durationDays"
+            type="number"
+            min={0}
+            defaultValue={course.duration_days ?? ""}
+            className="w-28 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          PC 수강권 가격(원)
+          <input
+            name="price"
+            type="number"
+            min={0}
+            defaultValue={course.price ?? 0}
+            className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          교재 가격(원, 선택)
+          <input
+            name="materialPrice"
+            type="number"
+            min={0}
+            defaultValue={course.material_price ?? ""}
+            className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex items-center gap-1.5 pb-2 text-sm font-medium text-zinc-700">
+          <input
+            name="isBest"
+            type="checkbox"
+            defaultChecked={course.is_best}
+            className="h-4 w-4 accent-brand"
+          />
+          BEST 뱃지
+        </label>
+      </div>
+
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        목록에 보여줄 한 줄 소개 (선택)
+        <input
+          name="tagline"
+          defaultValue={course.tagline ?? ""}
+          placeholder="예: 12가지 후치수식과 동사 7일 완성!"
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        />
+      </label>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         대표 이미지 URL (선택)

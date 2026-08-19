@@ -26,6 +26,26 @@ async function resolveInstructor(
   return data;
 }
 
+function readListingFields(formData: FormData) {
+  const level = String(formData.get("level") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+  const tagline = String(formData.get("tagline") ?? "").trim();
+  const isBest = formData.get("isBest") === "on";
+  const durationDaysRaw = String(formData.get("durationDays") ?? "").trim();
+  const priceRaw = String(formData.get("price") ?? "").trim();
+  const materialPriceRaw = String(formData.get("materialPrice") ?? "").trim();
+
+  return {
+    level: level || null,
+    category: category || null,
+    tagline: tagline || null,
+    is_best: isBest,
+    duration_days: durationDaysRaw ? Number(durationDaysRaw) : null,
+    price: priceRaw ? Number(priceRaw) : 0,
+    material_price: materialPriceRaw ? Number(materialPriceRaw) : null,
+  };
+}
+
 export async function createCourse(
   _prevState: CreateCourseState,
   formData: FormData,
@@ -35,6 +55,7 @@ export async function createCourse(
   const school = String(formData.get("school") ?? "").trim();
   const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
+  const listingFields = readListingFields(formData);
 
   if (!title || !instructorId) {
     return { error: "강좌명과 강사를 선택해주세요." };
@@ -57,6 +78,7 @@ export async function createCourse(
     school: school || null,
     thumbnail_url: thumbnailUrl || null,
     overview: overview || null,
+    ...listingFields,
   });
 
   if (error) {
@@ -64,6 +86,8 @@ export async function createCourse(
   }
 
   revalidatePath("/admin/courses");
+  revalidatePath("/courses/high");
+  revalidatePath("/courses/middle");
   return { success: true };
 }
 
@@ -77,6 +101,7 @@ export async function updateCourse(
   const school = String(formData.get("school") ?? "").trim();
   const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
+  const listingFields = readListingFields(formData);
 
   if (!title || !instructorId) {
     return { error: "강좌명과 강사를 선택해주세요." };
@@ -101,6 +126,7 @@ export async function updateCourse(
       school: school || null,
       thumbnail_url: thumbnailUrl || null,
       overview: overview || null,
+      ...listingFields,
     })
     .eq("id", courseId);
 
@@ -110,6 +136,8 @@ export async function updateCourse(
 
   revalidatePath("/admin/courses");
   revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePath("/courses/high");
+  revalidatePath("/courses/middle");
   revalidatePath(`/my-classroom/${courseId}`);
   return { success: true };
 }

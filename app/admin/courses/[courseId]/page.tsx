@@ -18,7 +18,7 @@ export default async function Page({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, subject, title, instructor_id, school, thumbnail_url, overview",
+      "id, subject, title, instructor_id, school, thumbnail_url, overview, level, category, tagline, is_best, duration_days, price, material_price",
     )
     .eq("id", courseId)
     .maybeSingle();

@@ -10,7 +10,9 @@ export default async function Page() {
   const supabase = createAdminClient();
   const { data: courses, error } = await supabase
     .from("courses")
-    .select("id, subject, title, teacher_name, school, created_at")
+    .select(
+      "id, subject, title, teacher_name, school, level, category, price, created_at",
+    )
     .order("created_at", { ascending: false });
 
   const { data: instructors } = await supabase
@@ -43,6 +45,8 @@ export default async function Page() {
               <th className="px-4 py-3">강좌명</th>
               <th className="px-4 py-3">선생님</th>
               <th className="px-4 py-3">학교</th>
+              <th className="px-4 py-3">과정/단계</th>
+              <th className="px-4 py-3">가격</th>
               <th className="px-4 py-3">개설일</th>
               <th className="px-4 py-3" />
             </tr>
@@ -66,6 +70,17 @@ export default async function Page() {
                   {row.school ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
+                  {row.level === "high"
+                    ? "고등"
+                    : row.level === "middle"
+                      ? "중등"
+                      : "-"}
+                  {row.category ? ` / ${row.category}` : ""}
+                </td>
+                <td className="px-4 py-3 text-zinc-500">
+                  {row.price ? `${row.price.toLocaleString()}원` : "-"}
+                </td>
+                <td className="px-4 py-3 text-zinc-500">
                   {new Date(row.created_at).toLocaleString("ko-KR")}
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -85,7 +100,7 @@ export default async function Page() {
             ))}
             {courses?.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-zinc-400">
                   등록된 강좌가 없습니다.
                 </td>
               </tr>
