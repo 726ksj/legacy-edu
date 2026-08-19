@@ -41,21 +41,23 @@ export default function CourseListing({
 
   return (
     <div>
-      <div className="flex overflow-x-auto border-b border-zinc-200">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`shrink-0 border-b-2 px-5 py-3 text-sm font-semibold transition-colors ${
-              activeTab === tab
-                ? "border-brand text-brand-dark"
-                : "border-transparent text-zinc-500 hover:text-zinc-800"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="flex justify-center overflow-x-auto">
+        <div className="inline-flex divide-x divide-zinc-300 overflow-hidden rounded-md border border-zinc-300">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`shrink-0 px-6 py-2.5 text-sm font-semibold transition-colors ${
+                activeTab === tab
+                  ? "bg-zinc-900 text-white"
+                  : "bg-white text-zinc-600 hover:bg-zinc-50"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {visibleCourses.length === 0 && (
@@ -64,32 +66,11 @@ export default function CourseListing({
         </p>
       )}
 
-      {activeTab === "전체" ? (
-        <div className="mt-6 flex flex-col gap-10">
-          {schoolTabs.map((school) => {
-            const list = grouped.get(school) ?? [];
-            if (list.length === 0) return null;
-            return (
-              <section key={school}>
-                <h2 className="mb-2 text-sm font-bold text-zinc-900">
-                  [{school}]
-                </h2>
-                <div>
-                  {list.map((course) => (
-                    <CourseCard key={course.id} course={course} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="mt-4">
-          {visibleCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
-          ))}
-        </div>
-      )}
+      <div className="mt-8">
+        {visibleCourses.map((course) => (
+          <CourseCard key={course.id} course={course} />
+        ))}
+      </div>
     </div>
   );
 }

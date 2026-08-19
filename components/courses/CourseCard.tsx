@@ -30,7 +30,7 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
           )}
           <Link
             href={`/courses/${course.id}`}
-            className="mt-0.5 block text-base font-semibold text-zinc-900 hover:text-brand-dark hover:underline"
+            className="mt-0.5 block text-lg font-semibold text-zinc-900 hover:text-brand-dark hover:underline"
           >
             {course.title}
           </Link>
@@ -43,14 +43,14 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-row items-start gap-4 sm:w-56 sm:flex-col sm:items-end sm:gap-2">
-          <Link
-            href={`/courses/${course.id}`}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:border-brand hover:text-brand-dark"
-          >
-            맛보기
-          </Link>
-          <span className="text-base font-bold text-zinc-900">
+        <div className="flex shrink-0 flex-row items-center gap-2 sm:w-40 sm:justify-end">
+          <input
+            type="checkbox"
+            defaultChecked
+            aria-label="강의 선택"
+            className="h-4 w-4 accent-brand"
+          />
+          <span className="text-lg font-bold text-zinc-900">
             {formatWon(course.price)}
           </span>
         </div>
