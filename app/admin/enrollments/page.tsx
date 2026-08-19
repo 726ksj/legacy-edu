@@ -22,7 +22,7 @@ export default async function Page() {
 
   const { data: students } = await supabase
     .from("profiles")
-    .select("id, name, username")
+    .select("id, name, username, school, grade")
     .order("name", { ascending: true });
 
   const { data: enrollments, error } = await supabase

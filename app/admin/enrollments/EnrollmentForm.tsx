@@ -15,6 +15,8 @@ interface Student {
   id: string;
   name: string;
   username: string;
+  school: string | null;
+  grade: string | null;
 }
 
 export default function EnrollmentForm({
@@ -51,7 +53,10 @@ export default function EnrollmentForm({
     const q = query.trim();
     if (!q) return students;
     return students.filter(
-      (student) => student.name.includes(q) || student.username.includes(q),
+      (student) =>
+        student.name.includes(q) ||
+        student.username.includes(q) ||
+        student.school?.includes(q),
     );
   }, [students, query]);
 
@@ -151,10 +156,10 @@ export default function EnrollmentForm({
                 onChange={() => toggle(student.id)}
                 className="h-4 w-4 rounded border-zinc-300"
               />
-              <span className="text-zinc-700">{student.name}</span>
-              <span className="font-mono text-xs text-zinc-400">
-                ({student.username})
+              <span className="text-xs text-zinc-400">
+                {student.school ?? "학교 미정"} · {student.grade ?? "학년 미정"}
               </span>
+              <span className="text-zinc-700">{student.name}</span>
             </label>
           ))}
           {filteredStudents.length === 0 && (
