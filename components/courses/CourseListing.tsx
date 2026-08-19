@@ -41,23 +41,21 @@ export default function CourseListing({
 
   return (
     <div>
-      <div className="flex justify-center overflow-x-auto">
-        <div className="inline-flex divide-x divide-zinc-300 overflow-hidden rounded-md border border-zinc-300">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`shrink-0 px-6 py-2.5 text-sm font-semibold transition-colors ${
-                activeTab === tab
-                  ? "bg-zinc-900 text-white"
-                  : "bg-white text-zinc-600 hover:bg-zinc-50"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+      <div className="mx-auto flex max-w-2xl divide-x divide-zinc-300 overflow-hidden rounded-md border border-zinc-300">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 px-4 py-2.5 text-sm font-semibold transition-colors ${
+              activeTab === tab
+                ? "bg-zinc-900 text-white"
+                : "bg-white text-zinc-600 hover:bg-zinc-50"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
       {visibleCourses.length === 0 && (
