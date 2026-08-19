@@ -6,7 +6,12 @@ import { deleteCourse } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>;
+}) {
+  const { edit } = await searchParams;
   const supabase = createAdminClient();
   const { data: courses, error } = await supabase
     .from("courses")
@@ -20,6 +25,16 @@ export default async function Page() {
     .select("id, name, subject")
     .order("name", { ascending: true });
 
+  const { data: editingCourse } = edit
+    ? await supabase
+        .from("courses")
+        .select(
+          "id, subject, title, instructor_id, school, overview, level, tagline, is_best, duration_days, price",
+        )
+        .eq("id", edit)
+        .maybeSingle()
+    : { data: null };
+
   return (
     <div className="flex flex-1 flex-col p-8">
       <h1 className="text-2xl font-bold text-zinc-900">강좌 관리</h1>
@@ -28,7 +43,11 @@ export default async function Page() {
       </p>
 
       <div className="mt-6">
-        <CourseForm instructors={instructors ?? []} />
+        <CourseForm
+          key={editingCourse?.id ?? "new"}
+          instructors={instructors ?? []}
+          editingCourse={editingCourse}
+        />
       </div>
 
       {error && (
@@ -53,7 +72,10 @@ export default async function Page() {
           </thead>
           <tbody className="divide-y divide-zinc-100">
             {courses?.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                className={row.id === editingCourse?.id ? "bg-amber-50" : undefined}
+              >
                 <td className="px-4 py-3 text-zinc-700">{row.subject}</td>
                 <td className="px-4 py-3 font-medium text-zinc-900">
                   <Link
@@ -89,6 +111,12 @@ export default async function Page() {
                       className="text-xs font-semibold text-brand-dark hover:underline"
                     >
                       차시 관리
+                    </Link>
+                    <Link
+                      href={`/admin/courses?edit=${row.id}`}
+                      className="text-xs font-semibold text-zinc-600 hover:underline"
+                    >
+                      수정
                     </Link>
                     <DeleteCourseButton
                       action={deleteCourse.bind(null, row.id)}
