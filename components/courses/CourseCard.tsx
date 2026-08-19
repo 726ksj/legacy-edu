@@ -64,7 +64,7 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
           장바구니
         </Link>
         <Link
-          href={`/courses/${course.id}`}
+          href={`/checkout?courseId=${course.id}`}
           className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
         >
           즉시구매

@@ -11,12 +11,23 @@ export interface LoginState {
 
 const EMAIL_DOMAIN = "legacyedu.local";
 
+// redirect 파라미터는 URL 쿼리에서 그대로 들어오는 값이라, 외부 도메인으로
+// 보내는 open redirect에 악용되지 않도록 우리 사이트 내부 상대 경로만
+// 허용한다.
+function safeRedirectPath(path: string): string | null {
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("://")) {
+    return null;
+  }
+  return path;
+}
+
 export async function login(
   _prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
   const username = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const redirectTo = safeRedirectPath(String(formData.get("redirect") ?? ""));
 
   if (!username || !password) {
     return { error: "아이디와 비밀번호를 입력해주세요." };
@@ -46,7 +57,7 @@ export async function login(
     redirect("/admin");
   }
 
-  redirect("/");
+  redirect(redirectTo ?? "/");
 }
 
 async function registerDevice(
