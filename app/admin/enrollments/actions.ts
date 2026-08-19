@@ -6,36 +6,55 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export interface CreateEnrollmentState {
   error?: string;
   success?: boolean;
+  message?: string;
 }
 
 export async function createEnrollment(
   _prevState: CreateEnrollmentState,
   formData: FormData,
 ): Promise<CreateEnrollmentState> {
-  const profileId = String(formData.get("profileId") ?? "").trim();
+  const profileIds = formData
+    .getAll("profileIds")
+    .map(String)
+    .filter(Boolean);
   const courseId = String(formData.get("courseId") ?? "").trim();
 
-  if (!profileId || !courseId) {
+  if (!courseId || profileIds.length === 0) {
     return { error: "강좌와 학생을 선택해주세요." };
   }
 
   const supabase = createAdminClient();
 
-  const { error } = await supabase
-    .from("enrollments")
-    .insert({ profile_id: profileId, course_id: courseId });
+  let registered = 0;
+  let alreadyEnrolled = 0;
+  for (const profileId of profileIds) {
+    const { error } = await supabase
+      .from("enrollments")
+      .insert({ profile_id: profileId, course_id: courseId });
 
-  if (error) {
-    return {
-      error:
-        error.code === "23505"
-          ? "이미 이 강좌에 등록된 학생입니다."
-          : error.message,
-    };
+    if (error) {
+      if (error.code === "23505") {
+        alreadyEnrolled += 1;
+        continue;
+      }
+      return { error: error.message };
+    }
+    registered += 1;
   }
 
   revalidatePath("/admin/enrollments");
-  return { success: true };
+
+  if (registered === 0) {
+    return { error: "선택한 학생은 이미 모두 이 강좌에 등록되어 있습니다." };
+  }
+
+  return {
+    success: true,
+    message:
+      alreadyEnrolled > 0
+        ? `${registered}명 등록 완료 (이미 등록되어 있던 ${alreadyEnrolled}명 제외)`
+        : `${registered}명 등록 완료`,
+  };
 }
 
 export async function deleteEnrollment(id: string) {
