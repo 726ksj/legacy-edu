@@ -49,6 +49,7 @@ export default function CourseForm({
     <form
       ref={formRef}
       action={formAction}
+      autoComplete="off"
       className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4"
     >
       {editingCourse && (
@@ -82,6 +83,7 @@ export default function CourseForm({
             name="school"
             defaultValue={editingCourse?.school ?? ""}
             placeholder="예: 분당고"
+            autoComplete="off"
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
@@ -130,6 +132,7 @@ export default function CourseForm({
                 : ""
             }
             placeholder="13"
+            autoComplete="off"
             className="w-24 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
@@ -141,6 +144,7 @@ export default function CourseForm({
             min={0}
             defaultValue={editingCourse?.price ?? ""}
             placeholder="51000"
+            autoComplete="off"
             className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
@@ -161,6 +165,7 @@ export default function CourseForm({
           name="tagline"
           defaultValue={editingCourse?.tagline ?? ""}
           placeholder="예: 12가지 후치수식과 동사 7일 완성!"
+          autoComplete="off"
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>
