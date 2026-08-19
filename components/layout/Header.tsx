@@ -24,14 +24,6 @@ const NAV_ITEMS: NavItem[] = [
     children: [{ label: "대표 인사말", href: "/about/greeting" }],
   },
   {
-    label: "강좌",
-    href: "/courses",
-    children: [
-      { label: "중등", href: "/courses/middle" },
-      { label: "고등", href: "/courses/high" },
-    ],
-  },
-  {
     label: "커리큘럼",
     href: "/curriculum",
     children: [{ label: "LEGACY 커리큘럼", href: "/curriculum/legacy" }],
@@ -109,14 +101,22 @@ export default async function Header() {
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
           {user ? (
-            <form action={logout}>
-              <button
-                type="submit"
-                className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:py-2 sm:text-sm md:px-6 md:py-2.5 md:text-base"
+            <>
+              <Link
+                href="/courses/high"
+                className="whitespace-nowrap rounded-md bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-dark sm:px-4 sm:py-2 sm:text-sm md:px-6 md:py-2.5 md:text-base"
               >
-                로그아웃
-              </button>
-            </form>
+                수강신청
+              </Link>
+              <form action={logout}>
+                <button
+                  type="submit"
+                  className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:py-2 sm:text-sm md:px-6 md:py-2.5 md:text-base"
+                >
+                  로그아웃
+                </button>
+              </form>
+            </>
           ) : (
             <>
               <Link
