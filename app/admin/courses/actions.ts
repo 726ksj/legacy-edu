@@ -28,19 +28,17 @@ async function resolveInstructor(
 
 function readListingFields(formData: FormData) {
   const level = String(formData.get("level") ?? "").trim();
-  const category = String(formData.get("category") ?? "").trim();
   const tagline = String(formData.get("tagline") ?? "").trim();
   const isBest = formData.get("isBest") === "on";
-  const durationDaysRaw = String(formData.get("durationDays") ?? "").trim();
+  const durationWeeksRaw = String(formData.get("durationWeeks") ?? "").trim();
   const priceRaw = String(formData.get("price") ?? "").trim();
   const materialPriceRaw = String(formData.get("materialPrice") ?? "").trim();
 
   return {
     level: level || null,
-    category: category || null,
     tagline: tagline || null,
     is_best: isBest,
-    duration_days: durationDaysRaw ? Number(durationDaysRaw) : null,
+    duration_days: durationWeeksRaw ? Number(durationWeeksRaw) * 7 : null,
     price: priceRaw ? Number(priceRaw) : 0,
     material_price: materialPriceRaw ? Number(materialPriceRaw) : null,
   };

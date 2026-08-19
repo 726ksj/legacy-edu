@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import CourseListing from "@/components/courses/CourseListing";
-import type { CourseCategory, CourseListItem } from "@/components/courses/types";
+import type { CourseListItem } from "@/components/courses/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function Page() {
   const { data: courses } = await supabase
     .from("courses")
     .select(
-      "id, subject, teacher_name, title, category, tagline, is_best, duration_days, price, material_price",
+      "id, subject, teacher_name, title, school, tagline, is_best, duration_days, price, material_price",
     )
     .eq("level", "high")
     .order("created_at", { ascending: true });
@@ -38,7 +38,7 @@ export default async function Page() {
     subject: course.subject,
     teacherName: course.teacher_name,
     title: course.title,
-    category: (course.category as CourseCategory | null) ?? null,
+    school: course.school,
     tagline: course.tagline,
     isBest: course.is_best,
     durationDays: course.duration_days,
@@ -53,7 +53,7 @@ export default async function Page() {
         고등 강좌
       </h1>
       <p className="mt-2 text-sm text-zinc-500">
-        학년과 단계에 맞는 강좌를 선택해 수강 신청하세요.
+        재학 중인 학교에 맞는 강좌를 선택해 수강 신청하세요.
       </p>
 
       <div className="mt-8">

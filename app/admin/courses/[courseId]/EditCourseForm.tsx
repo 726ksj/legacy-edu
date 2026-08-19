@@ -20,7 +20,6 @@ interface CourseData {
   thumbnail_url: string | null;
   overview: string | null;
   level: string | null;
-  category: string | null;
   tagline: string | null;
   is_best: boolean;
   duration_days: number | null;
@@ -47,6 +46,26 @@ export default function EditCourseForm({
       className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6"
     >
       <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          과정
+          <select
+            name="level"
+            defaultValue={course.level ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="">미지정</option>
+            <option value="middle">중등</option>
+            <option value="high">고등</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          학교 (선택)
+          <input
+            name="school"
+            defaultValue={course.school ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           강좌명
           <input
@@ -78,50 +97,17 @@ export default function EditCourseForm({
           </span>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          학교 (선택)
+          수강기간(주)
           <input
-            name="school"
-            defaultValue={course.school ?? ""}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          />
-        </label>
-      </div>
-
-      <div className="flex flex-wrap items-end gap-3 rounded-md bg-zinc-50 p-3">
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          과정
-          <select
-            name="level"
-            defaultValue={course.level ?? ""}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="">미지정</option>
-            <option value="middle">중등</option>
-            <option value="high">고등</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          단계
-          <select
-            name="category"
-            defaultValue={course.category ?? ""}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="">미지정</option>
-            <option value="기초입문">기초입문</option>
-            <option value="기본이론">기본이론</option>
-            <option value="심화이론">심화이론</option>
-            <option value="파이널">파이널</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          수강기간(일)
-          <input
-            name="durationDays"
+            name="durationWeeks"
             type="number"
             min={0}
-            defaultValue={course.duration_days ?? ""}
-            className="w-28 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            defaultValue={
+              course.duration_days != null
+                ? Math.round(course.duration_days / 7)
+                : ""
+            }
+            className="w-24 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
@@ -134,6 +120,18 @@ export default function EditCourseForm({
             className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
+        <label className="flex items-center gap-1.5 pb-2 text-sm font-medium text-zinc-700">
+          <input
+            name="isBest"
+            type="checkbox"
+            defaultChecked={course.is_best}
+            className="h-4 w-4 accent-brand"
+          />
+          BEST 뱃지
+        </label>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3 rounded-md bg-zinc-50 p-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           교재 가격(원, 선택)
           <input
@@ -143,15 +141,6 @@ export default function EditCourseForm({
             defaultValue={course.material_price ?? ""}
             className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
-        </label>
-        <label className="flex items-center gap-1.5 pb-2 text-sm font-medium text-zinc-700">
-          <input
-            name="isBest"
-            type="checkbox"
-            defaultChecked={course.is_best}
-            className="h-4 w-4 accent-brand"
-          />
-          BEST 뱃지
         </label>
       </div>
 

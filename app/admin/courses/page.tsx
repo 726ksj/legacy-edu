@@ -11,7 +11,7 @@ export default async function Page() {
   const { data: courses, error } = await supabase
     .from("courses")
     .select(
-      "id, subject, title, teacher_name, school, level, category, price, created_at",
+      "id, subject, title, teacher_name, school, level, price, created_at",
     )
     .order("created_at", { ascending: false });
 
@@ -45,7 +45,7 @@ export default async function Page() {
               <th className="px-4 py-3">강좌명</th>
               <th className="px-4 py-3">선생님</th>
               <th className="px-4 py-3">학교</th>
-              <th className="px-4 py-3">과정/단계</th>
+              <th className="px-4 py-3">과정</th>
               <th className="px-4 py-3">가격</th>
               <th className="px-4 py-3">개설일</th>
               <th className="px-4 py-3" />
@@ -75,7 +75,6 @@ export default async function Page() {
                     : row.level === "middle"
                       ? "중등"
                       : "-"}
-                  {row.category ? ` / ${row.category}` : ""}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
                   {row.price ? `${row.price.toLocaleString()}원` : "-"}

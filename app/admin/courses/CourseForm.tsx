@@ -37,6 +37,26 @@ export default function CourseForm({
     >
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          과정
+          <select
+            name="level"
+            defaultValue=""
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="">미지정</option>
+            <option value="middle">중등</option>
+            <option value="high">고등</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          학교 (선택)
+          <input
+            name="school"
+            placeholder="예: 분당고"
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           강좌명
           <input
             name="title"
@@ -64,50 +84,13 @@ export default function CourseForm({
           </select>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          학교 (선택)
+          수강기간(주)
           <input
-            name="school"
-            placeholder="예: 분당고등학교"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          />
-        </label>
-      </div>
-
-      <div className="flex flex-wrap items-end gap-3 rounded-md bg-zinc-50 p-3">
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          과정
-          <select
-            name="level"
-            defaultValue=""
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="">미지정</option>
-            <option value="middle">중등</option>
-            <option value="high">고등</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          단계
-          <select
-            name="category"
-            defaultValue=""
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="">미지정</option>
-            <option value="기초입문">기초입문</option>
-            <option value="기본이론">기본이론</option>
-            <option value="심화이론">심화이론</option>
-            <option value="파이널">파이널</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          수강기간(일)
-          <input
-            name="durationDays"
+            name="durationWeeks"
             type="number"
             min={0}
-            placeholder="90"
-            className="w-28 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            placeholder="13"
+            className="w-24 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
@@ -120,6 +103,13 @@ export default function CourseForm({
             className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
+        <label className="flex items-center gap-1.5 pb-2 text-sm font-medium text-zinc-700">
+          <input name="isBest" type="checkbox" className="h-4 w-4 accent-brand" />
+          BEST 뱃지
+        </label>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3 rounded-md bg-zinc-50 p-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           교재 가격(원, 선택)
           <input
@@ -129,10 +119,6 @@ export default function CourseForm({
             placeholder="14000"
             className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
-        </label>
-        <label className="flex items-center gap-1.5 pb-2 text-sm font-medium text-zinc-700">
-          <input name="isBest" type="checkbox" className="h-4 w-4 accent-brand" />
-          BEST 뱃지
         </label>
       </div>
 

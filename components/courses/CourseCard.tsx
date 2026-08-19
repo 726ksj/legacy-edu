@@ -14,7 +14,7 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
           <span className="font-semibold text-zinc-700">
             {course.teacherName}
           </span>
-          {course.category && <span>{course.category}</span>}
+          {course.school && <span>{course.school}</span>}
         </div>
 
         <div className="min-w-0 flex-1">
@@ -36,7 +36,7 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
           </Link>
           <p className="mt-2 text-xs text-zinc-400">
             {course.durationDays != null && (
-              <>수강기간: {course.durationDays}일</>
+              <>수강기간: {Math.round(course.durationDays / 7)}주</>
             )}
             {course.durationDays != null && "    "}
             강의수: {course.lectureCount}강
