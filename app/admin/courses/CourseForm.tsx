@@ -52,18 +52,6 @@ export default function CourseForm({
       autoComplete="off"
       className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4"
     >
-      {editingCourse && (
-        <div className="flex items-center justify-between rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          <span>&ldquo;{editingCourse.title}&rdquo; 강좌 수정 중</span>
-          <Link
-            href="/admin/courses"
-            className="font-semibold text-amber-900 hover:underline"
-          >
-            취소
-          </Link>
-        </div>
-      )}
-
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           과정
@@ -114,11 +102,6 @@ export default function CourseForm({
               </option>
             ))}
           </select>
-          {editingCourse && (
-            <span className="text-xs font-normal text-zinc-400">
-              현재 과목: {editingCourse.subject}
-            </span>
-          )}
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           수강기간(주)
@@ -194,19 +177,29 @@ export default function CourseForm({
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending || instructors.length === 0}
-        className="self-start rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-      >
-        {isPending
-          ? editingCourse
-            ? "저장 중..."
-            : "등록 중..."
-          : editingCourse
-            ? "수정 저장"
-            : "강좌 등록"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={isPending || instructors.length === 0}
+          className="self-start rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        >
+          {isPending
+            ? editingCourse
+              ? "저장 중..."
+              : "등록 중..."
+            : editingCourse
+              ? "수정 저장"
+              : "강좌 등록"}
+        </button>
+        {editingCourse && (
+          <Link
+            href="/admin/courses"
+            className="text-sm font-semibold text-zinc-500 hover:text-zinc-700"
+          >
+            취소
+          </Link>
+        )}
+      </div>
 
       {state.error && (
         <p className="text-sm font-medium text-red-500">{state.error}</p>
