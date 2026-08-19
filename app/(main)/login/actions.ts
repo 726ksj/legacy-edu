@@ -72,13 +72,16 @@ async function registerDevice(
     return null;
   }
 
-  const { count } = await supabase
+  const { data: devices } = await supabase
     .from("user_devices")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
+    .select("id")
+    .eq("user_id", userId)
+    .order("last_seen_at", { ascending: true });
 
-  if ((count ?? 0) >= MAX_DEVICES_PER_USER) {
-    return `등록된 기기가 이미 ${MAX_DEVICES_PER_USER}대입니다. 기존 기기에서 로그아웃하거나 관리자에게 기기 초기화를 요청해주세요.`;
+  const excess = (devices?.length ?? 0) - MAX_DEVICES_PER_USER + 1;
+  if (excess > 0) {
+    const idsToEvict = devices!.slice(0, excess).map((device) => device.id);
+    await supabase.from("user_devices").delete().in("id", idsToEvict);
   }
 
   const headerStore = await headers();

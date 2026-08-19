@@ -36,12 +36,15 @@ export async function updateSession(request: NextRequest) {
   // createServerClient와 getUser() 사이에 다른 로직을 넣지 말 것 -
   // 세션이 갱신되지 않아 사용자가 이유 없이 로그아웃되는 문제가 생기면
   // 디버깅하기 매우 어려워진다.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // 기기 등록 제한(로그인 시 사용)을 위해, 브라우저마다 고정되는 식별자를
   // 쿠키로 미리 발급해둔다. 로그인 폼 제출 시점에는 이미 이 쿠키가 있어야
   // 하므로, 로그인 액션이 아니라 모든 요청에 걸리는 미들웨어에서 처리한다.
-  if (!request.cookies.get(DEVICE_COOKIE_NAME)) {
+  const deviceId = request.cookies.get(DEVICE_COOKIE_NAME)?.value;
+  if (!deviceId) {
     response.cookies.set(DEVICE_COOKIE_NAME, crypto.randomUUID(), {
       httpOnly: true,
       sameSite: "lax",
@@ -49,6 +52,27 @@ export async function updateSession(request: NextRequest) {
       path: "/",
       maxAge: 60 * 60 * 24 * 400,
     });
+  }
+
+  // 다른 기기가 로그인하면서 기기 등록 한도 초과로 이 기기가 자동으로
+  // 밀려났을 수 있다. (관리자 계정은 기기 등록 대상이 아니라서 제외.)
+  // 밀려났다면 이번 요청에서 바로 로그아웃시킨다 - 실시간 강제 종료는
+  // 아니고, 밀려난 기기가 다음으로 페이지를 이동/새로고침하는 시점이다.
+  if (
+    user &&
+    deviceId &&
+    user.email !== `${process.env.ADMIN_USERNAME}@legacyedu.local`
+  ) {
+    const { data: device } = await supabase
+      .from("user_devices")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("device_id", deviceId)
+      .maybeSingle();
+
+    if (!device) {
+      await supabase.auth.signOut();
+    }
   }
 
   return response;
