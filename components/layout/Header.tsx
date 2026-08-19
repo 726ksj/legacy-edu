@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAuthUser } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import MobileNav from "./MobileNav";
+import EnrollmentButton from "./EnrollmentButton";
 
 interface NavChild {
   label: string;
@@ -102,12 +103,7 @@ export default async function Header() {
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
           {user ? (
             <>
-              <Link
-                href="/courses/high"
-                className="whitespace-nowrap rounded-md bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-dark sm:px-4 sm:py-2 sm:text-sm md:px-6 md:py-2.5 md:text-base"
-              >
-                수강신청
-              </Link>
+              <EnrollmentButton />
               <form action={logout}>
                 <button
                   type="submit"
