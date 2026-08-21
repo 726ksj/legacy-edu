@@ -2,16 +2,39 @@
 
 import { useState } from "react";
 import { createDirectUpload, saveLesson } from "./actions";
+import LessonAudiencePicker, {
+  type AudienceStudent,
+} from "./LessonAudiencePicker";
 
-export default function UploadLessonForm({ courseId }: { courseId: string }) {
+export default function UploadLessonForm({
+  courseId,
+  students,
+}: {
+  courseId: string;
+  students: AudienceStudent[];
+}) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [isRestricted, setIsRestricted] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState<"idle" | "uploading" | "saving">(
     "idle",
   );
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  const toggleId = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,11 +66,20 @@ export default function UploadLessonForm({ courseId }: { courseId: string }) {
       });
 
       setStatus("saving");
-      await saveLesson(courseId, title.trim(), uploadId, description.trim());
+      await saveLesson(
+        courseId,
+        title.trim(),
+        uploadId,
+        description.trim(),
+        isRestricted,
+        Array.from(selectedIds),
+      );
 
       setTitle("");
       setDescription("");
       setFile(null);
+      setIsRestricted(false);
+      setSelectedIds(new Set());
       setStatus("idle");
       setProgress(0);
       window.location.reload();
@@ -109,6 +141,17 @@ export default function UploadLessonForm({ courseId }: { courseId: string }) {
             className="hidden"
           />
         </label>
+      </div>
+      <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        공개 대상
+        <LessonAudiencePicker
+          students={students}
+          isRestricted={isRestricted}
+          onIsRestrictedChange={setIsRestricted}
+          selectedIds={selectedIds}
+          onToggleId={toggleId}
+          disabled={isBusy}
+        />
       </div>
       <button
         type="submit"

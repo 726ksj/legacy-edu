@@ -7,7 +7,7 @@ import {
   signThumbnailToken,
   syncLessonStatuses,
 } from "@/lib/mux";
-import { isEnrolled } from "@/lib/enrollments";
+import { canWatchLesson } from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
 import NoteSection from "./NoteSection";
 
@@ -19,6 +19,7 @@ interface LessonRow {
   mux_asset_id: string | null;
   mux_playback_id: string | null;
   course_id: string;
+  is_restricted: boolean;
   courses: { subject: string; title: string; teacher_name: string } | null;
 }
 
@@ -47,7 +48,7 @@ export default async function WatchPage({
   const { data: lesson } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, courses(subject, title, teacher_name)",
+      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, is_restricted, courses(subject, title, teacher_name)",
     )
     .eq("id", lessonId)
     .maybeSingle()
@@ -61,7 +62,7 @@ export default async function WatchPage({
   // 않으니 병렬로 요청한다.
   const [enrolled, { data: allSiblings }, { data: noteRows }] =
     await Promise.all([
-      isEnrolled(supabase, user.id, lesson.course_id),
+      canWatchLesson(supabase, user.id, lesson),
       supabase
         .from("lessons")
         .select("id, order_no, title, status, mux_asset_id, mux_playback_id")

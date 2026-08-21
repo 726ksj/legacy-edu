@@ -4,6 +4,7 @@ import { syncLessonStatuses } from "@/lib/mux";
 import UploadLessonForm from "./UploadLessonForm";
 import LessonRow from "./LessonRow";
 import { deleteLesson } from "./actions";
+import type { AudienceStudent } from "./LessonAudiencePicker";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,10 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   ready: { label: "재생 가능", className: "bg-brand-light text-brand-dark" },
   errored: { label: "처리 실패", className: "bg-red-100 text-red-600" },
 };
+
+interface EnrolledProfileRow {
+  profiles: AudienceStudent | null;
+}
 
 export default async function Page({
   params,
@@ -34,13 +39,39 @@ export default async function Page({
   const { data: lessons } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, mux_asset_id, status, created_at, description",
+      "id, order_no, title, mux_asset_id, status, created_at, description, is_restricted",
     )
     .eq("course_id", courseId)
     .order("order_no", { ascending: true });
 
   if (lessons?.length) {
     await syncLessonStatuses(supabase, lessons);
+  }
+
+  const { data: enrollmentRows } = await supabase
+    .from("enrollments")
+    .select("profiles(id, name, username, school, grade)")
+    .eq("course_id", courseId)
+    .returns<EnrolledProfileRow[]>();
+
+  const students = (enrollmentRows ?? [])
+    .map((row) => row.profiles)
+    .filter((profile): profile is AudienceStudent => profile !== null)
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+
+  const lessonIds = (lessons ?? []).map((lesson) => lesson.id);
+  const { data: accessRows } = lessonIds.length
+    ? await supabase
+        .from("lesson_access")
+        .select("lesson_id, profile_id")
+        .in("lesson_id", lessonIds)
+    : { data: [] as { lesson_id: string; profile_id: string }[] };
+
+  const accessByLesson = new Map<string, string[]>();
+  for (const row of accessRows ?? []) {
+    const list = accessByLesson.get(row.lesson_id) ?? [];
+    list.push(row.profile_id);
+    accessByLesson.set(row.lesson_id, list);
   }
 
   return (
@@ -53,7 +84,7 @@ export default async function Page({
       </p>
 
       <div className="mt-6">
-        <UploadLessonForm courseId={courseId} />
+        <UploadLessonForm courseId={courseId} students={students} />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-white">
@@ -77,6 +108,8 @@ export default async function Page({
                   lesson={lesson}
                   courseId={courseId}
                   statusInfo={statusInfo}
+                  students={students}
+                  initialSelectedIds={accessByLesson.get(lesson.id) ?? []}
                   deleteAction={deleteLesson.bind(null, lesson.id, courseId)}
                 />
               );

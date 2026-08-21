@@ -32,6 +32,8 @@ export async function saveLesson(
   title: string,
   uploadId: string,
   description: string,
+  isRestricted: boolean,
+  profileIds: string[],
 ) {
   const mux = createMuxClient();
   const upload = await mux.video.uploads.retrieve(uploadId);
@@ -51,9 +53,19 @@ export async function saveLesson(
       mux_asset_id: upload.asset_id ?? null,
       status: "preparing",
       description: description || null,
+      is_restricted: isRestricted,
     })
     .select("id")
     .single();
+
+  if (isRestricted && inserted && profileIds.length > 0) {
+    await supabase.from("lesson_access").insert(
+      profileIds.map((profileId) => ({
+        lesson_id: inserted.id,
+        profile_id: profileId,
+      })),
+    );
+  }
 
   // 업로드할 때마다 강좌의 모든 차시를 제목 기준 오름차순으로 다시 매겨서,
   // 어떤 순서로 업로드하든 항상 제목 순서대로 나열되게 한다.
@@ -90,6 +102,8 @@ export async function updateLessonInfo(
   const orderNoRaw = String(formData.get("orderNo") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const orderNo = Number(orderNoRaw);
+  const isRestricted = formData.get("isRestricted") === "true";
+  const profileIds = formData.getAll("profileIds").map(String);
 
   if (!title || !orderNoRaw || Number.isNaN(orderNo)) {
     return { error: "차시 제목과 차시 번호를 입력해주세요." };
@@ -102,11 +116,24 @@ export async function updateLessonInfo(
       title,
       order_no: orderNo,
       description: description || null,
+      is_restricted: isRestricted,
     })
     .eq("id", lessonId);
 
   if (error) {
     return { error: error.message };
+  }
+
+  // 공개 대상이 바뀌었을 수 있으니 항상 허용 목록을 새로 씀 (전체 공개로
+  // 전환한 경우에도 남아있던 목록이 깨끗이 비워지도록).
+  await supabase.from("lesson_access").delete().eq("lesson_id", lessonId);
+  if (isRestricted && profileIds.length > 0) {
+    await supabase.from("lesson_access").insert(
+      profileIds.map((profileId) => ({
+        lesson_id: lessonId,
+        profile_id: profileId,
+      })),
+    );
   }
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);

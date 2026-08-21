@@ -3,6 +3,9 @@
 import { useActionState, useState } from "react";
 import { updateLessonInfo, type UpdateLessonInfoState } from "./actions";
 import DeleteLessonButton from "./DeleteLessonButton";
+import LessonAudiencePicker, {
+  type AudienceStudent,
+} from "./LessonAudiencePicker";
 
 const initialState: UpdateLessonInfoState = {};
 
@@ -18,25 +21,46 @@ interface Lesson {
   status: string;
   description: string | null;
   created_at: string;
+  is_restricted: boolean;
 }
 
 export default function LessonRow({
   lesson,
   courseId,
   statusInfo,
+  students,
+  initialSelectedIds,
   deleteAction,
 }: {
   lesson: Lesson;
   courseId: string;
   statusInfo: StatusInfo;
+  students: AudienceStudent[];
+  initialSelectedIds: string[];
   deleteAction: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
+  const [isRestricted, setIsRestricted] = useState(lesson.is_restricted);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    new Set(initialSelectedIds),
+  );
   const boundUpdate = updateLessonInfo.bind(null, lesson.id, courseId);
   const [state, formAction, isPending] = useActionState(
     boundUpdate,
     initialState,
   );
+
+  const toggleId = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   if (editing) {
     return (
@@ -71,6 +95,17 @@ export default function LessonRow({
                 name="description"
                 defaultValue={lesson.description ?? ""}
                 className="min-w-[16rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
+              공개 대상
+              <LessonAudiencePicker
+                students={students}
+                isRestricted={isRestricted}
+                onIsRestrictedChange={setIsRestricted}
+                selectedIds={selectedIds}
+                onToggleId={toggleId}
+                disabled={isPending}
               />
             </label>
             <button
@@ -110,11 +145,18 @@ export default function LessonRow({
         )}
       </td>
       <td className="px-4 py-3">
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo.className}`}
-        >
-          {statusInfo.label}
-        </span>
+        <div className="flex flex-wrap gap-1.5">
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo.className}`}
+          >
+            {statusInfo.label}
+          </span>
+          {lesson.is_restricted && (
+            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+              일부 공개 ({selectedIds.size}명)
+            </span>
+          )}
+        </div>
       </td>
       <td className="px-4 py-3 text-zinc-500">
         {new Date(lesson.created_at).toLocaleString("ko-KR")}
