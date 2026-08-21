@@ -66,37 +66,51 @@ export default function LessonRow({
     return (
       <tr>
         <td colSpan={5} className="px-4 py-3">
-          <form
-            action={formAction}
-            className="flex flex-wrap items-end gap-3"
-          >
-            <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
-              차시 번호
-              <input
-                name="orderNo"
-                type="number"
-                defaultValue={lesson.order_no}
-                required
-                className="w-20 rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
-              제목
-              <input
-                name="title"
-                defaultValue={lesson.title}
-                required
-                className="min-w-[12rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
-              차시 소개
-              <input
-                name="description"
-                defaultValue={lesson.description ?? ""}
-                className="min-w-[16rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-              />
-            </label>
+          <form action={formAction} className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
+                차시 번호
+                <input
+                  name="orderNo"
+                  type="number"
+                  defaultValue={lesson.order_no}
+                  required
+                  className="w-20 rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
+                제목
+                <input
+                  name="title"
+                  defaultValue={lesson.title}
+                  required
+                  className="min-w-[12rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
+                차시 소개
+                <input
+                  name="description"
+                  defaultValue={lesson.description ?? ""}
+                  className="min-w-[16rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+              >
+                {isPending ? "저장 중..." : "저장"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
+              >
+                취소
+              </button>
+            </div>
+
             <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
               공개 대상
               <LessonAudiencePicker
@@ -108,22 +122,9 @@ export default function LessonRow({
                 disabled={isPending}
               />
             </label>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-            >
-              {isPending ? "저장 중..." : "저장"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
-            >
-              취소
-            </button>
+
             {state.error && (
-              <p className="w-full text-xs font-medium text-red-500">
+              <p className="text-xs font-medium text-red-500">
                 {state.error}
               </p>
             )}

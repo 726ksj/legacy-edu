@@ -96,52 +96,66 @@ export default function UploadLessonForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-white p-4"
+      className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4"
     >
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        차시 제목
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="예: 1강 - 문법 정리"
-          disabled={isBusy}
-          className="min-w-[14rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        차시 소개 (선택)
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="이 차시에서 다루는 내용을 입력하세요."
-          rows={1}
-          disabled={isBusy}
-          className="min-w-[16rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
-        />
-      </label>
-      <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        영상 파일
-        <label
-          className={
-            "flex w-fit items-center gap-2 " +
-            (isBusy ? "cursor-not-allowed opacity-60" : "cursor-pointer")
-          }
-        >
-          <span className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark">
-            파일 선택
-          </span>
-          <span className="max-w-[12rem] truncate text-sm text-zinc-500">
-            {file ? file.name : "선택된 파일 없음"}
-          </span>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          차시 제목
           <input
-            type="file"
-            accept="video/*"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="예: 1강 - 문법 정리"
             disabled={isBusy}
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="hidden"
+            className="min-w-[14rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
           />
         </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          차시 소개 (선택)
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="이 차시에서 다루는 내용을 입력하세요."
+            rows={1}
+            disabled={isBusy}
+            className="min-w-[16rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
+          />
+        </label>
+        <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          영상 파일
+          <label
+            className={
+              "flex w-fit items-center gap-2 " +
+              (isBusy ? "cursor-not-allowed opacity-60" : "cursor-pointer")
+            }
+          >
+            <span className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark">
+              파일 선택
+            </span>
+            <span className="max-w-[12rem] truncate text-sm text-zinc-500">
+              {file ? file.name : "선택된 파일 없음"}
+            </span>
+            <input
+              type="file"
+              accept="video/*"
+              disabled={isBusy}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+          </label>
+        </div>
+        <button
+          type="submit"
+          disabled={isBusy}
+          className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        >
+          {status === "uploading"
+            ? `업로드 중... ${progress}%`
+            : status === "saving"
+              ? "저장 중..."
+              : "영상 업로드"}
+        </button>
       </div>
+
       <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         공개 대상
         <LessonAudiencePicker
@@ -153,20 +167,9 @@ export default function UploadLessonForm({
           disabled={isBusy}
         />
       </div>
-      <button
-        type="submit"
-        disabled={isBusy}
-        className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-      >
-        {status === "uploading"
-          ? `업로드 중... ${progress}%`
-          : status === "saving"
-            ? "저장 중..."
-            : "영상 업로드"}
-      </button>
 
       {error && (
-        <p className="w-full text-sm font-medium text-red-500">{error}</p>
+        <p className="text-sm font-medium text-red-500">{error}</p>
       )}
     </form>
   );

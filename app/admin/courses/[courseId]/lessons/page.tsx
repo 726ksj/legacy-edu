@@ -87,7 +87,7 @@ export default async function Page({
         <UploadLessonForm courseId={courseId} students={students} />
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="mt-6 overflow-visible rounded-lg border border-zinc-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
