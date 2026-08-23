@@ -3,7 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { syncLessonStatuses } from "@/lib/mux";
-import { isEnrolled, filterWatchableLessons } from "@/lib/enrollments";
+import {
+  isEnrolled,
+  filterWatchableLessons,
+  type LessonVisibility,
+} from "@/lib/enrollments";
 
 interface Instructor {
   name: string;
@@ -26,7 +30,7 @@ interface Lesson {
   description: string | null;
   status: string;
   mux_asset_id: string | null;
-  is_restricted: boolean;
+  visibility: LessonVisibility;
 }
 
 export default async function CourseClassroomPage({
@@ -56,7 +60,7 @@ export default async function CourseClassroomPage({
     supabase
       .from("lessons")
       .select(
-        "id, order_no, title, description, status, mux_asset_id, is_restricted",
+        "id, order_no, title, description, status, mux_asset_id, visibility",
       )
       .eq("course_id", courseId)
       .order("order_no", { ascending: true })

@@ -6,6 +6,7 @@ import DeleteLessonButton from "./DeleteLessonButton";
 import LessonAudiencePicker, {
   type AudienceStudent,
 } from "./LessonAudiencePicker";
+import type { LessonVisibility } from "@/lib/enrollments";
 
 const initialState: UpdateLessonInfoState = {};
 
@@ -21,7 +22,7 @@ interface Lesson {
   status: string;
   description: string | null;
   created_at: string;
-  is_restricted: boolean;
+  visibility: LessonVisibility;
 }
 
 export default function LessonRow({
@@ -40,7 +41,9 @@ export default function LessonRow({
   deleteAction: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
-  const [isRestricted, setIsRestricted] = useState(lesson.is_restricted);
+  const [visibility, setVisibility] = useState<LessonVisibility>(
+    lesson.visibility,
+  );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(initialSelectedIds),
   );
@@ -60,6 +63,12 @@ export default function LessonRow({
       }
       return next;
     });
+  };
+
+  const changeVisibility = (value: LessonVisibility) => {
+    setVisibility(value);
+    // 선택 목록의 의미(포함/제외)가 바뀌므로, 헷갈리지 않게 매번 초기화한다.
+    setSelectedIds(new Set());
   };
 
   if (editing) {
@@ -115,8 +124,8 @@ export default function LessonRow({
               공개 대상
               <LessonAudiencePicker
                 students={students}
-                isRestricted={isRestricted}
-                onIsRestrictedChange={setIsRestricted}
+                visibility={visibility}
+                onVisibilityChange={changeVisibility}
                 selectedIds={selectedIds}
                 onToggleId={toggleId}
                 disabled={isPending}
@@ -152,9 +161,14 @@ export default function LessonRow({
           >
             {statusInfo.label}
           </span>
-          {lesson.is_restricted && (
+          {lesson.visibility === "include" && (
             <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
               일부 공개 ({selectedIds.size}명)
+            </span>
+          )}
+          {lesson.visibility === "exclude" && (
+            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+              일부 비공개 ({selectedIds.size}명 제외)
             </span>
           )}
         </div>

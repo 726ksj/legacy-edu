@@ -5,6 +5,7 @@ import { createDirectUpload, saveLesson } from "./actions";
 import LessonAudiencePicker, {
   type AudienceStudent,
 } from "./LessonAudiencePicker";
+import type { LessonVisibility } from "@/lib/enrollments";
 
 export default function UploadLessonForm({
   courseId,
@@ -16,7 +17,7 @@ export default function UploadLessonForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [isRestricted, setIsRestricted] = useState(false);
+  const [visibility, setVisibility] = useState<LessonVisibility>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState<"idle" | "uploading" | "saving">(
     "idle",
@@ -34,6 +35,12 @@ export default function UploadLessonForm({
       }
       return next;
     });
+  };
+
+  const changeVisibility = (value: LessonVisibility) => {
+    setVisibility(value);
+    // 선택 목록의 의미(포함/제외)가 바뀌므로, 헷갈리지 않게 매번 초기화한다.
+    setSelectedIds(new Set());
   };
 
   async function handleSubmit(e: React.FormEvent) {
@@ -71,14 +78,14 @@ export default function UploadLessonForm({
         title.trim(),
         uploadId,
         description.trim(),
-        isRestricted,
+        visibility,
         Array.from(selectedIds),
       );
 
       setTitle("");
       setDescription("");
       setFile(null);
-      setIsRestricted(false);
+      setVisibility("all");
       setSelectedIds(new Set());
       setStatus("idle");
       setProgress(0);
@@ -160,8 +167,8 @@ export default function UploadLessonForm({
         공개 대상
         <LessonAudiencePicker
           students={students}
-          isRestricted={isRestricted}
-          onIsRestrictedChange={setIsRestricted}
+          visibility={visibility}
+          onVisibilityChange={changeVisibility}
           selectedIds={selectedIds}
           onToggleId={toggleId}
           disabled={isBusy}

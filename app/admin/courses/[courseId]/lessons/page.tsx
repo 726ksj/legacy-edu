@@ -39,7 +39,7 @@ export default async function Page({
   const { data: lessons } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, mux_asset_id, status, created_at, description, is_restricted",
+      "id, order_no, title, mux_asset_id, status, created_at, description, visibility",
     )
     .eq("course_id", courseId)
     .order("order_no", { ascending: true });

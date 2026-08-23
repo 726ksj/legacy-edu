@@ -7,7 +7,11 @@ import {
   signThumbnailToken,
   syncLessonStatuses,
 } from "@/lib/mux";
-import { canWatchLesson, filterWatchableLessons } from "@/lib/enrollments";
+import {
+  canWatchLesson,
+  filterWatchableLessons,
+  type LessonVisibility,
+} from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
 import NoteSection from "./NoteSection";
 
@@ -19,7 +23,7 @@ interface LessonRow {
   mux_asset_id: string | null;
   mux_playback_id: string | null;
   course_id: string;
-  is_restricted: boolean;
+  visibility: LessonVisibility;
   courses: { subject: string; title: string; teacher_name: string } | null;
 }
 
@@ -30,7 +34,7 @@ interface SiblingLesson {
   status: string;
   mux_asset_id: string | null;
   mux_playback_id: string | null;
-  is_restricted: boolean;
+  visibility: LessonVisibility;
 }
 
 export default async function WatchPage({
@@ -49,7 +53,7 @@ export default async function WatchPage({
   const { data: lesson } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, is_restricted, courses(subject, title, teacher_name)",
+      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, visibility, courses(subject, title, teacher_name)",
     )
     .eq("id", lessonId)
     .maybeSingle()
@@ -67,7 +71,7 @@ export default async function WatchPage({
       supabase
         .from("lessons")
         .select(
-          "id, order_no, title, status, mux_asset_id, mux_playback_id, is_restricted",
+          "id, order_no, title, status, mux_asset_id, mux_playback_id, visibility",
         )
         .eq("course_id", lesson.course_id)
         .order("order_no", { ascending: true })

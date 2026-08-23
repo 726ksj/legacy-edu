@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { LessonVisibility } from "@/lib/enrollments";
 
 export interface AudienceStudent {
   id: string;
@@ -10,17 +11,23 @@ export interface AudienceStudent {
   grade: string | null;
 }
 
+const VISIBILITY_OPTIONS: { value: LessonVisibility; label: string }[] = [
+  { value: "all", label: "전체 공개" },
+  { value: "include", label: "일부 공개" },
+  { value: "exclude", label: "일부 비공개" },
+];
+
 export default function LessonAudiencePicker({
   students,
-  isRestricted,
-  onIsRestrictedChange,
+  visibility,
+  onVisibilityChange,
   selectedIds,
   onToggleId,
   disabled,
 }: {
   students: AudienceStudent[];
-  isRestricted: boolean;
-  onIsRestrictedChange: (value: boolean) => void;
+  visibility: LessonVisibility;
+  onVisibilityChange: (value: LessonVisibility) => void;
   selectedIds: Set<string>;
   onToggleId: (id: string) => void;
   disabled?: boolean;
@@ -39,46 +46,41 @@ export default function LessonAudiencePicker({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  const triggerLabel =
+    selectedIds.size === 0
+      ? "학생 선택"
+      : visibility === "exclude"
+        ? `${selectedIds.size}명 제외됨`
+        : `${selectedIds.size}명 선택됨`;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="inline-flex w-fit rounded-full border border-zinc-200 bg-zinc-50 p-0.5">
-        <label className={disabled ? "cursor-not-allowed" : "cursor-pointer"}>
-          <input
-            type="radio"
-            name="isRestricted"
-            value="false"
-            checked={!isRestricted}
-            onChange={() => {
-              onIsRestrictedChange(false);
-              setIsOpen(false);
-            }}
-            disabled={disabled}
-            className="peer sr-only"
-          />
-          <span className="block rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-500 transition-colors peer-checked:bg-white peer-checked:text-zinc-900 peer-checked:shadow-sm">
-            전체 공개
-          </span>
-        </label>
-        <label className={disabled ? "cursor-not-allowed" : "cursor-pointer"}>
-          <input
-            type="radio"
-            name="isRestricted"
-            value="true"
-            checked={isRestricted}
-            onChange={() => {
-              onIsRestrictedChange(true);
-              setIsOpen(true);
-            }}
-            disabled={disabled}
-            className="peer sr-only"
-          />
-          <span className="block rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-500 transition-colors peer-checked:bg-white peer-checked:text-brand-dark peer-checked:shadow-sm">
-            일부 공개
-          </span>
-        </label>
+        {VISIBILITY_OPTIONS.map((option) => (
+          <label
+            key={option.value}
+            className={disabled ? "cursor-not-allowed" : "cursor-pointer"}
+          >
+            <input
+              type="radio"
+              name="visibility"
+              value={option.value}
+              checked={visibility === option.value}
+              onChange={() => {
+                onVisibilityChange(option.value);
+                setIsOpen(option.value !== "all");
+              }}
+              disabled={disabled}
+              className="peer sr-only"
+            />
+            <span className="block rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-zinc-500 transition-colors peer-checked:bg-white peer-checked:text-brand-dark peer-checked:shadow-sm">
+              {option.label}
+            </span>
+          </label>
+        ))}
       </div>
 
-      {isRestricted && (
+      {visibility !== "all" && (
         <div ref={containerRef} className="relative w-56">
           <button
             type="button"
@@ -86,11 +88,7 @@ export default function LessonAudiencePicker({
             disabled={disabled}
             className="flex w-full items-center justify-between gap-2 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:border-brand disabled:opacity-60"
           >
-            <span>
-              {selectedIds.size === 0
-                ? "학생 선택"
-                : `${selectedIds.size}명 선택됨`}
-            </span>
+            <span>{triggerLabel}</span>
             <svg
               className={`h-3.5 w-3.5 shrink-0 text-zinc-400 transition-transform ${
                 isOpen ? "rotate-180" : ""
@@ -113,6 +111,11 @@ export default function LessonAudiencePicker({
               isOpen ? "" : "hidden"
             }`}
           >
+            <div className="border-b border-zinc-100 bg-zinc-50 px-3 py-1.5 text-xs text-zinc-500">
+              {visibility === "exclude"
+                ? "체크한 학생은 볼 수 없습니다"
+                : "체크한 학생만 볼 수 있습니다"}
+            </div>
             <div className="max-h-48 overflow-y-auto">
               {students.length === 0 ? (
                 <p className="px-3 py-6 text-center text-xs text-zinc-400">

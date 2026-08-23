@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createMuxClient } from "@/lib/mux";
+import type { LessonVisibility } from "@/lib/enrollments";
 
 // 차시 제목은 "1강 - 문법 정리"처럼 앞에 번호가 붙는 관례라, 제목에서 첫
 // 숫자를 뽑아 그 숫자로 비교한다. 단순 문자열 정렬로는 "10강"이 "2강"보다
@@ -32,7 +33,7 @@ export async function saveLesson(
   title: string,
   uploadId: string,
   description: string,
-  isRestricted: boolean,
+  visibility: LessonVisibility,
   profileIds: string[],
 ) {
   const mux = createMuxClient();
@@ -53,12 +54,12 @@ export async function saveLesson(
       mux_asset_id: upload.asset_id ?? null,
       status: "preparing",
       description: description || null,
-      is_restricted: isRestricted,
+      visibility,
     })
     .select("id")
     .single();
 
-  if (isRestricted && inserted && profileIds.length > 0) {
+  if (visibility !== "all" && inserted && profileIds.length > 0) {
     await supabase.from("lesson_access").insert(
       profileIds.map((profileId) => ({
         lesson_id: inserted.id,
@@ -102,7 +103,9 @@ export async function updateLessonInfo(
   const orderNoRaw = String(formData.get("orderNo") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const orderNo = Number(orderNoRaw);
-  const isRestricted = formData.get("isRestricted") === "true";
+  const visibility = String(
+    formData.get("visibility") ?? "all",
+  ) as LessonVisibility;
   const profileIds = formData.getAll("profileIds").map(String);
 
   if (!title || !orderNoRaw || Number.isNaN(orderNo)) {
@@ -116,7 +119,7 @@ export async function updateLessonInfo(
       title,
       order_no: orderNo,
       description: description || null,
-      is_restricted: isRestricted,
+      visibility,
     })
     .eq("id", lessonId);
 
@@ -124,10 +127,10 @@ export async function updateLessonInfo(
     return { error: error.message };
   }
 
-  // 공개 대상이 바뀌었을 수 있으니 항상 허용 목록을 새로 씀 (전체 공개로
-  // 전환한 경우에도 남아있던 목록이 깨끗이 비워지도록).
+  // 공개 대상이 바뀌었을 수 있으니 항상 허용/제외 목록을 새로 씀 (전체
+  // 공개로 전환한 경우에도 남아있던 목록이 깨끗이 비워지도록).
   await supabase.from("lesson_access").delete().eq("lesson_id", lessonId);
-  if (isRestricted && profileIds.length > 0) {
+  if (visibility !== "all" && profileIds.length > 0) {
     await supabase.from("lesson_access").insert(
       profileIds.map((profileId) => ({
         lesson_id: lessonId,
