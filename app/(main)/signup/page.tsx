@@ -176,16 +176,14 @@ export default function SignupPage() {
           </div>
         </div>
         <Field label="아이디" name="username" />
-        <div className="flex flex-col gap-1.5">
-          <Field
-            label="비밀번호"
-            name="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <p className="text-xs text-zinc-400">{PASSWORD_REQUIREMENT_TEXT}</p>
-        </div>
+        <Field
+          label="비밀번호"
+          name="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          hint={PASSWORD_REQUIREMENT_TEXT}
+        />
         <div className="flex flex-col gap-1.5">
           <Field
             label="비밀번호 확인"
@@ -229,6 +227,7 @@ function Field({
   placeholder,
   value,
   onChange,
+  hint,
 }: {
   label: string;
   name: string;
@@ -236,10 +235,12 @@ function Field({
   placeholder?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  hint?: string;
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
       {label}
+      {hint && <span className="text-xs font-normal text-zinc-400">{hint}</span>}
       <input
         name={name}
         type={type}
