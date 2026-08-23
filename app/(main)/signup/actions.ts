@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isValidPassword, PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
 
 export interface SignupState {
   error?: string;
@@ -36,8 +37,8 @@ export async function signup(
   ) {
     return { error: "모든 항목을 입력해주세요." };
   }
-  if (password.length < 8) {
-    return { error: "비밀번호는 8자 이상이어야 합니다." };
+  if (!isValidPassword(password)) {
+    return { error: `비밀번호는 ${PASSWORD_REQUIREMENT_TEXT}로 입력해주세요.` };
   }
 
   const supabase = createAdminClient();

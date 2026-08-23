@@ -4,6 +4,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { useActionState, useRef, useState } from "react";
 import { signup, type SignupState } from "./actions";
+import { PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
 
 const initialState: SignupState = {};
 
@@ -175,13 +176,16 @@ export default function SignupPage() {
           </div>
         </div>
         <Field label="아이디" name="username" />
-        <Field
-          label="비밀번호"
-          name="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="flex flex-col gap-1.5">
+          <Field
+            label="비밀번호"
+            name="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <p className="text-xs text-zinc-400">{PASSWORD_REQUIREMENT_TEXT}</p>
+        </div>
         <div className="flex flex-col gap-1.5">
           <Field
             label="비밀번호 확인"
