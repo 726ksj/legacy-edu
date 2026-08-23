@@ -7,7 +7,7 @@ import {
   signThumbnailToken,
   syncLessonStatuses,
 } from "@/lib/mux";
-import { canWatchLesson } from "@/lib/enrollments";
+import { canWatchLesson, filterWatchableLessons } from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
 import NoteSection from "./NoteSection";
 
@@ -30,6 +30,7 @@ interface SiblingLesson {
   status: string;
   mux_asset_id: string | null;
   mux_playback_id: string | null;
+  is_restricted: boolean;
 }
 
 export default async function WatchPage({
@@ -65,7 +66,9 @@ export default async function WatchPage({
       canWatchLesson(supabase, user.id, lesson),
       supabase
         .from("lessons")
-        .select("id, order_no, title, status, mux_asset_id, mux_playback_id")
+        .select(
+          "id, order_no, title, status, mux_asset_id, mux_playback_id, is_restricted",
+        )
         .eq("course_id", lesson.course_id)
         .order("order_no", { ascending: true })
         .returns<SiblingLesson[]>(),
@@ -92,12 +95,17 @@ export default async function WatchPage({
 
   const course = lesson.courses;
 
-  const siblingLessons = allSiblings?.filter(
+  const readySiblings = (allSiblings ?? []).filter(
     (sibling) => sibling.status === "ready",
+  );
+  const siblingLessons = await filterWatchableLessons(
+    supabase,
+    user.id,
+    readySiblings,
   );
 
   const upNext = await Promise.all(
-    (siblingLessons ?? []).map(async (sibling) => ({
+    siblingLessons.map(async (sibling) => ({
       ...sibling,
       thumbnailUrl: sibling.mux_playback_id
         ? `https://image.mux.com/${sibling.mux_playback_id}/thumbnail.jpg?width=320&time=0&token=${await signThumbnailToken(sibling.mux_playback_id)}`

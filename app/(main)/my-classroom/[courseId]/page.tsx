@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { syncLessonStatuses } from "@/lib/mux";
-import { isEnrolled } from "@/lib/enrollments";
+import { isEnrolled, filterWatchableLessons } from "@/lib/enrollments";
 
 interface Instructor {
   name: string;
@@ -26,6 +26,7 @@ interface Lesson {
   description: string | null;
   status: string;
   mux_asset_id: string | null;
+  is_restricted: boolean;
 }
 
 export default async function CourseClassroomPage({
@@ -54,7 +55,9 @@ export default async function CourseClassroomPage({
       .returns<Course>(),
     supabase
       .from("lessons")
-      .select("id, order_no, title, description, status, mux_asset_id")
+      .select(
+        "id, order_no, title, description, status, mux_asset_id, is_restricted",
+      )
       .eq("course_id", courseId)
       .order("order_no", { ascending: true })
       .returns<Lesson[]>(),
@@ -72,7 +75,13 @@ export default async function CourseClassroomPage({
     await syncLessonStatuses(supabase, allLessons);
   }
 
-  const lessons = allLessons?.filter((lesson) => lesson.status === "ready");
+  const readyLessons =
+    allLessons?.filter((lesson) => lesson.status === "ready") ?? [];
+  const lessons = await filterWatchableLessons(
+    supabase,
+    user.id,
+    readyLessons,
+  );
 
   const instructor = course.instructors;
 
