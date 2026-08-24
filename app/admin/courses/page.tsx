@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import CourseForm from "./CourseForm";
-import DeleteCourseButton from "./DeleteCourseButton";
-import { deleteCourse } from "./actions";
+import CourseTable from "./CourseTable";
 
 export const dynamic = "force-dynamic";
 
@@ -56,84 +54,11 @@ export default async function Page({
         </p>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
-            <tr>
-              <th className="px-4 py-3">과목</th>
-              <th className="px-4 py-3">강좌명</th>
-              <th className="px-4 py-3">선생님</th>
-              <th className="px-4 py-3">학교</th>
-              <th className="px-4 py-3">과정</th>
-              <th className="px-4 py-3">가격</th>
-              <th className="px-4 py-3">개설일</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100">
-            {courses?.map((row) => (
-              <tr
-                key={row.id}
-                className={row.id === editingCourse?.id ? "bg-amber-50" : undefined}
-              >
-                <td className="px-4 py-3 text-zinc-700">{row.subject}</td>
-                <td className="px-4 py-3 font-medium text-zinc-900">
-                  <Link
-                    href={`/admin/courses/${row.id}`}
-                    className="hover:text-brand-dark hover:underline"
-                  >
-                    {row.title}
-                  </Link>
-                </td>
-                <td className="px-4 py-3 text-zinc-700">
-                  {row.teacher_name}
-                </td>
-                <td className="px-4 py-3 text-zinc-500">
-                  {row.school ?? "-"}
-                </td>
-                <td className="px-4 py-3 text-zinc-500">
-                  {row.level === "high"
-                    ? "고등"
-                    : row.level === "middle"
-                      ? "중등"
-                      : "-"}
-                </td>
-                <td className="px-4 py-3 text-zinc-500">
-                  {row.price ? `${row.price.toLocaleString()}원` : "-"}
-                </td>
-                <td className="px-4 py-3 text-zinc-500">
-                  {new Date(row.created_at).toLocaleString("ko-KR")}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link
-                      href={`/admin/courses/${row.id}/lessons`}
-                      className="text-xs font-semibold text-brand-dark hover:underline"
-                    >
-                      차시 관리
-                    </Link>
-                    <Link
-                      href={`/admin/courses?edit=${row.id}`}
-                      className="text-xs font-semibold text-zinc-600 hover:underline"
-                    >
-                      수정
-                    </Link>
-                    <DeleteCourseButton
-                      action={deleteCourse.bind(null, row.id)}
-                    />
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {courses?.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-zinc-400">
-                  등록된 강좌가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="mt-6">
+        <CourseTable
+          courses={courses ?? []}
+          editingCourseId={editingCourse?.id}
+        />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef, useEffect } from "react";
+import { useActionState, useRef, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createCourse, updateCourse, type CreateCourseState } from "./actions";
 import PriceInput from "./PriceInput";
@@ -39,12 +40,32 @@ export default function CourseForm({
     : createCourse;
   const [state, formAction, isPending] = useActionState(action, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
+
+  // PriceInput은 React가 값을 직접 들고 있는 controlled input이라
+  // formRef.reset()(네이티브 리셋)이 DOM만 비우고 React state는 그대로 남아,
+  // 다음 렌더에서 React가 예전 값을 다시 채워 넣어버린다. key를 바꿔
+  // 컴포넌트를 통째로 새로 마운트시켜야 확실히 비워진다. state가 바뀐
+  // 시점(렌더 도중)에 바로 반영해야 해서 effect가 아니라 렌더 중에 처리한다.
+  const [priceInputKey, setPriceInputKey] = useState(0);
+  const [prevState, setPrevState] = useState(state);
+  if (state !== prevState) {
+    setPrevState(state);
+    if (state.success && !editingCourse) {
+      setPriceInputKey((key) => key + 1);
+    }
+  }
 
   useEffect(() => {
     if (state.success && !editingCourse) {
       formRef.current?.reset();
     }
-  }, [state.success, editingCourse]);
+    if (state.success) {
+      // revalidatePath만으로는 이 페이지의 강좌 목록 표가 즉시 갱신되지
+      // 않는 경우가 있어, 성공 시 명시적으로 새로고침해 항상 최신 값을 보여준다.
+      router.refresh();
+    }
+  }, [state, editingCourse, router]);
 
   return (
     <form
@@ -123,6 +144,7 @@ export default function CourseForm({
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           PC 수강권 가격(원)
           <PriceInput
+            key={priceInputKey}
             name="price"
             defaultValue={editingCourse?.price ?? ""}
             placeholder="51,000"
