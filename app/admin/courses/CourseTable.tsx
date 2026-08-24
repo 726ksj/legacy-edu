@@ -73,78 +73,11 @@ export default function CourseTable({
 
   return (
     <div>
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-white p-3">
-        <label className="flex flex-col gap-1 text-xs font-medium text-zinc-500">
-          과목
-          <select
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value)}
-            className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="">전체</option>
-            {subjects.map((subject) => (
-              <option key={subject} value={subject}>
-                {subject}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-zinc-500">
-          강좌명
-          <input
-            value={titleFilter}
-            onChange={(e) => setTitleFilter(e.target.value)}
-            placeholder="강좌명 검색"
-            className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-zinc-500">
-          선생님
-          <select
-            value={teacherFilter}
-            onChange={(e) => setTeacherFilter(e.target.value)}
-            className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="">전체</option>
-            {teachers.map((teacher) => (
-              <option key={teacher} value={teacher}>
-                {teacher}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-zinc-500">
-          학교
-          <select
-            value={schoolFilter}
-            onChange={(e) => setSchoolFilter(e.target.value)}
-            className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-          >
-            <option value="">전체</option>
-            {schools.map((school) => (
-              <option key={school} value={school}>
-                {school}
-              </option>
-            ))}
-          </select>
-        </label>
+      <p className="mb-1 text-right text-xs text-zinc-400">
+        {filtered.length} / {courses.length}개
+      </p>
 
-        {hasActiveFilter && (
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="text-xs font-semibold text-zinc-400 hover:text-zinc-600"
-          >
-            필터 초기화
-          </button>
-        )}
-
-        <span className="ml-auto text-xs text-zinc-400">
-          {filtered.length} / {courses.length}개
-        </span>
-      </div>
-
-      <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
@@ -156,6 +89,72 @@ export default function CourseTable({
               <th className="px-4 py-3">가격</th>
               <th className="px-4 py-3">개설일</th>
               <th className="px-4 py-3" />
+            </tr>
+            <tr className="border-t border-zinc-100">
+              <th className="px-4 pb-3">
+                <select
+                  value={subjectFilter}
+                  onChange={(e) => setSubjectFilter(e.target.value)}
+                  className="w-full rounded border border-zinc-300 bg-white px-1.5 py-1 text-xs font-normal text-zinc-700 outline-none focus:border-brand"
+                >
+                  <option value="">전체</option>
+                  {subjects.map((subject) => (
+                    <option key={subject} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="px-4 pb-3">
+                <input
+                  value={titleFilter}
+                  onChange={(e) => setTitleFilter(e.target.value)}
+                  placeholder="검색"
+                  className="w-full rounded border border-zinc-300 bg-white px-1.5 py-1 text-xs font-normal text-zinc-700 outline-none focus:border-brand"
+                />
+              </th>
+              <th className="px-4 pb-3">
+                <select
+                  value={teacherFilter}
+                  onChange={(e) => setTeacherFilter(e.target.value)}
+                  className="w-full rounded border border-zinc-300 bg-white px-1.5 py-1 text-xs font-normal text-zinc-700 outline-none focus:border-brand"
+                >
+                  <option value="">전체</option>
+                  {teachers.map((teacher) => (
+                    <option key={teacher} value={teacher}>
+                      {teacher}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="px-4 pb-3">
+                <select
+                  value={schoolFilter}
+                  onChange={(e) => setSchoolFilter(e.target.value)}
+                  className="w-full rounded border border-zinc-300 bg-white px-1.5 py-1 text-xs font-normal text-zinc-700 outline-none focus:border-brand"
+                >
+                  <option value="">전체</option>
+                  {schools.map((school) => (
+                    <option key={school} value={school}>
+                      {school}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="px-4 pb-3" />
+              <th className="px-4 pb-3" />
+              <th className="px-4 pb-3" />
+              <th className="px-4 pb-3 text-right">
+                {hasActiveFilter && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="text-[11px] font-semibold text-zinc-400 hover:text-zinc-600"
+                  >
+                    초기화
+                  </button>
+                )}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
