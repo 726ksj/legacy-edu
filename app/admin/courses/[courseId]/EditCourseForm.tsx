@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { updateCourse, type CreateCourseState } from "../actions";
+import PriceInput from "../PriceInput";
 
 const initialState: CreateCourseState = {};
 
@@ -113,12 +114,9 @@ export default function EditCourseForm({
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           PC 수강권 가격(원)
-          <input
+          <PriceInput
             name="price"
-            type="number"
-            min={0}
             defaultValue={course.price ?? 0}
-            autoComplete="off"
             className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>

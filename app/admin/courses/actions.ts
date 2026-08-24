@@ -31,7 +31,9 @@ function readListingFields(formData: FormData) {
   const tagline = String(formData.get("tagline") ?? "").trim();
   const isBest = formData.get("isBest") === "on";
   const durationWeeksRaw = String(formData.get("durationWeeks") ?? "").trim();
-  const priceRaw = String(formData.get("price") ?? "").trim();
+  const priceRaw = String(formData.get("price") ?? "")
+    .replace(/,/g, "")
+    .trim();
 
   return {
     level: level || null,
