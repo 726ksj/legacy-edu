@@ -29,13 +29,24 @@ export default async function CheckoutSuccessPage({
   const supabase = createAdminClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("id, profile_id, course_id, amount, status")
+    .select("id, profile_id, amount, status")
     .eq("order_id", orderId)
     .maybeSingle();
 
   if (!order || order.profile_id !== user.id) {
     notFound();
   }
+
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("course_id")
+    .eq("order_id", order.id);
+
+  const courseIds = (orderItems ?? []).map((item) => item.course_id);
+  const retryHref =
+    courseIds.length === 1
+      ? `/checkout?courseId=${courseIds[0]}`
+      : `/checkout?courseIds=${courseIds.join(",")}`;
 
   // Toss가 돌려준 URL의 amount는 클라이언트가 조작할 수 있으므로 절대
   // 신뢰하지 않고, 주문 생성 시 서버에 저장해둔 금액과 대조한 뒤 그 값으로만
@@ -45,7 +56,7 @@ export default async function CheckoutSuccessPage({
       <ResultSection
         title="결제 금액이 일치하지 않습니다"
         description="요청하신 결제를 처리할 수 없습니다. 다시 시도해주세요."
-        courseId={order.course_id}
+        retryHref={retryHref}
       />
     );
   }
@@ -55,7 +66,7 @@ export default async function CheckoutSuccessPage({
       <ResultSection
         title="이미 처리된 결제입니다"
         description="해당 주문은 이미 결제가 완료되었습니다."
-        courseId={order.course_id}
+        retryHref={retryHref}
         success
       />
     );
@@ -79,14 +90,24 @@ export default async function CheckoutSuccessPage({
       })
       .eq("id", order.id);
 
-    const { error: enrollError } = await supabase.from("enrollments").insert({
-      profile_id: order.profile_id,
-      course_id: order.course_id,
-    });
+    if (courseIds.length > 0) {
+      const { error: enrollError } = await supabase.from("enrollments").insert(
+        courseIds.map((courseId) => ({
+          profile_id: order.profile_id,
+          course_id: courseId,
+        })),
+      );
 
-    // 23505 = 이미 등록된 강좌(unique violation) — 결제는 성공했으니 정상 처리
-    if (enrollError && enrollError.code !== "23505") {
-      throw new Error(enrollError.message);
+      // 23505 = 이미 등록된 강좌(unique violation) — 결제는 성공했으니 정상 처리
+      if (enrollError && enrollError.code !== "23505") {
+        throw new Error(enrollError.message);
+      }
+
+      await supabase
+        .from("cart_items")
+        .delete()
+        .eq("profile_id", order.profile_id)
+        .in("course_id", courseIds);
     }
 
     outcome = {
@@ -111,7 +132,7 @@ export default async function CheckoutSuccessPage({
     <ResultSection
       title={outcome.title}
       description={outcome.description}
-      courseId={order.course_id}
+      retryHref={retryHref}
       success={outcome.success}
     />
   );
@@ -120,12 +141,12 @@ export default async function CheckoutSuccessPage({
 function ResultSection({
   title,
   description,
-  courseId,
+  retryHref,
   success,
 }: {
   title: string;
   description: string;
-  courseId: string;
+  retryHref: string;
   success?: boolean;
 }) {
   return (
@@ -142,7 +163,7 @@ function ResultSection({
           </Link>
         ) : (
           <Link
-            href={`/checkout?courseId=${courseId}`}
+            href={retryHref}
             className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
           >
             다시 시도하기

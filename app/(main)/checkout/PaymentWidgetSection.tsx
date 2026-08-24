@@ -11,10 +11,10 @@ import { createPendingOrder } from "./actions";
 const CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!;
 
 export default function PaymentWidgetSection({
-  courseId,
+  courseIds,
   amount,
 }: {
-  courseId: string;
+  courseIds: string[];
   amount: number;
 }) {
   const widgetRef = useRef<PaymentWidgetInstance | null>(null);
@@ -53,7 +53,7 @@ export default function PaymentWidgetSection({
     setError(null);
 
     try {
-      const order = await createPendingOrder(courseId);
+      const order = await createPendingOrder(courseIds);
       const origin = window.location.origin;
       await widgetRef.current.requestPayment({
         orderId: order.orderId,

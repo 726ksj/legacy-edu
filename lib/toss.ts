@@ -10,6 +10,37 @@ interface TossConfirmResult {
   [key: string]: unknown;
 }
 
+export async function cancelTossPayment({
+  paymentKey,
+  cancelReason,
+}: {
+  paymentKey: string;
+  cancelReason: string;
+}): Promise<TossConfirmResult> {
+  const secretKey = process.env.TOSS_SECRET_KEY!;
+  const authHeader = `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`;
+
+  const res = await fetch(
+    `https://api.tosspayments.com/v1/payments/${paymentKey}/cancel`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ cancelReason }),
+    },
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message ?? "결제 취소에 실패했습니다.");
+  }
+
+  return data;
+}
+
 export async function confirmTossPayment({
   paymentKey,
   orderId,

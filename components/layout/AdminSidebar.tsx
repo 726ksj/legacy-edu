@@ -15,6 +15,7 @@ const ADMIN_NAV_ITEMS = [
   { label: "수강생 Review 관리", href: "/admin/reviews" },
   { label: "강사 관리", href: "/admin/instructors" },
   { label: "강좌 관리", href: "/admin/courses" },
+  { label: "주문/결제 관리", href: "/admin/orders" },
   { label: "메모 관리", href: "/admin/notes" },
   { label: "수강 권한 관리", href: "/admin/enrollments" },
   { label: "FAQ 관리", href: "/admin/faqs" },

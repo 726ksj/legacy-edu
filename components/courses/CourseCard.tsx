@@ -5,7 +5,15 @@ function formatWon(amount: number) {
   return `${amount.toLocaleString("ko-KR")}원`;
 }
 
-export default function CourseCard({ course }: { course: CourseListItem }) {
+export default function CourseCard({
+  course,
+  checked,
+  onToggle,
+}: {
+  course: CourseListItem;
+  checked: boolean;
+  onToggle: () => void;
+}) {
   return (
     <div className="border-b border-zinc-200 py-6 first:pt-0 last:border-b-0">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
@@ -36,9 +44,8 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
           </Link>
           <p className="mt-2 text-xs text-zinc-400">
             {course.durationDays != null && (
-              <>수강기간: {Math.round(course.durationDays / 7)}주</>
+              <>수강기간: {Math.round(course.durationDays / 7)}주, </>
             )}
-            {course.durationDays != null && "    "}
             강의수: {course.lectureCount}강
           </p>
         </div>
@@ -46,29 +53,15 @@ export default function CourseCard({ course }: { course: CourseListItem }) {
         <div className="flex shrink-0 flex-row items-center gap-2 sm:w-40 sm:justify-end">
           <input
             type="checkbox"
-            defaultChecked
-            aria-label="강의 선택"
-            className="h-4 w-4 accent-brand"
+            checked={checked}
+            onChange={onToggle}
+            aria-label={`${course.title} 선택`}
+            className="h-4 w-4 shrink-0 accent-brand"
           />
-          <span className="text-lg font-bold text-zinc-900">
+          <span className="w-28 shrink-0 whitespace-nowrap text-right text-lg font-bold text-zinc-900">
             {formatWon(course.price)}
           </span>
         </div>
-      </div>
-
-      <div className="mt-4 flex justify-end gap-2 border-t border-zinc-100 pt-4">
-        <Link
-          href="/mypage/cart"
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-600 hover:border-brand hover:text-brand-dark"
-        >
-          장바구니
-        </Link>
-        <Link
-          href={`/checkout?courseId=${course.id}`}
-          className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-        >
-          즉시구매
-        </Link>
       </div>
     </div>
   );
