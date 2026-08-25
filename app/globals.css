@@ -10,8 +10,8 @@
   --brand-light: #e8f6f0;
 
   /* 수강신청 등 눈에 띄어야 하는 CTA 전용 강조 컬러 */
-  --accent: #f97316;
-  --accent-dark: #ea6a0a;
+  --accent: #e88c9a;
+  --accent-dark: #c57783;
 }
 
 @theme inline {
