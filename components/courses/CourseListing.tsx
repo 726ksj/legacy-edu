@@ -91,16 +91,16 @@ export default function CourseListing({
 
   return (
     <div>
-      <div className="mx-auto flex max-w-2xl divide-x divide-zinc-300 overflow-hidden rounded-md border border-zinc-300">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         {tabs.map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => selectTab(tab)}
-            className={`flex-1 px-4 py-2.5 text-sm font-semibold transition-colors ${
+            className={`min-w-[84px] shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-center text-sm font-semibold transition-colors ${
               activeTab === tab
                 ? "bg-zinc-900 text-white"
-                : "bg-white text-zinc-600 hover:bg-zinc-50"
+                : "border border-zinc-300 text-zinc-600 hover:bg-zinc-50"
             }`}
           >
             {tab}
@@ -114,7 +114,7 @@ export default function CourseListing({
         </p>
       )}
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-col gap-3">
         {pagedCourses.map((course) => (
           <CourseCard
             key={course.id}
