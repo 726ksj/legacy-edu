@@ -2,7 +2,7 @@ import { Play } from "lucide-react";
 
 export default function VideoSection() {
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
+    <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <div>
         <span className="text-sm font-semibold text-brand-dark">
           LEGACY EDU

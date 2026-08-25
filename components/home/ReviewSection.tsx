@@ -16,7 +16,7 @@ export default function ReviewSection({ reviews }: { reviews: Review[] }) {
   const [selected, setSelected] = useState<Review | null>(null);
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
+    <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <span className="text-sm font-semibold text-brand-dark">

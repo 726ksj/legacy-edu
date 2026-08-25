@@ -114,16 +114,16 @@ export default function CurriculumSection({
   return (
     <section
       id={CURRICULUM_SECTION_ID}
-      className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6"
+      className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6"
     >
-      <div className="text-center">
+      <div>
         <span className="text-sm font-semibold text-brand-dark">
           LEGACY ACADEMIC SYSTEM
         </span>
         <h2 className="mt-1 text-2xl font-bold text-zinc-900 sm:text-3xl lg:text-4xl">
           영어 커리큘럼
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line text-sm text-zinc-500 sm:text-base">
+        <p className="mt-3 max-w-2xl whitespace-pre-line text-sm text-zinc-500 sm:text-base">
           {intro}
         </p>
       </div>
