@@ -56,7 +56,13 @@ export default function UploadLessonForm({
     setProgress(0);
 
     try {
-      const { uploadUrl, uploadId } = await createDirectUpload(courseId);
+      const uploadResult = await createDirectUpload(courseId);
+      if ("error" in uploadResult) {
+        setError(uploadResult.error);
+        setStatus("idle");
+        return;
+      }
+      const { uploadUrl, uploadId } = uploadResult;
 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -73,7 +79,7 @@ export default function UploadLessonForm({
       });
 
       setStatus("saving");
-      await saveLesson(
+      const saveResult = await saveLesson(
         courseId,
         title.trim(),
         uploadId,
@@ -81,6 +87,11 @@ export default function UploadLessonForm({
         visibility,
         Array.from(selectedIds),
       );
+      if (saveResult.error) {
+        setError(saveResult.error);
+        setStatus("idle");
+        return;
+      }
 
       setTitle("");
       setDescription("");

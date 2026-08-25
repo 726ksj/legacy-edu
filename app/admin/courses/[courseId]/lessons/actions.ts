@@ -18,14 +18,23 @@ function compareLessonTitles(a: string, b: string): number {
   return a.localeCompare(b, "ko");
 }
 
-export async function createDirectUpload(courseId: string) {
+export async function createDirectUpload(
+  courseId: string,
+): Promise<
+  { uploadUrl: string; uploadId: string } | { error: string }
+> {
   const mux = createMuxClient();
-  const upload = await mux.video.uploads.create({
-    cors_origin: "*",
-    new_asset_settings: { playback_policy: ["signed"], passthrough: courseId },
-  });
-
-  return { uploadUrl: upload.url ?? "", uploadId: upload.id };
+  try {
+    const upload = await mux.video.uploads.create({
+      cors_origin: "*",
+      new_asset_settings: { playback_policy: ["signed"], passthrough: courseId },
+    });
+    return { uploadUrl: upload.url ?? "", uploadId: upload.id };
+  } catch {
+    return {
+      error: "영상 서버(Mux) 연결에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    };
+  }
 }
 
 export async function saveLesson(
@@ -35,9 +44,16 @@ export async function saveLesson(
   description: string,
   visibility: LessonVisibility,
   profileIds: string[],
-) {
+): Promise<{ error?: string }> {
   const mux = createMuxClient();
-  const upload = await mux.video.uploads.retrieve(uploadId);
+  let upload;
+  try {
+    upload = await mux.video.uploads.retrieve(uploadId);
+  } catch {
+    return {
+      error: "영상 업로드 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.",
+    };
+  }
 
   const supabase = createAdminClient();
   const { data: existingLessons } = await supabase
@@ -86,6 +102,7 @@ export async function saveLesson(
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath(`/my-classroom/${courseId}`);
+  return {};
 }
 
 export interface UpdateLessonInfoState {
