@@ -114,7 +114,7 @@ export default function CurriculumSection({
   return (
     <section
       id={CURRICULUM_SECTION_ID}
-      className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6"
+      className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6"
     >
       <div className="text-center">
         <span className="text-sm font-semibold text-brand-dark">
