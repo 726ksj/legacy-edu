@@ -35,18 +35,18 @@ export default function EnrollmentButton() {
       {open && (
         <div className="absolute right-0 top-full z-30 mt-2 flex w-28 flex-col overflow-hidden rounded-md border border-zinc-200 bg-white py-1 shadow-md">
           <Link
-            href="/courses/middle"
-            onClick={() => setOpen(false)}
-            className="px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:text-brand-dark"
-          >
-            중등
-          </Link>
-          <Link
             href="/courses/high"
             onClick={() => setOpen(false)}
             className="px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:text-brand-dark"
           >
             고등
+          </Link>
+          <Link
+            href="/courses/middle"
+            onClick={() => setOpen(false)}
+            className="px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:text-brand-dark"
+          >
+            중등
           </Link>
         </div>
       )}
