@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ConsultationFloatingCTA from "@/components/layout/ConsultationFloatingCTA";
 
 export default function MainLayout({
   children,
@@ -11,6 +12,7 @@ export default function MainLayout({
       <Header />
       <main className="flex flex-1 flex-col">{children}</main>
       <Footer />
+      <ConsultationFloatingCTA />
     </div>
   );
 }

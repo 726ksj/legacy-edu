@@ -108,7 +108,7 @@ export default async function Header() {
               <form action={logout}>
                 <button
                   type="submit"
-                  className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:py-2 sm:text-sm md:px-6 md:py-2.5 md:text-base"
+                  className="min-w-16 whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-center text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:min-w-[84px] sm:px-4 sm:py-2 sm:text-sm md:min-w-[108px] md:px-6 md:py-2.5 md:text-base"
                 >
                   로그아웃
                 </button>
@@ -118,13 +118,13 @@ export default async function Header() {
             <>
               <Link
                 href="/login"
-                className="whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:px-4 sm:py-2 sm:text-sm md:px-6 md:py-2.5 md:text-base"
+                className="min-w-16 whitespace-nowrap rounded-md border border-zinc-300 px-2.5 py-1.5 text-center text-xs font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark sm:min-w-[84px] sm:px-4 sm:py-2 sm:text-sm md:min-w-[108px] md:px-6 md:py-2.5 md:text-base"
               >
                 로그인
               </Link>
               <Link
                 href="/signup"
-                className="whitespace-nowrap rounded-md bg-brand px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-dark sm:px-4 sm:py-2 sm:text-sm md:px-6 md:py-2.5 md:text-base"
+                className="min-w-16 whitespace-nowrap rounded-md bg-brand px-2.5 py-1.5 text-center text-xs font-semibold text-white transition-colors hover:bg-brand-dark sm:min-w-[84px] sm:px-4 sm:py-2 sm:text-sm md:min-w-[108px] md:px-6 md:py-2.5 md:text-base"
               >
                 회원가입
               </Link>

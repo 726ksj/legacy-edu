@@ -64,7 +64,7 @@ export default function CurriculumStickyNav({
       }`}
       aria-hidden={!visible}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 overflow-x-auto px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-start gap-6 overflow-x-auto px-4 sm:justify-center sm:px-6">
         {steps.map((step, i) => (
           <button
             key={step.no}

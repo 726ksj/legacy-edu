@@ -1,4 +1,3 @@
-import Link from "next/link";
 import ReviewSection from "@/components/home/ReviewSection";
 import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
@@ -73,16 +72,6 @@ export default async function HomePage() {
           <p className="max-w-xl whitespace-pre-line text-zinc-500">
             {content.hero_subtitle}
           </p>
-          {!user && (
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Link
-                href="/consultation"
-                className="rounded-md border border-zinc-300 px-8 py-4 text-base font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
-              >
-                상담 신청하기
-              </Link>
-            </div>
-          )}
           {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
         </div>
       </section>

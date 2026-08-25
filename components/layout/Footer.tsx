@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="w-full border-t border-zinc-200 bg-zinc-50">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 pb-28 pt-10 sm:px-6 sm:pb-12">
         <div className="flex flex-col gap-6 md:flex-row md:justify-between">
           <div>
             <p className="text-lg font-bold text-brand-dark">LEGACY EDU</p>
