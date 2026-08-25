@@ -8,6 +8,7 @@ import { addManyToCart } from "@/app/(main)/mypage/cart/actions";
 import type { CourseListItem } from "./types";
 
 const UNASSIGNED = "기타";
+const PAGE_SIZE = 10;
 
 function groupBySchool(courses: CourseListItem[]) {
   const groups = new Map<string, CourseListItem[]>();
@@ -39,12 +40,23 @@ export default function CourseListing({
 
   const tabs = ["전체", ...schoolTabs];
   const [activeTab, setActiveTab] = useState<string>("전체");
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
 
+  function selectTab(tab: string) {
+    setActiveTab(tab);
+    setPage(1);
+  }
+
   const visibleCourses =
     activeTab === "전체" ? courses : (grouped.get(activeTab) ?? []);
+  const totalPages = Math.max(1, Math.ceil(visibleCourses.length / PAGE_SIZE));
+  const pagedCourses = visibleCourses.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
 
   function toggle(courseId: string) {
     setSelected((prev) => {
@@ -84,7 +96,7 @@ export default function CourseListing({
           <button
             key={tab}
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => selectTab(tab)}
             className={`flex-1 px-4 py-2.5 text-sm font-semibold transition-colors ${
               activeTab === tab
                 ? "bg-zinc-900 text-white"
@@ -103,7 +115,7 @@ export default function CourseListing({
       )}
 
       <div className="mt-8">
-        {visibleCourses.map((course) => (
+        {pagedCourses.map((course) => (
           <CourseCard
             key={course.id}
             course={course}
@@ -112,6 +124,26 @@ export default function CourseListing({
           />
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-1.5">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setPage(n)}
+              aria-current={page === n ? "page" : undefined}
+              className={`h-8 min-w-8 rounded-md px-2 text-sm font-semibold transition-colors ${
+                page === n
+                  ? "bg-zinc-900 text-white"
+                  : "text-zinc-500 hover:bg-zinc-100"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      )}
 
       {visibleCourses.length > 0 && (
         <div className="mt-6 flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4">

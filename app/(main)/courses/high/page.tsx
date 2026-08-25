@@ -17,7 +17,7 @@ export default async function Page() {
       "id, subject, teacher_name, title, school, tagline, is_best, duration_days, price",
     )
     .eq("level", "high")
-    .order("created_at", { ascending: true });
+    .order("title", { ascending: true });
 
   const courseIds = (courses ?? []).map((course) => course.id);
 
