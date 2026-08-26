@@ -21,6 +21,11 @@ export const CONTENT_KEYS = [
   "curriculum_step6_title",
   "curriculum_step6_subtitle",
   "curriculum_step6_desc",
+  "business_name",
+  "representative_name",
+  "business_registration_number",
+  "business_address",
+  "business_phone",
 ] as const;
 
 export type ContentKey = (typeof CONTENT_KEYS)[number];
@@ -58,4 +63,9 @@ export const CONTENT_DEFAULTS: SiteContentMap = {
   curriculum_step6_subtitle: "학습 리포트",
   curriculum_step6_desc:
     "점수뿐 아니라 학습 습관과 취약 유형, 다음 시험까지의 보완 계획을 학부모님께 전달합니다.",
+  business_name: "LEGACY EDU",
+  representative_name: "(대표자명 입력 필요)",
+  business_registration_number: "(사업자등록번호 입력 필요)",
+  business_address: "(사업장 주소 입력 필요)",
+  business_phone: "(연락처 입력 필요)",
 };

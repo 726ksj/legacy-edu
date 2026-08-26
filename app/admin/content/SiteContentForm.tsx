@@ -119,6 +119,60 @@ export default function SiteContentForm({
         ))}
       </div>
 
+      <div className="flex flex-col gap-4 border-t border-zinc-100 pt-6">
+        <p className="text-sm font-semibold text-zinc-900">
+          사업자 정보 (하단 푸터 표시)
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            상호명
+            <input
+              name="business_name"
+              defaultValue={content.business_name}
+              required
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            대표자명
+            <input
+              name="representative_name"
+              defaultValue={content.representative_name}
+              required
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            사업자등록번호
+            <input
+              name="business_registration_number"
+              defaultValue={content.business_registration_number}
+              required
+              placeholder="000-00-00000"
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            유선/휴대폰 번호
+            <input
+              name="business_phone"
+              defaultValue={content.business_phone}
+              required
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 sm:col-span-2">
+            사업장 주소
+            <input
+              name="business_address"
+              defaultValue={content.business_address}
+              required
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+        </div>
+      </div>
+
       {state.error && (
         <p className="text-sm font-medium text-red-500">{state.error}</p>
       )}

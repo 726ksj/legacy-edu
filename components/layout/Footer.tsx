@@ -1,6 +1,20 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
 
-export default function Footer() {
+export default async function Footer() {
+  const supabase = await createClient();
+  const { data: rows } = await supabase
+    .from("site_content")
+    .select("key, value");
+
+  const content: SiteContentMap = { ...CONTENT_DEFAULTS };
+  for (const row of rows ?? []) {
+    if (row.key in content) {
+      content[row.key as keyof SiteContentMap] = row.value;
+    }
+  }
+
   return (
     <footer className="w-full border-t border-zinc-200 bg-zinc-50">
       <div className="mx-auto max-w-6xl px-4 pb-28 pt-10 sm:px-6 sm:pb-12">
@@ -10,9 +24,14 @@ export default function Footer() {
             <p className="mt-2 text-sm text-zinc-500">
               고등학생 내신 및 수능 전문 교육
             </p>
-            <p className="mt-1 text-xs text-zinc-400">
-              (임시) 주소 · 사업자등록번호 · 대표자명 등 정보 영역
-            </p>
+            <div className="mt-2 flex flex-col gap-0.5 text-xs text-zinc-400">
+              <p>
+                {content.business_name} · 대표 {content.representative_name}
+              </p>
+              <p>사업자등록번호 {content.business_registration_number}</p>
+              <p>{content.business_address}</p>
+              <p>{content.business_phone}</p>
+            </div>
           </div>
 
           <div className="flex gap-10 text-sm">

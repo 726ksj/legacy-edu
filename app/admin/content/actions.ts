@@ -30,7 +30,8 @@ export async function updateSiteContent(
   }
 
   revalidatePath("/admin/content");
-  revalidatePath("/");
-  revalidatePath("/about/greeting");
+  // 사업자 정보(푸터)는 거의 모든 페이지에 노출되므로 사이트 전체를
+  // 다시 검증한다.
+  revalidatePath("/", "layout");
   return { success: true };
 }
