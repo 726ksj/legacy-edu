@@ -55,11 +55,11 @@ function StepCard({ step, index }: { step: CurriculumStep; index: number }) {
       ref={ref}
       id={curriculumStepId(index)}
       style={{ scrollMarginTop: CURRICULUM_STEP_SCROLL_OFFSET }}
-      className={`relative mx-auto flex w-full max-w-sm flex-col items-center overflow-hidden rounded-3xl border border-zinc-100 bg-white px-8 py-12 text-center shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-16 lg:max-w-2xl lg:px-20 lg:py-20 ${
+      className={`relative mx-auto flex w-full max-w-sm flex-col items-center overflow-hidden rounded-3xl border-2 border-brand/25 bg-white px-8 py-12 text-center shadow-[0_10px_32px_-10px_rgba(79,178,139,0.35)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-16 lg:max-w-2xl lg:px-20 lg:py-20 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
       }`}
     >
-      <span className="absolute left-6 top-6 text-3xl font-extrabold text-brand-light sm:left-8 sm:top-8 sm:text-5xl lg:text-6xl">
+      <span className="absolute left-6 top-6 text-3xl font-extrabold text-brand-dark sm:left-8 sm:top-8 sm:text-5xl lg:text-6xl">
         {step.no}
       </span>
       <Icon />
@@ -82,11 +82,11 @@ function FinalBadge() {
   return (
     <div
       ref={ref}
-      className={`relative mx-auto flex w-full max-w-sm flex-col items-center rounded-3xl border border-zinc-100 bg-white px-8 py-14 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-20 lg:max-w-2xl lg:px-20 ${
+      className={`relative mx-auto flex w-full max-w-sm flex-col items-center rounded-3xl border-2 border-brand/25 bg-white px-8 py-14 shadow-[0_10px_32px_-10px_rgba(79,178,139,0.35)] transition-all duration-700 ease-out sm:max-w-xl sm:px-14 sm:py-20 lg:max-w-2xl lg:px-20 ${
         visible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
       }`}
     >
-      <span className="absolute left-6 top-6 text-3xl font-extrabold text-brand-light sm:left-8 sm:top-8 sm:text-5xl lg:text-6xl">
+      <span className="absolute left-6 top-6 text-3xl font-extrabold text-brand-dark sm:left-8 sm:top-8 sm:text-5xl lg:text-6xl">
         07
       </span>
       <div className="flex h-52 w-52 flex-col items-center justify-center gap-1 rounded-full bg-gradient-to-b from-brand to-brand-dark text-white shadow-lg sm:h-72 sm:w-72 lg:h-80 lg:w-80">

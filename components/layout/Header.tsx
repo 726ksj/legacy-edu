@@ -84,7 +84,7 @@ export default async function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur">
       {/* 상단: 로고 + 로그인/회원가입. 데스크톱은 로고 정중앙, 모바일은 좌우 분리 배치 */}
-      <div className="relative flex h-16 w-full items-center justify-between px-4 sm:px-8 md:h-20 md:justify-end lg:px-12">
+      <div className="relative flex h-14 w-full items-center justify-between px-4 sm:px-8 md:h-16 md:justify-end lg:px-12">
         <Link
           href="/"
           className="flex min-w-0 shrink items-center gap-1.5 md:absolute md:left-1/2 md:top-1/2 md:shrink-0 md:-translate-x-1/2 md:-translate-y-1/2 md:gap-2.5"
@@ -136,11 +136,11 @@ export default async function Header() {
 
       {/* 하단: 굵은 대분류 메뉴 + 커서를 올리면 나오는 세부 메뉴 */}
       <nav className="hidden border-t border-zinc-100 bg-zinc-50 md:block">
-        <ul className="flex w-full items-start justify-between gap-6 px-5 sm:px-8 lg:px-12">
+        <ul className="mx-auto flex w-full max-w-6xl items-start justify-between gap-6 px-4 sm:px-6">
           {navItems.map((item) => {
             const hasChildren = Boolean(item.children && item.children.length > 0);
             const labelClassName =
-              "flex items-center gap-1 py-4 text-base font-bold text-zinc-800 transition-colors group-hover:text-brand-dark lg:text-lg";
+              "flex items-center gap-1 py-3 text-base font-bold text-zinc-800 transition-colors group-hover:text-brand-dark lg:text-lg";
 
             return (
             <li key={item.href} className="group relative">
