@@ -1,6 +1,7 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
-import type { ReportType } from "@/lib/scoreReports";
 
 interface ScoreEntry {
   id: string;
@@ -16,7 +17,7 @@ export default async function ScoreReportList({
   title,
   description,
 }: {
-  reportType: ReportType;
+  reportType: string;
   title: string;
   description: string;
 }) {
@@ -38,7 +39,14 @@ export default async function ScoreReportList({
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-16">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
+        <Link
+          href="/mypage/score-report"
+          className="inline-flex items-center gap-0.5 text-xs font-semibold text-zinc-400 hover:text-brand-dark"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          점수 리포트
+        </Link>
+        <h1 className="mt-1 text-2xl font-bold text-zinc-900 sm:text-3xl">
           {title}
         </h1>
         <p className="mt-2 text-sm text-zinc-500">{description}</p>
@@ -52,7 +60,7 @@ export default async function ScoreReportList({
         {entries?.map((entry) => (
           <div
             key={entry.id}
-            className="rounded-lg border border-zinc-200 bg-white p-4"
+            className="rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-brand/40"
           >
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
               <p className="text-sm font-medium text-zinc-900">

@@ -20,6 +20,10 @@ const ADMIN_NAV_ITEMS = [
   { label: "메모 관리", href: "/admin/notes" },
   { label: "수강 권한 관리", href: "/admin/enrollments" },
   { label: "FAQ 관리", href: "/admin/faqs" },
+  {
+    label: "점수 리포트 카테고리 관리",
+    href: "/admin/score-report-categories",
+  },
 ];
 
 export default function AdminSidebar({

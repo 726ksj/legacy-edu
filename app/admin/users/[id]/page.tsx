@@ -15,7 +15,7 @@ import DeleteEnrollmentButton from "../../enrollments/DeleteEnrollmentButton";
 import ScoreReportSection, {
   type ScoreReportEntry,
 } from "@/components/admin/ScoreReportSection";
-import { REPORT_TYPES, REPORT_TYPE_LABELS } from "@/lib/scoreReports";
+import { getScoreReportCategories } from "@/lib/scoreReports";
 
 export const dynamic = "force-dynamic";
 
@@ -62,27 +62,32 @@ export default async function Page({
     notFound();
   }
 
-  const [{ data: enrollments }, { data: scoreReports }, { data: devices }] =
-    await Promise.all([
-      supabase
-        .from("enrollments")
-        .select("id, course_id, enrolled_at, courses(subject, title)")
-        .eq("profile_id", id)
-        .order("enrolled_at", { ascending: false })
-        .returns<EnrollmentRow[]>(),
-      supabase
-        .from("score_reports")
-        .select("id, report_type, title, subject, score, exam_date, memo")
-        .eq("profile_id", id)
-        .order("exam_date", { ascending: false })
-        .returns<ScoreReportRow[]>(),
-      supabase
-        .from("user_devices")
-        .select("id, user_agent, created_at, last_seen_at")
-        .eq("user_id", id)
-        .order("last_seen_at", { ascending: false })
-        .returns<DeviceRow[]>(),
-    ]);
+  const [
+    { data: enrollments },
+    { data: scoreReports },
+    { data: devices },
+    categories,
+  ] = await Promise.all([
+    supabase
+      .from("enrollments")
+      .select("id, course_id, enrolled_at, courses(subject, title)")
+      .eq("profile_id", id)
+      .order("enrolled_at", { ascending: false })
+      .returns<EnrollmentRow[]>(),
+    supabase
+      .from("score_reports")
+      .select("id, report_type, title, subject, score, exam_date, memo")
+      .eq("profile_id", id)
+      .order("exam_date", { ascending: false })
+      .returns<ScoreReportRow[]>(),
+    supabase
+      .from("user_devices")
+      .select("id, user_agent, created_at, last_seen_at")
+      .eq("user_id", id)
+      .order("last_seen_at", { ascending: false })
+      .returns<DeviceRow[]>(),
+    getScoreReportCategories(),
+  ]);
 
   const scoreReportsByType = new Map<string, ScoreReportEntry[]>();
   for (const row of scoreReports ?? []) {
@@ -179,16 +184,22 @@ export default async function Page({
           <div>
             <h2 className="text-lg font-bold text-zinc-900">리포트</h2>
             <div className="mt-3 flex flex-col gap-4">
-              {REPORT_TYPES.map((reportType) => (
+              {categories.map((category) => (
                 <ScoreReportSection
-                  key={reportType}
-                  label={REPORT_TYPE_LABELS[reportType]}
-                  entries={scoreReportsByType.get(reportType) ?? []}
-                  addAction={addScoreReport.bind(null, user.id, reportType)}
+                  key={category.id}
+                  label={category.label}
+                  entries={scoreReportsByType.get(category.slug) ?? []}
+                  addAction={addScoreReport.bind(null, user.id, category.slug)}
                   updateAction={updateScoreReport.bind(null, user.id)}
                   deleteAction={deleteScoreReport.bind(null, user.id)}
                 />
               ))}
+              {categories.length === 0 && (
+                <p className="text-sm text-zinc-400">
+                  등록된 리포트 카테고리가 없습니다. 관리자 메뉴의 "점수 리포트
+                  카테고리 관리"에서 먼저 추가해주세요.
+                </p>
+              )}
             </div>
           </div>
         </div>

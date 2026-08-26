@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { ReportType } from "@/lib/scoreReports";
 
 export interface ScoreActionState {
   error?: string;
@@ -32,15 +31,12 @@ function parseScoreForm(formData: FormData) {
 function revalidateScoreReportPaths(userId: string) {
   revalidatePath(`/admin/users/${userId}`);
   revalidatePath("/mypage/score-report");
-  revalidatePath("/mypage/score-report/vocabulary");
-  revalidatePath("/mypage/score-report/academy-mock-exam");
-  revalidatePath("/mypage/score-report/official-mock-exam");
-  revalidatePath("/mypage/score-report/midterm-final");
+  revalidatePath("/mypage/score-report/[slug]", "layout");
 }
 
 export async function addScoreReport(
   userId: string,
-  reportType: ReportType,
+  reportType: string,
   formData: FormData,
 ): Promise<ScoreActionState> {
   const parsed = parseScoreForm(formData);
