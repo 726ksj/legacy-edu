@@ -32,10 +32,6 @@ export default function Page() {
           </li>
         ))}
       </ul>
-
-      <p className="mt-8 text-sm text-zinc-400">
-        (임시 화면입니다. 실제 기능은 다음 단계에서 구현됩니다.)
-      </p>
     </section>
   );
 }

@@ -38,7 +38,9 @@ export default async function ScoreReportList({
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-16">
       <div>
-        <h1 className="text-3xl font-bold text-zinc-900">{title}</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
+          {title}
+        </h1>
         <p className="mt-2 text-sm text-zinc-500">{description}</p>
       </div>
 
@@ -52,7 +54,7 @@ export default async function ScoreReportList({
             key={entry.id}
             className="rounded-lg border border-zinc-200 bg-white p-4"
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
               <p className="text-sm font-medium text-zinc-900">
                 {entry.title}
                 {entry.subject && (
