@@ -114,7 +114,7 @@ export default function CourseListing({
         </p>
       )}
 
-      <div className="mt-8 flex flex-col gap-3">
+      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {pagedCourses.map((course) => (
           <CourseCard
             key={course.id}

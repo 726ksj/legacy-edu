@@ -16,7 +16,7 @@ export default function CourseCard({
 }) {
   return (
     <div
-      className={`flex flex-col gap-3 rounded-2xl border p-5 transition-colors ${
+      className={`flex h-full flex-col justify-between gap-3 rounded-2xl border p-5 transition-colors ${
         checked
           ? "border-brand bg-brand-light/40"
           : "border-zinc-200 bg-white"
