@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import Link from "next/link";
 import { login, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
@@ -82,6 +83,19 @@ export default function LoginForm({
           {isPending ? "로그인 중..." : "로그인"}
         </button>
       </form>
+
+      <div className="flex items-center justify-center gap-3 text-sm text-zinc-500">
+        <Link href="/find-id" className="hover:text-brand-dark hover:underline">
+          아이디 찾기
+        </Link>
+        <span className="text-zinc-300">|</span>
+        <Link
+          href="/find-password"
+          className="hover:text-brand-dark hover:underline"
+        >
+          비밀번호 찾기
+        </Link>
+      </div>
     </section>
   );
 }

@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useActionState, useRef, useState } from "react";
 import { signup, type SignupState } from "./actions";
 import { PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
+import { formatPhoneInput } from "@/lib/phone";
 
 const initialState: SignupState = {};
 
@@ -27,6 +28,8 @@ export default function SignupPage() {
   const postcodeContainerRef = useRef<HTMLDivElement>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
   const passwordMismatch =
     confirmPassword.length > 0 && password !== confirmPassword;
 
@@ -145,12 +148,16 @@ export default function SignupPage() {
           name="phone"
           type="tel"
           placeholder="010-0000-0000"
+          value={phone}
+          onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
         />
         <Field
           label="보호자 전화번호"
           name="guardianPhone"
           type="tel"
           placeholder="010-0000-0000"
+          value={guardianPhone}
+          onChange={(e) => setGuardianPhone(formatPhoneInput(e.target.value))}
         />
         <div className="flex gap-3">
           <div className="flex-1">

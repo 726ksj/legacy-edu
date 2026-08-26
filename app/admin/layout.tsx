@@ -23,26 +23,34 @@ export default async function AdminLayout({
 
   const adminSupabase = createAdminClient();
 
-  // 서로 무관한 두 집계 쿼리라 병렬로 요청한다.
-  const [{ data: newNote }, { count: pendingConsultationCount }] =
-    await Promise.all([
-      adminSupabase
-        .from("questions")
-        .select("id")
-        .is("question_read_at", null)
-        .limit(1)
-        .maybeSingle(),
-      adminSupabase
-        .from("consultation_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
-    ]);
+  // 서로 무관한 집계 쿼리들이라 병렬로 요청한다.
+  const [
+    { data: newNote },
+    { count: pendingConsultationCount },
+    { count: pendingPasswordResetCount },
+  ] = await Promise.all([
+    adminSupabase
+      .from("questions")
+      .select("id")
+      .is("question_read_at", null)
+      .limit(1)
+      .maybeSingle(),
+    adminSupabase
+      .from("consultation_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    adminSupabase
+      .from("password_reset_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+  ]);
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <AdminSidebar
         hasNewNote={Boolean(newNote)}
         pendingConsultationCount={pendingConsultationCount ?? 0}
+        pendingPasswordResetCount={pendingPasswordResetCount ?? 0}
       />
       <div className="flex flex-1 flex-col bg-zinc-50">{children}</div>
     </div>
