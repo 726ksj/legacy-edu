@@ -146,25 +146,28 @@ export default function CourseListing({
       )}
 
       {visibleCourses.length > 0 && (
-        <div className="mt-6 flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl border-2 border-brand/25 bg-brand-light/40 p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-600">
-                선택 {selected.size}개 · 합계 {total.toLocaleString("ko-KR")}원
+            <div className="flex flex-col gap-1.5">
+              <span className="text-base font-bold text-zinc-800 sm:text-lg">
+                선택 {selected.size}개 · 합계{" "}
+                <span className="text-brand-dark">
+                  {total.toLocaleString("ko-KR")}원
+                </span>
               </span>
               <Link
                 href="/mypage/cart"
-                className="w-fit text-xs font-semibold text-brand-dark hover:underline"
+                className="w-fit text-sm font-semibold text-brand-dark hover:underline"
               >
                 내 장바구니 보기 →
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:w-80">
+            <div className="grid grid-cols-2 gap-2.5 sm:w-96">
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={selected.size === 0 || isAddingToCart}
-                className="rounded-md border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-600 hover:border-brand hover:text-brand-dark disabled:opacity-50"
+                className="rounded-lg border-2 border-zinc-300 bg-white px-4 py-3 text-base font-semibold text-zinc-700 transition-colors hover:border-brand hover:text-brand-dark disabled:opacity-50"
               >
                 {isAddingToCart ? "담는 중..." : "장바구니 담기"}
               </button>
@@ -172,7 +175,7 @@ export default function CourseListing({
                 type="button"
                 onClick={handleBuyNow}
                 disabled={selected.size === 0}
-                className="rounded-md bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+                className="rounded-lg bg-brand px-4 py-3 text-base font-bold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
               >
                 선택 강좌 구매하기
               </button>
