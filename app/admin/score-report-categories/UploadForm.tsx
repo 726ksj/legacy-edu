@@ -66,9 +66,8 @@ export default function UploadForm({
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           엑셀 파일
           <span className="text-xs font-normal text-zinc-400">
-            첫 행은 열 제목: 학교, 학년, 이름, 전화번호, 아이디, 점수 (학교
-            · 학년 · 아이디는 비워도 됩니다. 아이디가 없으면 이름+전화번호로
-            찾습니다.)
+            첫 행은 열 제목: 학교, 학년, 이름, 전화번호, 점수 (학교 · 학년은
+            비워도 됩니다. 이름+전화번호로 회원을 찾습니다.)
           </span>
           <input
             name="file"

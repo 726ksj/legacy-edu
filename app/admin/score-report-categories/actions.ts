@@ -208,7 +208,6 @@ export async function uploadScoreReports(
     row: number;
     name: string;
     phone: string;
-    username: string;
     score: string;
   }
 
@@ -226,11 +225,10 @@ export async function uploadScoreReports(
 
     const name = get("이름");
     const phone = get("전화번호");
-    const username = get("아이디");
     const score = get("점수");
 
     // 완전히 빈 행은 조용히 건너뛴다 (엑셀 끝부분에 흔함).
-    if (!name && !phone && !username && !score) return;
+    if (!name && !phone && !score) return;
 
     if (!name || !phone || !score) {
       failed.push({
@@ -242,40 +240,22 @@ export async function uploadScoreReports(
       return;
     }
 
-    parsedRows.push({ row: rowNumber, name, phone, username, score });
+    parsedRows.push({ row: rowNumber, name, phone, score });
   });
 
   if (parsedRows.length === 0 && failed.length === 0) {
     return { error: "업로드할 데이터가 없습니다." };
   }
 
-  // 아이디가 있는 행과 없는 행을 나눠서, 있는 쪽은 아이디로만, 없는 쪽은
-  // 이름+전화번호로 매칭한다.
-  const usernames = [
-    ...new Set(parsedRows.filter((r) => r.username).map((r) => r.username)),
-  ];
-  const names = [
-    ...new Set(parsedRows.filter((r) => !r.username).map((r) => r.name)),
-  ];
+  const names = [...new Set(parsedRows.map((r) => r.name))];
 
-  const [{ data: byUsername }, { data: byName }] = await Promise.all([
-    usernames.length
-      ? supabase
-          .from("profiles")
-          .select("id, username, name, phone")
-          .in("username", usernames)
-      : Promise.resolve({ data: [] as never[] }),
-    names.length
-      ? supabase
-          .from("profiles")
-          .select("id, username, name, phone")
-          .in("name", names)
-      : Promise.resolve({ data: [] as never[] }),
-  ]);
+  const { data: byName } = names.length
+    ? await supabase
+        .from("profiles")
+        .select("id, name, phone")
+        .in("name", names)
+    : { data: [] as { id: string; name: string; phone: string }[] };
 
-  const profileByUsername = new Map(
-    (byUsername ?? []).map((p) => [p.username, p]),
-  );
   const profilesByName = new Map<string, { id: string; phone: string }[]>();
   for (const p of byName ?? []) {
     const list = profilesByName.get(p.name) ?? [];
@@ -292,28 +272,19 @@ export async function uploadScoreReports(
   }[] = [];
 
   for (const row of parsedRows) {
-    let matchedId: string | null = null;
-
-    if (row.username) {
-      const match = profileByUsername.get(row.username);
-      if (match) matchedId = match.id;
-    } else {
-      const candidates = profilesByName.get(row.name) ?? [];
-      const targetPhone = normalizePhoneDigits(row.phone);
-      const match = candidates.find(
-        (c) => normalizePhoneDigits(c.phone) === targetPhone,
-      );
-      if (match) matchedId = match.id;
-    }
+    const candidates = profilesByName.get(row.name) ?? [];
+    const targetPhone = normalizePhoneDigits(row.phone);
+    const match = candidates.find(
+      (c) => normalizePhoneDigits(c.phone) === targetPhone,
+    );
+    const matchedId = match?.id ?? null;
 
     if (!matchedId) {
       failed.push({
         row: row.row,
         name: row.name,
         phone: row.phone,
-        reason: row.username
-          ? "해당 아이디의 회원을 찾을 수 없습니다."
-          : "이름+전화번호와 일치하는 회원을 찾을 수 없습니다.",
+        reason: "이름+전화번호와 일치하는 회원을 찾을 수 없습니다.",
       });
       continue;
     }
