@@ -9,6 +9,7 @@ const initialState: FindIdState = {};
 
 export default function FindIdForm() {
   const [state, formAction, isPending] = useActionState(findId, initialState);
+  const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
   return (
@@ -40,6 +41,8 @@ export default function FindIdForm() {
             <input
               name="name"
               required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
             />
           </label>

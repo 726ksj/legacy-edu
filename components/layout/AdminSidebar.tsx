@@ -9,7 +9,10 @@ import { cn } from "@/lib/utils";
 const ADMIN_NAV_ITEMS = [
   { label: "홈/소개 문구 관리", href: "/admin/content" },
   { label: "상담 신청 관리", href: "/admin/consultations" },
-  { label: "비밀번호 찾기 요청 관리", href: "/admin/password-reset-requests" },
+  {
+    label: "비밀번호 셀프 재설정 이력",
+    href: "/admin/password-reset-requests",
+  },
   { label: "학생코드 관리", href: "/admin/student-codes" },
   { label: "회원 관리", href: "/admin/users" },
   { label: "고객센터 관리", href: "/admin/notices" },
@@ -29,11 +32,9 @@ const ADMIN_NAV_ITEMS = [
 export default function AdminSidebar({
   hasNewNote = false,
   pendingConsultationCount = 0,
-  pendingPasswordResetCount = 0,
 }: {
   hasNewNote?: boolean;
   pendingConsultationCount?: number;
-  pendingPasswordResetCount?: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -117,14 +118,6 @@ export default function AdminSidebar({
                       {pendingConsultationCount > 99
                         ? "99+"
                         : pendingConsultationCount}
-                    </span>
-                  )}
-                {item.href === "/admin/password-reset-requests" &&
-                  pendingPasswordResetCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
-                      {pendingPasswordResetCount > 99
-                        ? "99+"
-                        : pendingPasswordResetCount}
                     </span>
                   )}
               </Link>
