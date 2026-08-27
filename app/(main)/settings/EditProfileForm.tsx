@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateProfile, type UpdateProfileState } from "./actions";
+import { formatPhoneInput } from "@/lib/phone";
 
 const initialState: UpdateProfileState = {};
 
@@ -9,6 +10,7 @@ interface ProfileData {
   username: string;
   name: string;
   phone: string;
+  guardian_phone: string;
   address: string;
   school: string | null;
   grade: string | null;
@@ -19,6 +21,8 @@ export default function EditProfileForm({ profile }: { profile: ProfileData }) {
     updateProfile,
     initialState,
   );
+  const [phone, setPhone] = useState(profile.phone);
+  const [guardianPhone, setGuardianPhone] = useState(profile.guardian_phone);
 
   return (
     <form
@@ -43,11 +47,23 @@ export default function EditProfileForm({ profile }: { profile: ProfileData }) {
         />
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        전화번호
+        본인 전화번호
         <input
           name="phone"
           type="tel"
-          defaultValue={profile.phone}
+          value={phone}
+          onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+          required
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        보호자 전화번호
+        <input
+          name="guardianPhone"
+          type="tel"
+          value={guardianPhone}
+          onChange={(e) => setGuardianPhone(formatPhoneInput(e.target.value))}
           required
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
