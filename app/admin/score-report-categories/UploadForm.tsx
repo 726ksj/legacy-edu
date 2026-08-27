@@ -1,0 +1,120 @@
+"use client";
+
+import { useActionState, useEffect, useRef } from "react";
+import { uploadScoreReports, type UploadState } from "./actions";
+
+const initialState: UploadState = {};
+
+export default function UploadForm({
+  categories,
+}: {
+  categories: { id: string; label: string }[];
+}) {
+  const [state, formAction, isPending] = useActionState(
+    uploadScoreReports,
+    initialState,
+  );
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state.successCount !== undefined) {
+      formRef.current?.reset();
+    }
+  }, [state.successCount]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <form
+        ref={formRef}
+        action={formAction}
+        className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6"
+      >
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          카테고리
+          <select
+            name="categoryId"
+            required
+            defaultValue=""
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="" disabled>
+              선택
+            </option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          시험명 (예: OO고등학교 2학년 내신반 단어 테스트 - 1회차)
+          <input
+            name="examTitle"
+            required
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          시험일 (선택)
+          <input
+            name="examDate"
+            type="date"
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          엑셀 파일
+          <span className="text-xs font-normal text-zinc-400">
+            첫 행은 열 제목: 학교, 학년, 이름, 전화번호, 아이디, 점수 (학교
+            · 학년 · 아이디는 비워도 됩니다. 아이디가 없으면 이름+전화번호로
+            찾습니다.)
+          </span>
+          <input
+            name="file"
+            type="file"
+            accept=".xlsx,.xls"
+            required
+            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+
+        {state.error && (
+          <p className="text-sm font-medium text-red-500">{state.error}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-fit rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        >
+          {isPending ? "업로드 중..." : "업로드"}
+        </button>
+      </form>
+
+      {state.successCount !== undefined && (
+        <div className="flex flex-col gap-3 rounded-lg border-2 border-brand/25 bg-brand-light/40 p-4">
+          <p className="text-sm font-semibold text-brand-dark">
+            성공 {state.successCount}건 · 실패 {state.failed?.length ?? 0}건
+          </p>
+          {state.failed && state.failed.length > 0 && (
+            <ul className="flex flex-col gap-1.5">
+              {state.failed.map((row) => (
+                <li
+                  key={row.row}
+                  className="rounded-md bg-white px-3 py-2 text-xs text-zinc-600"
+                >
+                  <span className="font-semibold text-zinc-900">
+                    {row.row}행
+                  </span>{" "}
+                  {row.name || "(이름 없음)"} · {row.phone || "(전화번호 없음)"}{" "}
+                  — {row.reason}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
