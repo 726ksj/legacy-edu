@@ -2,6 +2,7 @@
 
 import { removeUserDevice } from "../actions";
 import { MAX_DEVICES_PER_USER } from "@/lib/device";
+import { formatDateTime } from "@/lib/formatDateTime";
 
 interface DeviceRow {
   id: string;
@@ -43,7 +44,7 @@ export default function DeviceSection({
                 </p>
                 <p className="mt-0.5 text-zinc-400">
                   최근 로그인{" "}
-                  {new Date(device.last_seen_at).toLocaleString("ko-KR")}
+                  {formatDateTime(device.last_seen_at)}
                 </p>
               </div>
               <form

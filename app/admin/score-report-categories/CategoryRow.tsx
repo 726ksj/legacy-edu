@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { type CategoryActionState } from "./actions";
+import { type CategoryActionState, type DeleteCategoryState } from "./actions";
 
 export interface CategoryRowData {
   id: string;
@@ -23,10 +23,11 @@ export default function CategoryRow({
   category: CategoryRowData;
   reportCount: number;
   onUpdate: (formData: FormData) => Promise<CategoryActionState>;
-  onDelete: () => Promise<void>;
+  onDelete: () => Promise<DeleteCategoryState>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isSaving, startSaveTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
 
@@ -102,58 +103,64 @@ export default function CategoryRow({
   }
 
   return (
-    <li className="flex items-start justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-zinc-900">
-          {category.label}
-        </p>
-        {category.description && (
-          <p className="mt-0.5 truncate text-xs text-zinc-500">
-            {category.description}
+    <li className="rounded-lg border border-zinc-200 bg-white px-4 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-zinc-900">
+            {category.label}
           </p>
-        )}
-        <p className="mt-0.5 text-xs text-zinc-400">
-          연결된 리포트 {reportCount}건 · 만점 {category.max_score}점
-          {category.extra_field_labels.length > 0 &&
-            ` · 추가 필드 ${category.extra_field_labels.join(", ")}`}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-3">
-        <Link
-          href={`/admin/score-report-categories/${category.id}`}
-          className="text-xs font-semibold text-zinc-500 hover:underline"
-        >
-          보기
-        </Link>
-        <button
-          type="button"
-          onClick={() => setIsEditing(true)}
-          className="text-xs font-semibold text-brand-dark hover:underline"
-        >
-          수정
-        </button>
-        <form
-          className="inline-flex"
-          action={() => startDeleteTransition(() => onDelete())}
-          onSubmit={(e) => {
-            const message =
-              reportCount > 0
-                ? `이 카테고리를 삭제하면 연결된 리포트 ${reportCount}건이 학생 화면과 회원 상세 페이지에서 보이지 않게 됩니다 (데이터 자체는 남아있음). 삭제할까요?`
-                : "이 카테고리를 삭제할까요?";
-            if (!window.confirm(message)) {
-              e.preventDefault();
-            }
-          }}
-        >
-          <button
-            type="submit"
-            disabled={isDeleting}
-            className="text-xs font-semibold text-red-500 hover:text-red-600"
+          {category.description && (
+            <p className="mt-0.5 truncate text-xs text-zinc-500">
+              {category.description}
+            </p>
+          )}
+          <p className="mt-0.5 text-xs text-zinc-400">
+            연결된 리포트 {reportCount}건 · 만점 {category.max_score}점
+            {category.extra_field_labels.length > 0 &&
+              ` · 추가 필드 ${category.extra_field_labels.join(", ")}`}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <Link
+            href={`/admin/score-report-categories/${category.id}`}
+            className="text-xs font-semibold text-zinc-500 hover:underline"
           >
-            삭제
+            보기
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="text-xs font-semibold text-brand-dark hover:underline"
+          >
+            수정
           </button>
-        </form>
+          <form
+            className="inline-flex"
+            action={() =>
+              startDeleteTransition(async () => {
+                const result = await onDelete();
+                setDeleteError(result.error ?? null);
+              })
+            }
+            onSubmit={(e) => {
+              if (!window.confirm("이 카테고리를 삭제할까요?")) {
+                e.preventDefault();
+              }
+            }}
+          >
+            <button
+              type="submit"
+              disabled={isDeleting}
+              className="text-xs font-semibold text-red-500 hover:text-red-600"
+            >
+              삭제
+            </button>
+          </form>
+        </div>
       </div>
+      {deleteError && (
+        <p className="mt-2 text-xs font-medium text-red-500">{deleteError}</p>
+      )}
     </li>
   );
 }

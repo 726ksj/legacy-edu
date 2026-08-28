@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 import RefundButton from "./RefundButton";
 
 export const dynamic = "force-dynamic";
@@ -72,9 +73,7 @@ export default async function AdminOrdersPage() {
                   {STATUS_LABEL[order.status] ?? order.status}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {order.paid_at
-                    ? new Date(order.paid_at).toLocaleString("ko-KR")
-                    : "-"}
+                  {order.paid_at ? formatDateTime(order.paid_at) : "-"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   {order.status === "paid" && (

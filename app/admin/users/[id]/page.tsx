@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 import EditUserForm from "./EditUserForm";
 import DeviceSection from "./DeviceSection";
 import DeleteUserButton from "../DeleteUserButton";
@@ -119,7 +120,7 @@ export default async function Page({
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         아이디 {user.username} · 가입일{" "}
-        {new Date(user.created_at).toLocaleString("ko-KR")}
+        {formatDateTime(user.created_at)}
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">

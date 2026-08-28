@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { formatDateTime } from "@/lib/formatDateTime";
 import {
   signPlaybackToken,
   signThumbnailToken,
@@ -120,7 +121,7 @@ export default async function WatchPage({
   const notes = (noteRows ?? []).map((note) => ({
     id: note.id,
     content: note.content,
-    createdAt: new Date(note.created_at).toLocaleString("ko-KR"),
+    createdAt: formatDateTime(note.created_at),
   }));
 
   const currentIndex = upNext.findIndex((sibling) => sibling.id === lesson.id);

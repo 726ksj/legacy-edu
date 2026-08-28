@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { updateLessonInfo, type UpdateLessonInfoState } from "./actions";
 import DeleteLessonButton from "./DeleteLessonButton";
 import LessonAudiencePicker, {
@@ -174,7 +175,7 @@ export default function LessonRow({
         </div>
       </td>
       <td className="px-4 py-3 text-zinc-500">
-        {new Date(lesson.created_at).toLocaleString("ko-KR")}
+        {formatDateTime(lesson.created_at)}
       </td>
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-3">

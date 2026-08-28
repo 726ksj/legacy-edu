@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAllRows } from "@/lib/supabase/fetchAll";
 import { formatPhone } from "@/lib/formatPhone";
 import { scoreToPercent } from "@/lib/scoreParsing";
 import GaugeCard from "@/components/admin/charts/GaugeCard";
@@ -35,7 +36,7 @@ export default async function Page({
   const { id } = await params;
   const supabase = createAdminClient();
 
-  const [{ data: user }, { data: categories }, { data: reports }] =
+  const [{ data: user }, { data: categories }, reportList] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -47,18 +48,20 @@ export default async function Page({
         .select("id, slug, label, max_score")
         .order("sort_order", { ascending: true })
         .returns<CategoryData[]>(),
-      supabase
-        .from("score_reports")
-        .select("id, report_type, title, score, exam_date")
-        .eq("profile_id", id)
-        .order("exam_date", { ascending: true })
-        .returns<ReportData[]>(),
+      fetchAllRows<ReportData>((from, to) =>
+        supabase
+          .from("score_reports")
+          .select("id, report_type, title, score, exam_date")
+          .eq("profile_id", id)
+          .order("exam_date", { ascending: true })
+          .range(from, to)
+          .returns<ReportData[]>(),
+      ),
     ]);
 
   if (!user) notFound();
 
   const categoryList = categories ?? [];
-  const reportList = reports ?? [];
   const categoryBySlug = new Map(categoryList.map((c) => [c.slug, c]));
 
   interface EnrichedRow {

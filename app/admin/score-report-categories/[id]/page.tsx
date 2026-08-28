@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAllRows } from "@/lib/supabase/fetchAll";
 import { formatPhone } from "@/lib/formatPhone";
 import { deleteReport } from "../actions";
 import DeleteReportButton from "./DeleteReportButton";
@@ -37,14 +38,17 @@ export default async function Page({
 
   const extraFieldLabels: string[] = category.extra_field_labels ?? [];
 
-  const { data: reports } = await supabase
-    .from("score_reports")
-    .select(
-      "id, title, subject, score, exam_date, memo, extra_data, profiles(name, phone)",
-    )
-    .eq("report_type", category.slug)
-    .order("exam_date", { ascending: false })
-    .returns<ReportRow[]>();
+  const reports = await fetchAllRows<ReportRow>((from, to) =>
+    supabase
+      .from("score_reports")
+      .select(
+        "id, title, subject, score, exam_date, memo, extra_data, profiles(name, phone)",
+      )
+      .eq("report_type", category.slug)
+      .order("exam_date", { ascending: false })
+      .range(from, to)
+      .returns<ReportRow[]>(),
+  );
 
   return (
     <div className="flex flex-1 flex-col p-8">

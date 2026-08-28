@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { updateNote } from "./actions";
 import LessonNotesList, { type LessonItem } from "./LessonNotesList";
 
@@ -78,7 +79,7 @@ export default async function Page({
     notes: (notesByLesson.get(lesson.id) ?? []).map((note) => ({
       id: note.id,
       content: note.content,
-      createdAt: new Date(note.created_at).toLocaleString("ko-KR"),
+      createdAt: formatDateTime(note.created_at),
       studentName: note.profiles?.name ?? "-",
       studentUsername: note.profiles?.username ?? "-",
     })),

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 import EnrollmentForm from "./EnrollmentForm";
 import DeleteEnrollmentButton from "./DeleteEnrollmentButton";
 import { deleteEnrollment } from "./actions";
@@ -89,7 +90,7 @@ export default async function Page() {
                         {row.profiles?.username ?? "-"}
                       </td>
                       <td className="px-4 py-2 text-zinc-500">
-                        {new Date(row.enrolled_at).toLocaleString("ko-KR")}
+                        {formatDateTime(row.enrolled_at)}
                       </td>
                       <td className="px-4 py-2 text-right">
                         <DeleteEnrollmentButton

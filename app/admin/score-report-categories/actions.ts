@@ -123,11 +123,36 @@ export async function updateCategory(
   return { success: true };
 }
 
-export async function deleteCategory(id: string) {
+export interface DeleteCategoryState {
+  error?: string;
+}
+
+export async function deleteCategory(id: string): Promise<DeleteCategoryState> {
   await requireAdmin();
   const supabase = createAdminClient();
+
+  const { data: category } = await supabase
+    .from("score_report_categories")
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (category) {
+    const { count } = await supabase
+      .from("score_reports")
+      .select("id", { count: "exact", head: true })
+      .eq("report_type", category.slug);
+
+    if (count && count > 0) {
+      return {
+        error: `연결된 리포트 ${count}건이 있어 삭제할 수 없습니다. 카테고리 상세 페이지에서 리포트를 먼저 정리해주세요.`,
+      };
+    }
+  }
+
   await supabase.from("score_report_categories").delete().eq("id", id);
   revalidateCategoryPaths();
+  return {};
 }
 
 export async function deleteReport(categoryId: string, reportId: string) {

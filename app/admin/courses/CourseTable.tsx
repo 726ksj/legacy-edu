@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { formatDateTime } from "@/lib/formatDateTime";
 import DeleteCourseButton from "./DeleteCourseButton";
 import { deleteCourse } from "./actions";
 
@@ -189,7 +190,7 @@ export default function CourseTable({
                   {row.price ? `${row.price.toLocaleString()}원` : "-"}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {new Date(row.created_at).toLocaleString("ko-KR")}
+                  {formatDateTime(row.created_at)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">

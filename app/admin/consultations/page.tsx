@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPhone } from "@/lib/formatPhone";
+import { formatDateTime } from "@/lib/formatDateTime";
 import { markConsultationComplete, deleteConsultation } from "./actions";
 import DeleteConsultationButton from "./DeleteConsultationButton";
 
@@ -76,7 +77,7 @@ export default async function Page() {
                 </span>
               </div>
               <span className="text-xs text-zinc-400">
-                {new Date(row.created_at).toLocaleString("ko-KR")}
+                {formatDateTime(row.created_at)}
               </span>
             </div>
 

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 import StudentCodeForm from "./StudentCodeForm";
 import DeleteCodeButton from "./DeleteCodeButton";
 
@@ -57,12 +58,10 @@ export default async function Page() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {new Date(row.created_at).toLocaleString("ko-KR")}
+                  {formatDateTime(row.created_at)}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {row.used_at
-                    ? new Date(row.used_at).toLocaleString("ko-KR")
-                    : "-"}
+                  {row.used_at ? formatDateTime(row.used_at) : "-"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <DeleteCodeButton codeId={row.id} isUsed={row.is_used} />

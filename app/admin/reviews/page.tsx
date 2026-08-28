@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 import ReviewForm from "./ReviewForm";
 import DeleteReviewButton from "./DeleteReviewButton";
 import { deleteReview } from "./actions";
@@ -53,7 +54,7 @@ export default async function Page() {
                 <td className="px-4 py-3 text-zinc-700">{row.subject}</td>
                 <td className="px-4 py-3 text-zinc-500">{row.summary}</td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {new Date(row.created_at).toLocaleString("ko-KR")}
+                  {formatDateTime(row.created_at)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function Page() {
                   {row.school ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {new Date(row.created_at).toLocaleString("ko-KR")}
+                  {formatDateTime(row.created_at)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link

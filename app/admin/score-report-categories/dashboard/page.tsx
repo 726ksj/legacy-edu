@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAllRows } from "@/lib/supabase/fetchAll";
 import { scoreToPercent } from "@/lib/scoreParsing";
 import GaugeCard from "@/components/admin/charts/GaugeCard";
 import DonutChart from "@/components/admin/charts/DonutChart";
@@ -38,26 +39,25 @@ interface ReportData {
 export default async function Page() {
   const supabase = createAdminClient();
 
-  const [{ data: categories }, { data: reports }] = await Promise.all([
+  const [{ data: categories }, reportList] = await Promise.all([
     supabase
       .from("score_report_categories")
       .select("id, slug, label, max_score")
       .order("sort_order", { ascending: true })
       .returns<CategoryData[]>(),
-    // 대시보드 집계용이라 최근 5000건까지만 가져온다. 그 이상 쌓이면
-    // 페이지네이션이 필요하다.
-    supabase
-      .from("score_reports")
-      .select(
-        "id, report_type, score, exam_date, profile_id, profiles(name, grade)",
-      )
-      .order("exam_date", { ascending: false })
-      .limit(5000)
-      .returns<ReportData[]>(),
+    fetchAllRows<ReportData>((from, to) =>
+      supabase
+        .from("score_reports")
+        .select(
+          "id, report_type, score, exam_date, profile_id, profiles(name, grade)",
+        )
+        .order("exam_date", { ascending: false })
+        .range(from, to)
+        .returns<ReportData[]>(),
+    ),
   ]);
 
   const categoryList = categories ?? [];
-  const reportList = reports ?? [];
   const categoryBySlug = new Map(categoryList.map((c) => [c.slug, c]));
 
   interface EnrichedRow {

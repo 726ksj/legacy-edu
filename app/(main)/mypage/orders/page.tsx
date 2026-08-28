@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/formatDateTime";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ export default async function OrdersPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-zinc-400">
-                {new Date(order.created_at).toLocaleString("ko-KR")}
+                {formatDateTime(order.created_at)}
               </span>
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
