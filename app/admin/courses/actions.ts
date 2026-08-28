@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
+import { createMuxClient } from "@/lib/mux";
 
 export interface CreateCourseState {
   error?: string;
@@ -142,6 +143,27 @@ export async function updateCourse(
 export async function deleteCourse(id: string) {
   await requireAdmin();
   const supabase = createAdminClient();
+
+  // courses 삭제는 FK CASCADE로 lessons 행도 같이 지우지만, Mux에 올려둔
+  // 실제 영상 파일은 그걸로 안 지워진다. 미리 목록을 받아 Mux에서도
+  // 지워두지 않으면 파일이 고아로 남아 계속 과금된다.
+  const { data: lessons } = await supabase
+    .from("lessons")
+    .select("mux_asset_id")
+    .eq("course_id", id)
+    .not("mux_asset_id", "is", null);
+
+  if (lessons && lessons.length > 0) {
+    const mux = createMuxClient();
+    await Promise.all(
+      lessons.map((lesson) =>
+        mux.video.assets.delete(lesson.mux_asset_id!).catch(() => {
+          // Mux에 이미 없거나 삭제 실패해도 강좌 삭제 자체는 계속 진행
+        }),
+      ),
+    );
+  }
+
   await supabase.from("courses").delete().eq("id", id);
   revalidatePath("/admin/courses");
 }

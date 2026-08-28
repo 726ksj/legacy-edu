@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
-import { createMuxClient } from "@/lib/mux";
+import { createMuxClient, pollUploadForAssetId } from "@/lib/mux";
 import type { LessonVisibility } from "@/lib/enrollments";
 
 // 차시 제목은 "1강 - 문법 정리"처럼 앞에 번호가 붙는 관례라, 제목에서 첫
@@ -58,19 +58,26 @@ export async function saveLesson(
     };
   }
 
+  // Mux는 업로드가 끝나도 asset을 비동기로 나중에 만들어서, 이 시점엔
+  // asset_id가 아직 없을 수 있다. 잠깐 재시도하며 기다리고, 그래도 안
+  // 나타나면 upload_id를 저장해둬서 syncLessonStatuses/웹훅이 나중에
+  // 마저 채울 수 있게 한다 (그냥 null로 저장하면 영영 복구 불가능해짐).
+  const assetId = upload.asset_id ?? (await pollUploadForAssetId(uploadId));
+
   const supabase = createAdminClient();
   const { data: existingLessons } = await supabase
     .from("lessons")
     .select("id, title")
     .eq("course_id", courseId);
 
-  const { data: inserted } = await supabase
+  const { data: inserted, error: insertError } = await supabase
     .from("lessons")
     .insert({
       course_id: courseId,
       title,
       order_no: (existingLessons?.length ?? 0) + 1,
-      mux_asset_id: upload.asset_id ?? null,
+      mux_asset_id: assetId,
+      mux_upload_id: assetId ? null : uploadId,
       status: "preparing",
       description: description || null,
       visibility,
@@ -78,7 +85,13 @@ export async function saveLesson(
     .select("id")
     .single();
 
-  if (visibility !== "all" && inserted && profileIds.length > 0) {
+  if (insertError || !inserted) {
+    return {
+      error: `차시 저장에 실패했습니다: ${insertError?.message ?? "알 수 없는 오류"}`,
+    };
+  }
+
+  if (visibility !== "all" && profileIds.length > 0) {
     await supabase.from("lesson_access").insert(
       profileIds.map((profileId) => ({
         lesson_id: inserted.id,
@@ -91,7 +104,7 @@ export async function saveLesson(
   // 어떤 순서로 업로드하든 항상 제목 순서대로 나열되게 한다.
   const allLessons = [
     ...(existingLessons ?? []),
-    ...(inserted ? [{ id: inserted.id, title }] : []),
+    { id: inserted.id, title },
   ].sort((a, b) => compareLessonTitles(a.title, b.title));
 
   await Promise.all(
