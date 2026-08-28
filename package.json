@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:pull": "supabase db pull",
+    "db:push": "supabase db push",
+    "db:diff": "supabase db diff",
+    "db:dump": "supabase db dump --linked --schema public",
+    "migration:new": "supabase migration new"
   },
   "dependencies": {
     "@mux/mux-node": "^14.1.1",
@@ -34,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "supabase": "^2.116.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.11"
