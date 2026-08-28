@@ -9,6 +9,7 @@ export interface ScoreReportEntry {
   score: string;
   examDate: string | null;
   memo: string | null;
+  extraData: Record<string, string>;
 }
 
 interface ActionResult {
@@ -19,12 +20,14 @@ interface ActionResult {
 export default function ScoreReportSection({
   label,
   entries,
+  extraFieldLabels,
   addAction,
   updateAction,
   deleteAction,
 }: {
   label: string;
   entries: ScoreReportEntry[];
+  extraFieldLabels: string[];
   addAction: (formData: FormData) => Promise<ActionResult>;
   updateAction: (id: string, formData: FormData) => Promise<ActionResult>;
   deleteAction: (id: string) => Promise<void>;
@@ -46,6 +49,7 @@ export default function ScoreReportSection({
 
       {isAdding && (
         <ScoreEntryForm
+          extraFieldLabels={extraFieldLabels}
           submitLabel="추가"
           onCancel={() => setIsAdding(false)}
           onSubmit={async (formData) => {
@@ -68,6 +72,7 @@ export default function ScoreReportSection({
             <ScoreEntryRow
               key={entry.id}
               entry={entry}
+              extraFieldLabels={extraFieldLabels}
               onUpdate={(formData) => updateAction(entry.id, formData)}
               onDelete={() => deleteAction(entry.id)}
             />
@@ -80,11 +85,13 @@ export default function ScoreReportSection({
 
 function ScoreEntryForm({
   defaultValues,
+  extraFieldLabels,
   onSubmit,
   onCancel,
   submitLabel,
 }: {
   defaultValues?: ScoreReportEntry;
+  extraFieldLabels: string[];
   onSubmit: (formData: FormData) => Promise<ActionResult>;
   onCancel: () => void;
   submitLabel: string;
@@ -132,6 +139,19 @@ function ScoreEntryForm({
           className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
         />
       </div>
+      {extraFieldLabels.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {extraFieldLabels.map((extraLabel) => (
+            <input
+              key={extraLabel}
+              name={`extra:${extraLabel}`}
+              placeholder={`${extraLabel} (선택)`}
+              defaultValue={defaultValues?.extraData[extraLabel] ?? ""}
+              className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+            />
+          ))}
+        </div>
+      )}
       <textarea
         name="memo"
         placeholder="메모 (선택)"
@@ -162,10 +182,12 @@ function ScoreEntryForm({
 
 function ScoreEntryRow({
   entry,
+  extraFieldLabels,
   onUpdate,
   onDelete,
 }: {
   entry: ScoreReportEntry;
+  extraFieldLabels: string[];
   onUpdate: (formData: FormData) => Promise<ActionResult>;
   onDelete: () => Promise<void>;
 }) {
@@ -177,6 +199,7 @@ function ScoreEntryRow({
       <li>
         <ScoreEntryForm
           defaultValues={entry}
+          extraFieldLabels={extraFieldLabels}
           submitLabel="저장"
           onCancel={() => setIsEditing(false)}
           onSubmit={async (formData) => {
@@ -188,6 +211,10 @@ function ScoreEntryRow({
       </li>
     );
   }
+
+  const extraEntries = extraFieldLabels
+    .map((extraLabel) => [extraLabel, entry.extraData[extraLabel]] as const)
+    .filter(([, value]) => value);
 
   return (
     <li className="flex items-center justify-between gap-3 px-4 py-3">
@@ -202,6 +229,11 @@ function ScoreEntryRow({
           <span className="ml-2 text-sm font-semibold text-brand-dark">
             {entry.score}
           </span>
+          {extraEntries.map(([extraLabel, value]) => (
+            <span key={extraLabel} className="ml-2 text-xs text-zinc-500">
+              {extraLabel} {value}
+            </span>
+          ))}
         </p>
         {(entry.examDate || entry.memo) && (
           <p className="mt-0.5 text-xs text-zinc-400">

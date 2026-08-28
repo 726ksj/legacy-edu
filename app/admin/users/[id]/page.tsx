@@ -34,6 +34,7 @@ interface ScoreReportRow {
   score: string;
   exam_date: string | null;
   memo: string | null;
+  extra_data: Record<string, string> | null;
 }
 
 interface DeviceRow {
@@ -76,7 +77,9 @@ export default async function Page({
       .returns<EnrollmentRow[]>(),
     supabase
       .from("score_reports")
-      .select("id, report_type, title, subject, score, exam_date, memo")
+      .select(
+        "id, report_type, title, subject, score, exam_date, memo, extra_data",
+      )
       .eq("profile_id", id)
       .order("exam_date", { ascending: false })
       .returns<ScoreReportRow[]>(),
@@ -99,6 +102,7 @@ export default async function Page({
       score: row.score,
       examDate: row.exam_date,
       memo: row.memo,
+      extraData: row.extra_data ?? {},
     });
     scoreReportsByType.set(row.report_type, list);
   }
@@ -189,8 +193,18 @@ export default async function Page({
                   key={category.id}
                   label={category.label}
                   entries={scoreReportsByType.get(category.slug) ?? []}
-                  addAction={addScoreReport.bind(null, user.id, category.slug)}
-                  updateAction={updateScoreReport.bind(null, user.id)}
+                  extraFieldLabels={category.extra_field_labels}
+                  addAction={addScoreReport.bind(
+                    null,
+                    user.id,
+                    category.slug,
+                    category.extra_field_labels,
+                  )}
+                  updateAction={updateScoreReport.bind(
+                    null,
+                    user.id,
+                    category.extra_field_labels,
+                  )}
                   deleteAction={deleteScoreReport.bind(null, user.id)}
                 />
               ))}

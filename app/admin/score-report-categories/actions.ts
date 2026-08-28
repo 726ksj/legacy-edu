@@ -23,6 +23,16 @@ function slugify(label: string) {
   return base ? `${base}_${suffix}` : `category_${suffix}`;
 }
 
+// "백분위, 등급" 같은 콤마 구분 입력을 카테고리별 추가 필드 목록으로 바꾼다.
+function parseExtraFieldLabels(raw: string): string[] {
+  return [...new Set(
+    raw
+      .split(",")
+      .map((label) => label.trim())
+      .filter(Boolean),
+  )];
+}
+
 function revalidateCategoryPaths() {
   revalidatePath("/admin/score-report-categories");
   revalidatePath("/admin/users/[id]", "layout");
@@ -38,6 +48,9 @@ export async function createCategory(
   const label = String(formData.get("label") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const maxScore = Number(formData.get("maxScore") ?? "100");
+  const extraFieldLabels = parseExtraFieldLabels(
+    String(formData.get("extraFields") ?? ""),
+  );
 
   if (!label) {
     return { error: "이름을 입력해주세요." };
@@ -60,6 +73,7 @@ export async function createCategory(
     slug: slugify(label),
     description: description || null,
     max_score: maxScore,
+    extra_field_labels: extraFieldLabels,
     sort_order: (lastCategory?.sort_order ?? 0) + 1,
   });
 
@@ -79,6 +93,9 @@ export async function updateCategory(
   const label = String(formData.get("label") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const maxScore = Number(formData.get("maxScore") ?? "100");
+  const extraFieldLabels = parseExtraFieldLabels(
+    String(formData.get("extraFields") ?? ""),
+  );
 
   if (!label) {
     return { error: "이름을 입력해주세요." };
@@ -90,7 +107,12 @@ export async function updateCategory(
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("score_report_categories")
-    .update({ label, description: description || null, max_score: maxScore })
+    .update({
+      label,
+      description: description || null,
+      max_score: maxScore,
+      extra_field_labels: extraFieldLabels,
+    })
     .eq("id", id);
 
   if (error) {
@@ -129,7 +151,6 @@ export interface UploadState {
   failed?: UploadResultRow[];
 }
 
-// 학교/학년은 참고용으로만 받고 매칭에는 쓰지 않는다.
 const REQUIRED_HEADERS = ["이름", "전화번호", "점수"] as const;
 
 function digitsOnly(value: string) {
@@ -188,7 +209,7 @@ export async function uploadScoreReports(
 
   const { data: category } = await supabase
     .from("score_report_categories")
-    .select("slug")
+    .select("slug, extra_field_labels")
     .eq("id", categoryId)
     .maybeSingle();
 
@@ -231,8 +252,10 @@ export async function uploadScoreReports(
     name: string;
     phone: string;
     score: string;
+    extraData: Record<string, string>;
   }
 
+  const extraFieldLabels = category.extra_field_labels ?? [];
   const parsedRows: ParsedRow[] = [];
   const failed: UploadResultRow[] = [];
 
@@ -262,7 +285,13 @@ export async function uploadScoreReports(
       return;
     }
 
-    parsedRows.push({ row: rowNumber, name, phone, score });
+    const extraData: Record<string, string> = {};
+    for (const label of extraFieldLabels) {
+      const value = get(label);
+      if (value) extraData[label] = value;
+    }
+
+    parsedRows.push({ row: rowNumber, name, phone, score, extraData });
   });
 
   if (parsedRows.length === 0 && failed.length === 0) {
@@ -291,6 +320,7 @@ export async function uploadScoreReports(
     title: string;
     score: string;
     exam_date: string | null;
+    extra_data: Record<string, string>;
   }[] = [];
 
   for (const row of parsedRows) {
@@ -317,6 +347,7 @@ export async function uploadScoreReports(
       title: examTitle,
       score: row.score,
       exam_date: examDate || null,
+      extra_data: row.extraData,
     });
   }
 

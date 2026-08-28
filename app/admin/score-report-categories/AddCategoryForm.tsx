@@ -47,6 +47,11 @@ export default function AddCategoryForm() {
           placeholder="만점 (예: 100)"
           className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand sm:col-span-1"
         />
+        <input
+          name="extraFields"
+          placeholder="추가 필드 (선택, 콤마로 구분 — 예: 백분위, 등급)"
+          className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand sm:col-span-3"
+        />
       </div>
 
       {state.error && (

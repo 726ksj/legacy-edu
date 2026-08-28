@@ -22,6 +22,7 @@ export default async function Page({
       reportType={category.slug}
       title={category.label}
       description={category.description ?? ""}
+      extraFieldLabels={category.extra_field_labels}
     />
   );
 }

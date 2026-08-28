@@ -14,6 +14,7 @@ interface ReportRow {
   score: string;
   exam_date: string | null;
   memo: string | null;
+  extra_data: Record<string, string> | null;
   profiles: { name: string; phone: string | null } | null;
 }
 
@@ -27,15 +28,19 @@ export default async function Page({
 
   const { data: category } = await supabase
     .from("score_report_categories")
-    .select("id, slug, label, description")
+    .select("id, slug, label, description, extra_field_labels")
     .eq("id", id)
     .maybeSingle();
 
   if (!category) notFound();
 
+  const extraFieldLabels: string[] = category.extra_field_labels ?? [];
+
   const { data: reports } = await supabase
     .from("score_reports")
-    .select("id, title, subject, score, exam_date, memo, profiles(name, phone)")
+    .select(
+      "id, title, subject, score, exam_date, memo, extra_data, profiles(name, phone)",
+    )
     .eq("report_type", category.slug)
     .order("exam_date", { ascending: false })
     .returns<ReportRow[]>();
@@ -67,6 +72,11 @@ export default async function Page({
               <th className="px-4 py-3">시험명</th>
               <th className="px-4 py-3">과목</th>
               <th className="px-4 py-3">점수</th>
+              {extraFieldLabels.map((label) => (
+                <th key={label} className="px-4 py-3">
+                  {label}
+                </th>
+              ))}
               <th className="px-4 py-3">시험일</th>
               <th className="px-4 py-3">메모</th>
               <th className="px-4 py-3" />
@@ -88,6 +98,11 @@ export default async function Page({
                 <td className="px-4 py-3 font-semibold text-brand-dark">
                   {report.score}
                 </td>
+                {extraFieldLabels.map((label) => (
+                  <td key={label} className="px-4 py-3 text-zinc-500">
+                    {report.extra_data?.[label] ?? "-"}
+                  </td>
+                ))}
                 <td className="px-4 py-3 text-zinc-500">
                   {report.exam_date ?? "-"}
                 </td>
@@ -104,7 +119,7 @@ export default async function Page({
             {(!reports || reports.length === 0) && (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={8 + extraFieldLabels.length}
                   className="px-4 py-8 text-center text-zinc-400"
                 >
                   등록된 리포트가 없습니다.

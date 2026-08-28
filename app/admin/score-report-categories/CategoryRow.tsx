@@ -11,6 +11,7 @@ export interface CategoryRowData {
   description: string | null;
   sort_order: number;
   max_score: number;
+  extra_field_labels: string[];
 }
 
 export default function CategoryRow({
@@ -68,6 +69,12 @@ export default function CategoryRow({
               placeholder="만점 (예: 100)"
               className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
             />
+            <input
+              name="extraFields"
+              defaultValue={category.extra_field_labels.join(", ")}
+              placeholder="추가 필드 (선택, 콤마로 구분 — 예: 백분위, 등급)"
+              className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand sm:col-span-3"
+            />
           </div>
           {error && <p className="text-xs font-medium text-red-500">{error}</p>}
           <div className="flex items-center gap-3">
@@ -107,6 +114,8 @@ export default function CategoryRow({
         )}
         <p className="mt-0.5 text-xs text-zinc-400">
           연결된 리포트 {reportCount}건 · 만점 {category.max_score}점
+          {category.extra_field_labels.length > 0 &&
+            ` · 추가 필드 ${category.extra_field_labels.join(", ")}`}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">

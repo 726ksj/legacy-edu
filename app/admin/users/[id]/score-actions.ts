@@ -9,7 +9,7 @@ export interface ScoreActionState {
   success?: boolean;
 }
 
-function parseScoreForm(formData: FormData) {
+function parseScoreForm(formData: FormData, extraFieldLabels: string[]) {
   const title = String(formData.get("title") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const score = String(formData.get("score") ?? "").trim();
@@ -20,12 +20,19 @@ function parseScoreForm(formData: FormData) {
     return { error: "시험명과 점수를 입력해주세요." } as const;
   }
 
+  const extraData: Record<string, string> = {};
+  for (const label of extraFieldLabels) {
+    const value = String(formData.get(`extra:${label}`) ?? "").trim();
+    if (value) extraData[label] = value;
+  }
+
   return {
     title,
     subject: subject || null,
     score,
     exam_date: examDate || null,
     memo: memo || null,
+    extra_data: extraData,
   } as const;
 }
 
@@ -38,10 +45,11 @@ function revalidateScoreReportPaths(userId: string) {
 export async function addScoreReport(
   userId: string,
   reportType: string,
+  extraFieldLabels: string[],
   formData: FormData,
 ): Promise<ScoreActionState> {
   await requireAdmin();
-  const parsed = parseScoreForm(formData);
+  const parsed = parseScoreForm(formData, extraFieldLabels);
   if ("error" in parsed) return parsed;
 
   const supabase = createAdminClient();
@@ -59,11 +67,12 @@ export async function addScoreReport(
 
 export async function updateScoreReport(
   userId: string,
+  extraFieldLabels: string[],
   id: string,
   formData: FormData,
 ): Promise<ScoreActionState> {
   await requireAdmin();
-  const parsed = parseScoreForm(formData);
+  const parsed = parseScoreForm(formData, extraFieldLabels);
   if ("error" in parsed) return parsed;
 
   const supabase = createAdminClient();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { uploadScoreReports, type UploadState } from "./actions";
 
 const initialState: UploadState = {};
@@ -8,17 +8,28 @@ const initialState: UploadState = {};
 export default function UploadForm({
   categories,
 }: {
-  categories: { id: string; label: string }[];
+  categories: { id: string; label: string; extraFieldLabels: string[] }[];
 }) {
   const [state, formAction, isPending] = useActionState(
     uploadScoreReports,
     initialState,
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const [categoryId, setCategoryId] = useState("");
+
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.id === categoryId),
+    [categories, categoryId],
+  );
+  const requiredHeaders = ["이름", "전화번호", "점수"];
+  const headerHint = selectedCategory
+    ? [...requiredHeaders, ...selectedCategory.extraFieldLabels].join(", ")
+    : requiredHeaders.join(", ");
 
   useEffect(() => {
     if (state.successCount !== undefined) {
       formRef.current?.reset();
+      setCategoryId("");
     }
   }, [state.successCount]);
 
@@ -34,7 +45,8 @@ export default function UploadForm({
           <select
             name="categoryId"
             required
-            defaultValue=""
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           >
             <option value="" disabled>
@@ -66,8 +78,10 @@ export default function UploadForm({
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           엑셀 파일
           <span className="text-xs font-normal text-zinc-400">
-            첫 행은 열 제목: 학교, 학년, 이름, 전화번호, 점수 (학교 · 학년은
-            비워도 됩니다. 이름+전화번호로 회원을 찾습니다.)
+            첫 행은 열 제목: {headerHint} (이름+전화번호로 회원을 찾습니다.)
+            {selectedCategory && selectedCategory.extraFieldLabels.length > 0 && (
+              <> 추가 필드는 값이 없으면 비워둬도 됩니다.</>
+            )}
           </span>
           <input
             name="file"

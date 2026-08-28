@@ -14,6 +14,7 @@ interface CategoryData {
   description: string | null;
   sort_order: number;
   max_score: number;
+  extra_field_labels: string[];
 }
 
 export default async function Page() {
@@ -22,7 +23,9 @@ export default async function Page() {
   const [{ data: categories }, { data: reports }] = await Promise.all([
     supabase
       .from("score_report_categories")
-      .select("id, slug, label, description, sort_order, max_score")
+      .select(
+        "id, slug, label, description, sort_order, max_score, extra_field_labels",
+      )
       .order("sort_order", { ascending: true })
       .returns<CategoryData[]>(),
     supabase.from("score_reports").select("report_type"),
@@ -96,6 +99,7 @@ export default async function Page() {
               categories={(categories ?? []).map((c) => ({
                 id: c.id,
                 label: c.label,
+                extraFieldLabels: c.extra_field_labels,
               }))}
             />
           </div>
