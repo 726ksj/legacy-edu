@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface CreateEnrollmentState {
   error?: string;
@@ -13,6 +14,7 @@ export async function createEnrollment(
   _prevState: CreateEnrollmentState,
   formData: FormData,
 ): Promise<CreateEnrollmentState> {
+  await requireAdmin();
   const profileIds = formData
     .getAll("profileIds")
     .map(String)
@@ -58,6 +60,7 @@ export async function createEnrollment(
 }
 
 export async function deleteEnrollment(id: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
 
   // 메모(questions)는 enrollments와 직접 연결돼 있지 않아서, 수강 권한을

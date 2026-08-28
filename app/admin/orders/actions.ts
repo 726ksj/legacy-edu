@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 import { cancelTossPayment } from "@/lib/toss";
 
 export interface RefundState {
@@ -14,6 +15,7 @@ export async function refundOrder(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- useActionState always passes prevState as the trailing arg
   _prevState: RefundState,
 ): Promise<RefundState> {
+  await requireAdmin();
   const supabase = createAdminClient();
   const { data: order } = await supabase
     .from("orders")

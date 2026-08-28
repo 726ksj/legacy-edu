@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import ExcelJS from "exceljs";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface CategoryActionState {
   error?: string;
@@ -33,6 +34,7 @@ export async function createCategory(
   _prevState: CategoryActionState,
   formData: FormData,
 ): Promise<CategoryActionState> {
+  await requireAdmin();
   const label = String(formData.get("label") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
 
@@ -68,6 +70,7 @@ export async function updateCategory(
   id: string,
   formData: FormData,
 ): Promise<CategoryActionState> {
+  await requireAdmin();
   const label = String(formData.get("label") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
 
@@ -90,12 +93,14 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(id: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   await supabase.from("score_report_categories").delete().eq("id", id);
   revalidateCategoryPaths();
 }
 
 export async function deleteReport(categoryId: string, reportId: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   await supabase.from("score_reports").delete().eq("id", reportId);
   revalidatePath(`/admin/score-report-categories/${categoryId}`);
@@ -157,6 +162,7 @@ export async function uploadScoreReports(
   _prevState: UploadState,
   formData: FormData,
 ): Promise<UploadState> {
+  await requireAdmin();
   const categoryId = String(formData.get("categoryId") ?? "").trim();
   const examTitle = String(formData.get("examTitle") ?? "").trim();
   const examDate = String(formData.get("examDate") ?? "").trim();

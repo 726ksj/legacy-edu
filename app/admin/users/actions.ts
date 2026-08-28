@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface UpdateUserState {
   error?: string;
@@ -14,6 +15,7 @@ export async function updateUser(
   _prevState: UpdateUserState,
   formData: FormData,
 ): Promise<UpdateUserState> {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const guardianPhone = String(formData.get("guardianPhone") ?? "").trim();
@@ -57,6 +59,7 @@ export async function resetUserPassword(
   _prevState: ResetPasswordState,
   formData: FormData,
 ): Promise<ResetPasswordState> {
+  await requireAdmin();
   const password = String(formData.get("password") ?? "");
 
   if (password.length < 8) {
@@ -76,6 +79,7 @@ export async function resetUserPassword(
 }
 
 export async function removeUserDevice(userId: string, deviceRowId: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   await supabase
     .from("user_devices")
@@ -95,6 +99,7 @@ export async function deleteUser(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- required by useActionState's action signature
   _prevState: DeleteUserState,
 ): Promise<DeleteUserState> {
+  await requireAdmin();
   const supabase = createAdminClient();
   // auth 유저 삭제 시 profiles 행(및 enrollments)도 on delete cascade로 함께 삭제됨
   const { error } = await supabase.auth.admin.deleteUser(id);

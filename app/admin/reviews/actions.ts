@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface ReviewFormState {
   error?: string;
@@ -27,6 +28,7 @@ export async function createReview(
   _prevState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  await requireAdmin();
   const parsed = readReviewFields(formData);
   if ("error" in parsed) return { error: parsed.error };
 
@@ -47,6 +49,7 @@ export async function updateReview(
   _prevState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  await requireAdmin();
   const parsed = readReviewFields(formData);
   if ("error" in parsed) return { error: parsed.error };
 
@@ -67,6 +70,7 @@ export async function updateReview(
 }
 
 export async function deleteReview(id: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   await supabase.from("reviews").delete().eq("id", id);
   revalidatePath("/admin/reviews");

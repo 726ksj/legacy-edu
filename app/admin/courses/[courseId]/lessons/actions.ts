@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 import { createMuxClient } from "@/lib/mux";
 import type { LessonVisibility } from "@/lib/enrollments";
 
@@ -23,6 +24,7 @@ export async function createDirectUpload(
 ): Promise<
   { uploadUrl: string; uploadId: string } | { error: string }
 > {
+  await requireAdmin();
   const mux = createMuxClient();
   try {
     const upload = await mux.video.uploads.create({
@@ -45,6 +47,7 @@ export async function saveLesson(
   visibility: LessonVisibility,
   profileIds: string[],
 ): Promise<{ error?: string }> {
+  await requireAdmin();
   const mux = createMuxClient();
   let upload;
   try {
@@ -116,6 +119,7 @@ export async function updateLessonInfo(
   _prevState: UpdateLessonInfoState,
   formData: FormData,
 ): Promise<UpdateLessonInfoState> {
+  await requireAdmin();
   const title = String(formData.get("title") ?? "").trim();
   const orderNoRaw = String(formData.get("orderNo") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -162,6 +166,7 @@ export async function updateLessonInfo(
 }
 
 export async function deleteLesson(lessonId: string, courseId: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   const { data: lesson } = await supabase
     .from("lessons")

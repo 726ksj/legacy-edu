@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 const PHOTO_BUCKET = "instructor-photos";
 
@@ -38,6 +39,7 @@ export async function createInstructor(
   _prevState: InstructorFormState,
   formData: FormData,
 ): Promise<InstructorFormState> {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
@@ -79,6 +81,7 @@ export async function updateInstructor(
   _prevState: InstructorFormState,
   formData: FormData,
 ): Promise<InstructorFormState> {
+  await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
@@ -133,6 +136,7 @@ export async function deleteInstructor(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- required by useActionState's action signature
   _prevState: DeleteInstructorState,
 ): Promise<DeleteInstructorState> {
+  await requireAdmin();
   const supabase = createAdminClient();
   const { error } = await supabase.from("instructors").delete().eq("id", id);
 

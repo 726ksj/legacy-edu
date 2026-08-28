@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface UpdateNoteState {
   error?: string;
@@ -13,6 +14,7 @@ export async function updateNote(
   id: string,
   formData: FormData,
 ): Promise<UpdateNoteState> {
+  await requireAdmin();
   const content = String(formData.get("content") ?? "").trim();
 
   if (!content) {

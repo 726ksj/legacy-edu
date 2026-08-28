@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface CreateCourseState {
   error?: string;
@@ -48,6 +49,7 @@ export async function createCourse(
   _prevState: CreateCourseState,
   formData: FormData,
 ): Promise<CreateCourseState> {
+  await requireAdmin();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
@@ -92,6 +94,7 @@ export async function updateCourse(
   _prevState: CreateCourseState,
   formData: FormData,
 ): Promise<CreateCourseState> {
+  await requireAdmin();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
@@ -137,6 +140,7 @@ export async function updateCourse(
 }
 
 export async function deleteCourse(id: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   await supabase.from("courses").delete().eq("id", id);
   revalidatePath("/admin/courses");

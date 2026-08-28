@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface CreateStudentCodeState {
   error?: string;
@@ -12,6 +13,7 @@ export async function createStudentCode(
   _prevState: CreateStudentCodeState,
   formData: FormData,
 ): Promise<CreateStudentCodeState> {
+  await requireAdmin();
   const code = String(formData.get("code") ?? "").trim();
   const studentName = String(formData.get("studentName") ?? "").trim();
 
@@ -44,6 +46,7 @@ export async function deleteStudentCode(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- required by useActionState's action signature
   _prevState: DeleteStudentCodeState,
 ): Promise<DeleteStudentCodeState> {
+  await requireAdmin();
   const supabase = createAdminClient();
 
   const { data: profile } = await supabase

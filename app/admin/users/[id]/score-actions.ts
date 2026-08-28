@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface ScoreActionState {
   error?: string;
@@ -39,6 +40,7 @@ export async function addScoreReport(
   reportType: string,
   formData: FormData,
 ): Promise<ScoreActionState> {
+  await requireAdmin();
   const parsed = parseScoreForm(formData);
   if ("error" in parsed) return parsed;
 
@@ -60,6 +62,7 @@ export async function updateScoreReport(
   id: string,
   formData: FormData,
 ): Promise<ScoreActionState> {
+  await requireAdmin();
   const parsed = parseScoreForm(formData);
   if ("error" in parsed) return parsed;
 
@@ -76,6 +79,7 @@ export async function updateScoreReport(
 }
 
 export async function deleteScoreReport(userId: string, id: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   await supabase.from("score_reports").delete().eq("id", id);
   revalidateScoreReportPaths(userId);

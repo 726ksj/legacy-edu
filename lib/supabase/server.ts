@@ -64,6 +64,26 @@ async function getCachedJwks(): Promise<Jwks | undefined> {
 const hasWebCrypto =
   typeof globalThis.crypto?.subtle?.importKey === "function";
 
+const ADMIN_EMAIL_DOMAIN = "legacyedu.local";
+
+// Server Action은 페이지 렌더링(및 app/admin/layout.tsx의 관리자 체크)을
+// 거치지 않고 Next-Action 헤더가 붙은 별도 POST로 직접 호출될 수 있다.
+// 그래서 모든 admin "use server" 액션은 DB 작업 전에 이 함수를 호출해
+// 인가를 다시 확인해야 한다.
+export async function requireAdmin() {
+  const user = await getAuthUser();
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const isAdmin =
+    Boolean(adminUsername) &&
+    user?.email === `${adminUsername}@${ADMIN_EMAIL_DOMAIN}`;
+
+  if (!isAdmin) {
+    throw new Error("관리자만 사용할 수 있습니다.");
+  }
+
+  return user;
+}
+
 // 같은 요청 안에서 레이아웃(Header)과 페이지가 각자 호출해도 React cache()로
 // 요청 1회당 1번만 실제로 검증되게 한다.
 export const getAuthUser = cache(async () => {

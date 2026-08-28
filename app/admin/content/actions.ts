@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/server";
 import { CONTENT_KEYS } from "./keys";
 
 export interface SiteContentState {
@@ -13,6 +14,7 @@ export async function updateSiteContent(
   _prevState: SiteContentState,
   formData: FormData,
 ): Promise<SiteContentState> {
+  await requireAdmin();
   const rows = CONTENT_KEYS.map((key) => ({
     key,
     value: String(formData.get(key) ?? "").trim(),
