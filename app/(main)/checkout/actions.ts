@@ -23,16 +23,40 @@ export async function createPendingOrder(
   }
 
   const supabase = createAdminClient();
+  const uniqueCourseIds = [...new Set(courseIds)];
   const { data: courses, error: courseError } = await supabase
     .from("courses")
     .select("id, title, price")
-    .in("id", courseIds);
+    .in("id", uniqueCourseIds);
 
-  if (courseError || !courses || courses.length === 0) {
+  // 요청한 강좌 ID 개수와 실제로 존재하는 강좌 개수가 다르면, 삭제됐거나
+  // 존재하지 않는 ID가 섞여 들어온 것이므로 일부만 결제되게 두지 않고
+  // 전체를 거부한다.
+  if (courseError || !courses || courses.length !== uniqueCourseIds.length) {
     throw new Error("강좌 정보를 찾을 수 없습니다.");
   }
 
+  const { data: existingEnrollments } = await supabase
+    .from("enrollments")
+    .select("course_id")
+    .eq("profile_id", user.id)
+    .in("course_id", uniqueCourseIds);
+
+  if (existingEnrollments && existingEnrollments.length > 0) {
+    const enrolledIds = new Set(existingEnrollments.map((e) => e.course_id));
+    const alreadyEnrolledTitles = courses
+      .filter((course) => enrolledIds.has(course.id))
+      .map((course) => course.title);
+    throw new Error(
+      `이미 수강 중인 강좌가 포함되어 있습니다: ${alreadyEnrolledTitles.join(", ")}`,
+    );
+  }
+
   const amount = courses.reduce((sum, course) => sum + course.price, 0);
+  if (amount <= 0) {
+    throw new Error("결제 금액이 올바르지 않습니다. 관리자에게 문의해주세요.");
+  }
+
   const orderId = randomUUID();
   const orderName =
     courses.length === 1

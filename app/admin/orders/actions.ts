@@ -51,14 +51,33 @@ export async function refundOrder(
 
   const courseIds = (items ?? []).map((item) => item.course_id);
 
-  await supabase.from("orders").update({ status: "refunded" }).eq("id", order.id);
+  // 이 시점에는 토스 취소가 이미 성공해서 실제로 환불이 됐다. 아래
+  // 업데이트가 실패해도 "환불에 실패했습니다"라고 하면 안 되고, 돈은
+  // 나갔으니 관리자가 직접 상태를 맞춰야 한다는 걸 알려줘야 한다.
+  const { error: statusError } = await supabase
+    .from("orders")
+    .update({ status: "refunded" })
+    .eq("id", order.id);
+
+  if (statusError) {
+    return {
+      error: `토스 환불은 완료됐지만 주문 상태 업데이트에 실패했습니다 (${statusError.message}). 이 주문은 수동으로 확인해주세요.`,
+    };
+  }
 
   if (courseIds.length > 0) {
-    await supabase
+    const { error: deleteError } = await supabase
       .from("enrollments")
       .delete()
       .eq("profile_id", order.profile_id)
       .in("course_id", courseIds);
+
+    if (deleteError) {
+      revalidatePath("/admin/orders");
+      return {
+        error: `환불은 완료됐지만 수강 권한 회수에 실패했습니다 (${deleteError.message}). 이 학생의 수강 권한을 수동으로 확인해주세요.`,
+      };
+    }
   }
 
   revalidatePath("/admin/orders");

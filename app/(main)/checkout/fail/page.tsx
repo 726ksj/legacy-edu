@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getAuthUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -9,14 +10,26 @@ export default async function CheckoutFailPage({
   searchParams: Promise<{ code?: string; message?: string; orderId?: string }>;
 }) {
   const { message, orderId } = await searchParams;
+  const user = await getAuthUser();
 
-  if (orderId) {
+  // 로그인 + 본인 주문인지 확인한 뒤에만 상태를 건드린다. orderId는
+  // URL 쿼리라 누구나 값을 바꿔 넣을 수 있어서, 확인 없이 업데이트하면
+  // 다른 사람의 pending 주문을 실패 처리할 수 있었다.
+  if (orderId && user) {
     const supabase = createAdminClient();
-    await supabase
+    const { data: order } = await supabase
       .from("orders")
-      .update({ status: "failed" })
+      .select("id, profile_id")
       .eq("order_id", orderId)
-      .eq("status", "pending");
+      .maybeSingle();
+
+    if (order && order.profile_id === user.id) {
+      await supabase
+        .from("orders")
+        .update({ status: "failed" })
+        .eq("id", order.id)
+        .eq("status", "pending");
+    }
   }
 
   return (

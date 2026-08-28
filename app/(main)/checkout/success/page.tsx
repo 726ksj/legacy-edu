@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 import { getAuthUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { confirmTossPayment } from "@/lib/toss";
@@ -81,6 +82,12 @@ export default async function CheckoutSuccessPage({
       amount: order.amount,
     });
 
+    // 여기까지 왔으면 돈은 이미 승인됐다. 이 시점 이후로는 무슨 일이
+    // 있어도 주문을 다시 failed로 되돌리면 안 된다 — 결제가 실패했다는
+    // 뜻이 아니라 뒷정리(수강 등록 등)가 실패했다는 뜻이라, 사용자에게
+    // "실패"로 보여주면 돈은 냈는데 재시도해서 이중결제를 유도하게 된다.
+    // 동시에 두 번 들어온 승인 요청 중 하나만 반영되도록 pending일
+    // 때만 갱신한다 (레이스 방지).
     await supabase
       .from("orders")
       .update({
@@ -88,26 +95,39 @@ export default async function CheckoutSuccessPage({
         payment_key: result.paymentKey,
         paid_at: new Date().toISOString(),
       })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .eq("status", "pending");
 
     if (courseIds.length > 0) {
-      const { error: enrollError } = await supabase.from("enrollments").insert(
-        courseIds.map((courseId) => ({
-          profile_id: order.profile_id,
-          course_id: courseId,
-        })),
-      );
+      try {
+        const { error: enrollError } = await supabase
+          .from("enrollments")
+          .insert(
+            courseIds.map((courseId) => ({
+              profile_id: order.profile_id,
+              course_id: courseId,
+            })),
+          );
 
-      // 23505 = 이미 등록된 강좌(unique violation) — 결제는 성공했으니 정상 처리
-      if (enrollError && enrollError.code !== "23505") {
-        throw new Error(enrollError.message);
+        // 23505 = 이미 등록된 강좌(unique violation) — 결제는 성공했으니 정상 처리
+        if (enrollError && enrollError.code !== "23505") {
+          throw new Error(enrollError.message);
+        }
+
+        await supabase
+          .from("cart_items")
+          .delete()
+          .eq("profile_id", order.profile_id)
+          .in("course_id", courseIds);
+      } catch (postPaymentErr) {
+        // 결제는 이미 확정됐으니 사용자에게는 성공으로 보여주되, 수강
+        // 등록이 실패했다는 사실은 놓치면 안 되므로 Sentry로 보고해
+        // 관리자가 수동으로 확인할 수 있게 한다.
+        Sentry.captureException(postPaymentErr, {
+          tags: { area: "checkout-post-payment" },
+          extra: { orderId: order.id, courseIds },
+        });
       }
-
-      await supabase
-        .from("cart_items")
-        .delete()
-        .eq("profile_id", order.profile_id)
-        .in("course_id", courseIds);
     }
 
     outcome = {
@@ -116,16 +136,34 @@ export default async function CheckoutSuccessPage({
       success: true,
     };
   } catch (err) {
+    // Toss 승인 자체가 거절된 경우만 여기로 온다 (돈이 안 나감).
+    // pending일 때만 failed로 바꾼다 — 동시 요청 중 다른 하나가 먼저
+    // 승인에 성공해 이미 paid로 바뀌어 있을 수 있어서다.
     await supabase
       .from("orders")
       .update({ status: "failed" })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .eq("status", "pending");
 
-    outcome = {
-      title: "결제 승인에 실패했습니다",
-      description:
-        err instanceof Error ? err.message : "잠시 후 다시 시도해주세요.",
-    };
+    const { data: latestOrder } = await supabase
+      .from("orders")
+      .select("status")
+      .eq("id", order.id)
+      .maybeSingle();
+
+    if (latestOrder?.status === "paid") {
+      outcome = {
+        title: "결제가 완료되었습니다",
+        description: "이제 나의 강의실에서 바로 수강을 시작할 수 있어요.",
+        success: true,
+      };
+    } else {
+      outcome = {
+        title: "결제 승인에 실패했습니다",
+        description:
+          err instanceof Error ? err.message : "잠시 후 다시 시도해주세요.",
+      };
+    }
   }
 
   return (
