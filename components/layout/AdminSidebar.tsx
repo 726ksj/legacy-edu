@@ -9,10 +9,6 @@ import { cn } from "@/lib/utils";
 const ADMIN_NAV_ITEMS = [
   { label: "홈/소개 문구 관리", href: "/admin/content" },
   { label: "상담 신청 관리", href: "/admin/consultations" },
-  {
-    label: "비밀번호 셀프 재설정 이력",
-    href: "/admin/password-reset-requests",
-  },
   { label: "학생코드 관리", href: "/admin/student-codes" },
   { label: "회원 관리", href: "/admin/users" },
   { label: "고객센터 관리", href: "/admin/notices" },
@@ -23,7 +19,7 @@ const ADMIN_NAV_ITEMS = [
   { label: "메모 관리", href: "/admin/notes" },
   { label: "수강 권한 관리", href: "/admin/enrollments" },
   { label: "FAQ 관리", href: "/admin/faqs" },
-  { label: "점수 리포트 관리", href: "/admin/score-report-categories" },
+  { label: "성적 관리", href: "/admin/score-report-categories" },
 ];
 
 export default function AdminSidebar({

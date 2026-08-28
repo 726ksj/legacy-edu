@@ -1,6 +1,6 @@
 "use client";
 
-export default function DeleteRequestButton({
+export default function DeleteReportButton({
   action,
 }: {
   action: () => Promise<void>;
@@ -9,7 +9,7 @@ export default function DeleteRequestButton({
     <form
       action={action}
       onSubmit={(e) => {
-        if (!window.confirm("이 요청을 삭제할까요? 되돌릴 수 없습니다.")) {
+        if (!window.confirm("이 리포트를 삭제할까요?")) {
           e.preventDefault();
         }
       }}

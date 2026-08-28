@@ -95,6 +95,13 @@ export async function deleteCategory(id: string) {
   revalidateCategoryPaths();
 }
 
+export async function deleteReport(categoryId: string, reportId: string) {
+  const supabase = createAdminClient();
+  await supabase.from("score_reports").delete().eq("id", reportId);
+  revalidatePath(`/admin/score-report-categories/${categoryId}`);
+  revalidateCategoryPaths();
+}
+
 export interface UploadResultRow {
   row: number;
   name: string;

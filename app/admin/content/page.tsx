@@ -31,7 +31,7 @@ export default async function Page() {
         </p>
       )}
 
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-6">
         <SiteContentForm content={content} />
       </div>
     </div>

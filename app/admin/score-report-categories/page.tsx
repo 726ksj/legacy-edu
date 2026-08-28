@@ -36,7 +36,7 @@ export default async function Page() {
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <h1 className="text-2xl font-bold text-zinc-900">점수 리포트 관리</h1>
+      <h1 className="text-2xl font-bold text-zinc-900">성적 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         학생 마이페이지의 "점수 리포트"에 표시되는 카테고리를 관리하고,
         엑셀로 성적을 일괄 등록할 수 있습니다.
@@ -49,11 +49,11 @@ export default async function Page() {
           항목에 즉시 반영됩니다.
         </p>
 
-        <div className="mt-4 max-w-2xl">
+        <div className="mt-4">
           <AddCategoryForm />
         </div>
 
-        <ul className="mt-4 flex max-w-2xl flex-col gap-3">
+        <ul className="mt-4 flex flex-col gap-3">
           {categories?.map((category) => (
             <CategoryRow
               key={category.id}
@@ -78,7 +78,7 @@ export default async function Page() {
           찾아 점수 리포트로 등록합니다.
         </p>
 
-        <div className="mt-4 max-w-2xl">
+        <div className="mt-4">
           <UploadForm
             categories={(categories ?? []).map((c) => ({
               id: c.id,

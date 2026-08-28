@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { type CategoryActionState } from "./actions";
 
 export interface CategoryRowData {
@@ -97,15 +98,22 @@ export default function CategoryRow({
           연결된 리포트 {reportCount}건
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-3">
+        <Link
+          href={`/admin/score-report-categories/${category.id}`}
+          className="text-xs font-semibold text-zinc-500 hover:underline"
+        >
+          보기
+        </Link>
         <button
           type="button"
           onClick={() => setIsEditing(true)}
-          className="text-xs font-semibold text-zinc-500 hover:text-brand-dark"
+          className="text-xs font-semibold text-brand-dark hover:underline"
         >
           수정
         </button>
         <form
+          className="inline-flex"
           action={() => startDeleteTransition(() => onDelete())}
           onSubmit={(e) => {
             const message =
