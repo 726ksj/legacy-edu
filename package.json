@@ -18,6 +18,7 @@
   "dependencies": {
     "@mux/mux-node": "^14.1.1",
     "@mux/mux-player-react": "^3.13.2",
+    "@sentry/nextjs": "^10.71.0",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
     "@tosspayments/payment-widget-sdk": "^0.12.2",
