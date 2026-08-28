@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import * as Sentry from "@sentry/nextjs";
 import { getAuthUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { confirmTossPayment } from "@/lib/toss";
+import { fulfillPaidOrder } from "@/lib/orderFulfillment";
 
 export const dynamic = "force-dynamic";
 
@@ -86,49 +86,13 @@ export default async function CheckoutSuccessPage({
     // 있어도 주문을 다시 failed로 되돌리면 안 된다 — 결제가 실패했다는
     // 뜻이 아니라 뒷정리(수강 등록 등)가 실패했다는 뜻이라, 사용자에게
     // "실패"로 보여주면 돈은 냈는데 재시도해서 이중결제를 유도하게 된다.
-    // 동시에 두 번 들어온 승인 요청 중 하나만 반영되도록 pending일
-    // 때만 갱신한다 (레이스 방지).
-    await supabase
-      .from("orders")
-      .update({
-        status: "paid",
-        payment_key: result.paymentKey,
-        paid_at: new Date().toISOString(),
-      })
-      .eq("id", order.id)
-      .eq("status", "pending");
-
-    if (courseIds.length > 0) {
-      try {
-        const { error: enrollError } = await supabase
-          .from("enrollments")
-          .insert(
-            courseIds.map((courseId) => ({
-              profile_id: order.profile_id,
-              course_id: courseId,
-            })),
-          );
-
-        // 23505 = 이미 등록된 강좌(unique violation) — 결제는 성공했으니 정상 처리
-        if (enrollError && enrollError.code !== "23505") {
-          throw new Error(enrollError.message);
-        }
-
-        await supabase
-          .from("cart_items")
-          .delete()
-          .eq("profile_id", order.profile_id)
-          .in("course_id", courseIds);
-      } catch (postPaymentErr) {
-        // 결제는 이미 확정됐으니 사용자에게는 성공으로 보여주되, 수강
-        // 등록이 실패했다는 사실은 놓치면 안 되므로 Sentry로 보고해
-        // 관리자가 수동으로 확인할 수 있게 한다.
-        Sentry.captureException(postPaymentErr, {
-          tags: { area: "checkout-post-payment" },
-          extra: { orderId: order.id, courseIds },
-        });
-      }
-    }
+    // fulfillPaidOrder는 pending일 때만 갱신하는 조건부 UPDATE라 웹훅과
+    // 동시에 들어와도 한 번만 반영된다.
+    await fulfillPaidOrder({
+      orderDbId: order.id,
+      profileId: order.profile_id,
+      paymentKey: result.paymentKey,
+    });
 
     outcome = {
       title: "결제가 완료되었습니다",
