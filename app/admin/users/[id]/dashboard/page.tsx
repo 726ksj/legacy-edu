@@ -155,7 +155,7 @@ export default async function Page({
           <ChevronLeft className="h-3.5 w-3.5" />
           {user.name} 회원 정보
         </Link>
-        <PrintButton />
+        <PrintButton fileName={`${user.name} 성적 대시보드`} />
       </div>
 
       <h1 className="mt-1 text-2xl font-bold text-zinc-900">
