@@ -58,18 +58,16 @@ export default function CategoryRow({
               placeholder="설명 (선택)"
               className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
             />
-            <label className="flex items-center gap-2 text-sm text-zinc-500">
-              만점
-              <input
-                name="maxScore"
-                type="number"
-                min={1}
-                step="any"
-                required
-                defaultValue={category.max_score}
-                className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
-              />
-            </label>
+            <input
+              name="maxScore"
+              type="number"
+              min={1}
+              step="any"
+              required
+              defaultValue={category.max_score}
+              placeholder="만점 (예: 100)"
+              className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+            />
           </div>
           {error && <p className="text-xs font-medium text-red-500">{error}</p>}
           <div className="flex items-center gap-3">
