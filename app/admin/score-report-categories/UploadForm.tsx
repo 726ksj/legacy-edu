@@ -16,6 +16,7 @@ export default function UploadForm({
   );
   const formRef = useRef<HTMLFormElement>(null);
   const [categoryId, setCategoryId] = useState("");
+  const [fileName, setFileName] = useState("");
 
   const selectedCategory = useMemo(
     () => categories.find((c) => c.id === categoryId),
@@ -30,6 +31,7 @@ export default function UploadForm({
     if (state.successCount !== undefined) {
       formRef.current?.reset();
       setCategoryId("");
+      setFileName("");
     }
   }, [state.successCount]);
 
@@ -75,7 +77,7 @@ export default function UploadForm({
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           엑셀 파일
           <span className="text-xs font-normal text-zinc-400">
             첫 행은 열 제목: {headerHint} (이름+전화번호로 회원을 찾습니다.)
@@ -83,14 +85,27 @@ export default function UploadForm({
               <> 추가 필드는 값이 없으면 비워둬도 됩니다.</>
             )}
           </span>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="score-upload-file"
+              className="w-fit cursor-pointer rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
+            >
+              파일 선택
+            </label>
+            <span className="max-w-[16rem] truncate text-sm text-zinc-500">
+              {fileName || "선택된 파일 없음"}
+            </span>
+          </div>
           <input
+            id="score-upload-file"
             name="file"
             type="file"
             accept=".xlsx,.xls"
             required
-            className="text-sm text-zinc-700 file:mr-3 file:rounded-md file:border file:border-zinc-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-zinc-700 hover:file:border-brand hover:file:text-brand-dark"
+            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+            className="hidden"
           />
-        </label>
+        </div>
 
         {state.error && (
           <p className="text-sm font-medium text-red-500">{state.error}</p>
