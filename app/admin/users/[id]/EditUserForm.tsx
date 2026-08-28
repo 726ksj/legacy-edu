@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { updateUser, type UpdateUserState } from "../actions";
+import { formatPhone } from "@/lib/formatPhone";
 
 const initialState: UpdateUserState = {};
 
@@ -59,7 +60,7 @@ export default function EditUserForm({ user }: { user: UserData }) {
         <input
           name="phone"
           type="tel"
-          defaultValue={user.phone}
+          defaultValue={formatPhone(user.phone)}
           required
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
@@ -69,7 +70,7 @@ export default function EditUserForm({ user }: { user: UserData }) {
         <input
           name="guardianPhone"
           type="tel"
-          defaultValue={user.guardian_phone ?? ""}
+          defaultValue={formatPhone(user.guardian_phone)}
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>

@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { colorAt } from "@/components/admin/charts/colors";
 
-export default function GradeCategoryBarChart({
+export default function CategoryTrendChart({
   data,
   categoryLabels,
 }: {
@@ -28,21 +28,25 @@ export default function GradeCategoryBarChart({
   }
 
   return (
-    <ResponsiveContainer width="100%" height={Math.max(260, data.length * 60)}>
-      <BarChart
-        data={data}
-        layout="vertical"
-        margin={{ top: 8, right: 16, left: 8, bottom: 0 }}
-      >
+    <ResponsiveContainer width="100%" height={280}>
+      <LineChart data={data} margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
-        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
-        <YAxis dataKey="grade" type="category" tick={{ fontSize: 12 }} width={56} />
+        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+        <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
         <Tooltip formatter={(value) => `${Number(value).toFixed(1)}점`} />
         <Legend />
         {categoryLabels.map((label, index) => (
-          <Bar key={label} dataKey={label} fill={colorAt(index)} radius={[0, 4, 4, 0]} />
+          <Line
+            key={label}
+            type="monotone"
+            dataKey={label}
+            stroke={colorAt(index)}
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            connectNulls
+          />
         ))}
-      </BarChart>
+      </LineChart>
     </ResponsiveContainer>
   );
 }

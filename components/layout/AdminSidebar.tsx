@@ -34,7 +34,7 @@ export default function AdminSidebar({
 
   return (
     <>
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-4 md:hidden">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-4 print:hidden md:hidden">
         <Link href="/" className="flex items-baseline gap-1.5">
           <span className="text-base font-bold text-brand-dark">
             LEGACY EDU
@@ -60,7 +60,7 @@ export default function AdminSidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full w-64 shrink-0 -translate-x-full flex-col border-r border-zinc-200 bg-white transition-transform duration-200 md:static md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-full w-64 shrink-0 -translate-x-full flex-col border-r border-zinc-200 bg-white transition-transform duration-200 print:hidden md:static md:translate-x-0",
           open && "translate-x-0",
         )}
       >

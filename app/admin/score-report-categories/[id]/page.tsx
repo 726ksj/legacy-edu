@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatPhone } from "@/lib/formatPhone";
 import { deleteReport } from "../actions";
 import DeleteReportButton from "./DeleteReportButton";
 
@@ -89,7 +90,9 @@ export default async function Page({
                   {report.profiles?.name ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {report.profiles?.phone ?? "-"}
+                  {report.profiles?.phone
+                    ? formatPhone(report.profiles.phone)
+                    : "-"}
                 </td>
                 <td className="px-4 py-3 text-zinc-700">{report.title}</td>
                 <td className="px-4 py-3 text-zinc-500">

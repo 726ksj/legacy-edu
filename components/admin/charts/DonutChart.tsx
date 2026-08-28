@@ -3,10 +3,12 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { colorAt } from "./colors";
 
-export default function GradeDonutChart({
+export default function DonutChart({
   data,
+  unit = "건",
 }: {
-  data: { grade: string; count: number }[];
+  data: { label: string; count: number }[];
+  unit?: string;
 }) {
   if (data.length === 0) {
     return (
@@ -22,16 +24,16 @@ export default function GradeDonutChart({
         <Pie
           data={data}
           dataKey="count"
-          nameKey="grade"
+          nameKey="label"
           innerRadius={60}
           outerRadius={90}
           paddingAngle={2}
         >
           {data.map((entry, index) => (
-            <Cell key={entry.grade} fill={colorAt(index)} />
+            <Cell key={entry.label} fill={colorAt(index)} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => `${value}명`} />
+        <Tooltip formatter={(value) => `${value}${unit}`} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

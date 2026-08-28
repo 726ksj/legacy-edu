@@ -12,10 +12,12 @@ export default function GaugeCard({
   label,
   average,
   sampleCount,
+  sampleLabel = "숫자 점수",
 }: {
   label: string;
   average: number | null;
   sampleCount: number;
+  sampleLabel?: string;
 }) {
   const value = average === null ? 0 : Math.max(0, Math.min(100, average));
   const color = average === null ? "#d4d4d8" : gaugeColor(value);
@@ -47,7 +49,9 @@ export default function GaugeCard({
       </div>
       <p className="mt-1 flex justify-between text-[11px] text-zinc-400">
         <span>0</span>
-        <span>숫자 점수 {sampleCount}건</span>
+        <span>
+          {sampleLabel} {sampleCount}건
+        </span>
         <span>100</span>
       </p>
     </div>

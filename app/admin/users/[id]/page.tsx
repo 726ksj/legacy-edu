@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import EditUserForm from "./EditUserForm";
-import ResetPasswordForm from "./ResetPasswordForm";
 import DeviceSection from "./DeviceSection";
 import DeleteUserButton from "../DeleteUserButton";
 import {
@@ -133,13 +132,6 @@ export default async function Page({
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-zinc-900">비밀번호 초기화</h2>
-            <div className="mt-3">
-              <ResetPasswordForm userId={user.id} />
-            </div>
-          </div>
-
-          <div>
             <h2 className="text-lg font-bold text-zinc-900">기기 관리</h2>
             <div className="mt-3">
               <DeviceSection userId={user.id} devices={devices ?? []} />
@@ -186,7 +178,17 @@ export default async function Page({
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-zinc-900">리포트</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-zinc-900">리포트</h2>
+              {categories.length > 0 && (
+                <Link
+                  href={`/admin/users/${user.id}/dashboard`}
+                  className="text-xs font-semibold text-brand-dark hover:underline"
+                >
+                  대시보드
+                </Link>
+              )}
+            </div>
             <div className="mt-3 flex flex-col gap-4">
               {categories.map((category) => (
                 <ScoreReportSection

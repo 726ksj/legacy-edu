@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scoreToPercent } from "@/lib/scoreParsing";
-import GaugeCard from "./GaugeCard";
-import GradeDonutChart from "./GradeDonutChart";
+import GaugeCard from "@/components/admin/charts/GaugeCard";
+import DonutChart from "@/components/admin/charts/DonutChart";
 import ScoreTrendChart from "./ScoreTrendChart";
 import GradeCategoryBarChart from "./GradeCategoryBarChart";
 import StudentDetailsTable, {
@@ -116,7 +116,7 @@ export default async function Page() {
   }
   const donutData = [...gradeCounts.entries()]
     .sort((a, b) => gradeSortIndex(a[0]) - gradeSortIndex(b[0]))
-    .map(([grade, count]) => ({ grade, count }));
+    .map(([grade, count]) => ({ label: grade, count }));
 
   // 추이: 월별 전체 평균 (카테고리 만점 기준 백분율로 정규화해 통합)
   const monthBuckets = new Map<string, { sum: number; count: number }>();
@@ -205,7 +205,7 @@ export default async function Page() {
           <h2 className="text-sm font-bold text-zinc-900">
             학년별 학생 분포
           </h2>
-          <GradeDonutChart data={donutData} />
+          <DonutChart data={donutData} unit="명" />
         </section>
         <section className="rounded-lg border border-zinc-200 bg-white p-4 lg:col-span-2">
           <h2 className="text-sm font-bold text-zinc-900">

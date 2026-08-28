@@ -49,35 +49,6 @@ export async function updateUser(
   return { success: true };
 }
 
-export interface ResetPasswordState {
-  error?: string;
-  success?: boolean;
-}
-
-export async function resetUserPassword(
-  id: string,
-  _prevState: ResetPasswordState,
-  formData: FormData,
-): Promise<ResetPasswordState> {
-  await requireAdmin();
-  const password = String(formData.get("password") ?? "");
-
-  if (password.length < 8) {
-    return { error: "비밀번호는 8자 이상이어야 합니다." };
-  }
-
-  const supabase = createAdminClient();
-  const { error } = await supabase.auth.admin.updateUserById(id, {
-    password,
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  return { success: true };
-}
-
 export async function removeUserDevice(userId: string, deviceRowId: string) {
   await requireAdmin();
   const supabase = createAdminClient();

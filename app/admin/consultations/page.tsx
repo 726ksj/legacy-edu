@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatPhone } from "@/lib/formatPhone";
 import { markConsultationComplete, deleteConsultation } from "./actions";
 import DeleteConsultationButton from "./DeleteConsultationButton";
 
@@ -82,7 +83,7 @@ export default async function Page() {
             <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
               <div>
                 <dt className="text-xs text-zinc-400">전화번호</dt>
-                <dd className="text-zinc-900">{row.phone}</dd>
+                <dd className="text-zinc-900">{formatPhone(row.phone)}</dd>
               </div>
               <div>
                 <dt className="text-xs text-zinc-400">모의고사 등급</dt>
