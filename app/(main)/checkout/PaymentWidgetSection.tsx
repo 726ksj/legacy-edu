@@ -7,6 +7,7 @@ import {
   type PaymentWidgetInstance,
 } from "@tosspayments/payment-widget-sdk";
 import { createPendingOrder } from "./actions";
+import { friendlyTossMessage } from "@/lib/tossErrorMessages";
 
 const CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!;
 
@@ -52,8 +53,22 @@ export default function PaymentWidgetSection({
     setIsPaying(true);
     setError(null);
 
+    // 주문 생성(우리 서버 로직)과 결제 요청(토스 SDK)은 실패 원인의
+    // 성격이 달라서 따로 처리한다 - 전자는 이미 친절한 한글 메시지를
+    // 직접 던지고, 후자는 토스 SDK가 { code, message } 형태로 reject해서
+    // code를 우리 매핑 테이블로 변환해야 한다.
+    let order;
     try {
-      const order = await createPendingOrder(courseIds);
+      order = await createPendingOrder(courseIds);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "주문 생성 중 오류가 발생했습니다.",
+      );
+      setIsPaying(false);
+      return;
+    }
+
+    try {
       const origin = window.location.origin;
       await widgetRef.current.requestPayment({
         orderId: order.orderId,
@@ -62,9 +77,11 @@ export default function PaymentWidgetSection({
         failUrl: `${origin}/checkout/fail`,
       });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "결제 요청 중 오류가 발생했습니다.",
-      );
+      const code =
+        typeof err === "object" && err !== null && "code" in err
+          ? String((err as { code: unknown }).code)
+          : undefined;
+      setError(friendlyTossMessage(code));
       setIsPaying(false);
     }
   }

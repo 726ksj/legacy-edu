@@ -23,6 +23,18 @@ export async function createPendingOrder(
   }
 
   const supabase = createAdminClient();
+
+  // 결제창을 닫고 "결제하기"를 다시 누르는 식으로 pending 주문이 계속
+  // 쌓이는 걸 막는다. 토스 결제창 자체도 대략 30분이면 만료되니, 1시간
+  // 지난 pending은 이미 죽은 시도로 보고 정리한다. 사용자가 새로 결제를
+  // 시도할 때마다 자연스럽게 청소되므로 별도 배치 작업이 필요 없다.
+  await supabase
+    .from("orders")
+    .update({ status: "failed" })
+    .eq("profile_id", user.id)
+    .eq("status", "pending")
+    .lt("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+
   const uniqueCourseIds = [...new Set(courseIds)];
   const { data: courses, error: courseError } = await supabase
     .from("courses")
