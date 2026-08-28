@@ -37,9 +37,13 @@ export async function createCategory(
   await requireAdmin();
   const label = String(formData.get("label") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
+  const maxScore = Number(formData.get("maxScore") ?? "100");
 
   if (!label) {
     return { error: "이름을 입력해주세요." };
+  }
+  if (!Number.isFinite(maxScore) || maxScore <= 0) {
+    return { error: "만점은 0보다 큰 숫자로 입력해주세요." };
   }
 
   const supabase = createAdminClient();
@@ -55,6 +59,7 @@ export async function createCategory(
     label,
     slug: slugify(label),
     description: description || null,
+    max_score: maxScore,
     sort_order: (lastCategory?.sort_order ?? 0) + 1,
   });
 
@@ -73,15 +78,19 @@ export async function updateCategory(
   await requireAdmin();
   const label = String(formData.get("label") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
+  const maxScore = Number(formData.get("maxScore") ?? "100");
 
   if (!label) {
     return { error: "이름을 입력해주세요." };
+  }
+  if (!Number.isFinite(maxScore) || maxScore <= 0) {
+    return { error: "만점은 0보다 큰 숫자로 입력해주세요." };
   }
 
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("score_report_categories")
-    .update({ label, description: description || null })
+    .update({ label, description: description || null, max_score: maxScore })
     .eq("id", id);
 
   if (error) {

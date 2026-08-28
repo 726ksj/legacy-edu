@@ -25,18 +25,30 @@ export default function AddCategoryForm() {
       className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4"
     >
       <p className="text-sm font-semibold text-zinc-900">새 카테고리 추가</p>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <input
           name="label"
           required
           placeholder="이름 (예: 단어 테스트)"
-          className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+          className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand sm:col-span-1"
         />
         <input
           name="description"
           placeholder="설명 (선택)"
-          className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+          className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand sm:col-span-1"
         />
+        <label className="flex items-center gap-2 text-sm text-zinc-500 sm:col-span-1">
+          만점
+          <input
+            name="maxScore"
+            type="number"
+            min={1}
+            step="any"
+            required
+            defaultValue={100}
+            className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+          />
+        </label>
       </div>
 
       {state.error && (

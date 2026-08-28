@@ -10,6 +10,7 @@ export interface CategoryRowData {
   label: string;
   description: string | null;
   sort_order: number;
+  max_score: number;
 }
 
 export default function CategoryRow({
@@ -44,7 +45,7 @@ export default function CategoryRow({
     return (
       <li className="rounded-lg border border-zinc-200 bg-white p-4">
         <form action={handleSave} className="flex flex-col gap-2">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <input
               name="label"
               required
@@ -57,6 +58,18 @@ export default function CategoryRow({
               placeholder="설명 (선택)"
               className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
             />
+            <label className="flex items-center gap-2 text-sm text-zinc-500">
+              만점
+              <input
+                name="maxScore"
+                type="number"
+                min={1}
+                step="any"
+                required
+                defaultValue={category.max_score}
+                className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+              />
+            </label>
           </div>
           {error && <p className="text-xs font-medium text-red-500">{error}</p>}
           <div className="flex items-center gap-3">
@@ -95,7 +108,7 @@ export default function CategoryRow({
           </p>
         )}
         <p className="mt-0.5 text-xs text-zinc-400">
-          연결된 리포트 {reportCount}건
+          연결된 리포트 {reportCount}건 · 만점 {category.max_score}점
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">

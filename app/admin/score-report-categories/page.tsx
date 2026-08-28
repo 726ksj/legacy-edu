@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateCategory, deleteCategory } from "./actions";
 import AddCategoryForm from "./AddCategoryForm";
@@ -12,6 +13,7 @@ interface CategoryData {
   label: string;
   description: string | null;
   sort_order: number;
+  max_score: number;
 }
 
 export default async function Page() {
@@ -20,7 +22,7 @@ export default async function Page() {
   const [{ data: categories }, { data: reports }] = await Promise.all([
     supabase
       .from("score_report_categories")
-      .select("id, slug, label, description, sort_order")
+      .select("id, slug, label, description, sort_order, max_score")
       .order("sort_order", { ascending: true })
       .returns<CategoryData[]>(),
     supabase.from("score_reports").select("report_type"),
@@ -36,11 +38,21 @@ export default async function Page() {
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <h1 className="text-2xl font-bold text-zinc-900">성적 관리</h1>
-      <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        학생 마이페이지의 "점수 리포트"에 표시되는 카테고리를 관리하고,
-        엑셀로 성적을 일괄 등록할 수 있습니다.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900">성적 관리</h1>
+          <p className="mt-2 max-w-2xl text-sm text-zinc-500">
+            학생 마이페이지의 "점수 리포트"에 표시되는 카테고리를 관리하고,
+            엑셀로 성적을 일괄 등록할 수 있습니다.
+          </p>
+        </div>
+        <Link
+          href="/admin/score-report-categories/dashboard"
+          className="shrink-0 rounded-md border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
+        >
+          대시보드 보기
+        </Link>
+      </div>
 
       <section className="mt-8">
         <h2 className="text-lg font-bold text-zinc-900">카테고리 관리</h2>
