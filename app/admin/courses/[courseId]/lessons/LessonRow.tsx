@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { updateLessonInfo, type UpdateLessonInfoState } from "./actions";
 import DeleteLessonButton from "./DeleteLessonButton";
@@ -53,6 +53,17 @@ export default function LessonRow({
     boundUpdate,
     initialState,
   );
+
+  // 저장 성공 시 편집 폼을 닫아 최신 값이 반영된 일반 행으로 돌아간다 -
+  // 이게 곧 저장 성공 피드백이다 (다른 관리자 인라인 편집 행들과 동일한 방식).
+  useEffect(() => {
+    if (state.success) {
+      setEditing(false);
+    }
+    // useActionState는 값이 같아도(연속 저장 성공 등) 매번 새 state
+    // 객체를 반환하니, state.success가 아니라 state 전체를 의존성으로
+    // 둬야 반복 성공에도 매번 닫힌다.
+  }, [state]);
 
   const toggleId = (id: string) => {
     setSelectedIds((prev) => {

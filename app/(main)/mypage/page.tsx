@@ -10,7 +10,7 @@ const MYPAGE_LINKS = [
   { label: "나의 메모", href: "/mypage/notes" },
   { label: "장바구니", href: "/mypage/cart" },
   { label: "주문내역", href: "/mypage/orders" },
-  { label: "점수 리포트", href: "/mypage/score-report" },
+  { label: "성적 리포트", href: "/mypage/score-report" },
   { label: "회원정보 관리", href: "/settings" },
 ];
 
@@ -22,9 +22,15 @@ export default async function MyPage() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-16">
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-900">마이페이지</h1>
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          My Page
+        </span>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+          마이페이지
+        </h1>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
       </div>
 
       <ul className="flex flex-col gap-3">

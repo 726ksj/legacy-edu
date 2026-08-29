@@ -47,7 +47,7 @@ export default async function ScoreReportList({
           className="inline-flex items-center gap-0.5 text-xs font-semibold text-zinc-400 hover:text-brand-dark"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          점수 리포트
+          성적 리포트
         </Link>
         <h1 className="mt-1 text-2xl font-bold text-zinc-900 sm:text-3xl">
           {title}

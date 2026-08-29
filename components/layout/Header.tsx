@@ -69,7 +69,7 @@ export default async function Header() {
             { label: "나의 메모", href: "/mypage/notes" },
             { label: "장바구니", href: "/mypage/cart" },
             { label: "주문내역", href: "/mypage/orders" },
-            { label: "점수 리포트", href: "/mypage/score-report" },
+            { label: "성적 리포트", href: "/mypage/score-report" },
             { label: "회원정보 관리", href: "/settings" },
           ],
         },

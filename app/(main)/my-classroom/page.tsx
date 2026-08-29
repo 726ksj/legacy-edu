@@ -27,9 +27,15 @@ export default async function MyClassroomPage() {
     .returns<Enrollment[]>();
 
   return (
-    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-16">
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-900">나의 강의실</h1>
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          My Classroom
+        </span>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+          나의 강의실
+        </h1>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
       </div>
 
       {(!enrollments || enrollments.length === 0) && (

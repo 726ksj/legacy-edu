@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import EditProfileForm from "./EditProfileForm";
 import ChangePasswordForm from "./ChangePasswordForm";
 
@@ -15,7 +16,9 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, name, phone, guardian_phone, address, school, grade")
+    .select(
+      "username, name, phone, guardian_phone, address, school, grade, student_code_id",
+    )
     .eq("id", user.id)
     .single();
 
@@ -23,16 +26,35 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
+  // student_codes는 RLS에 select 정책이 없어 서비스롤로만 조회할 수 있다
+  // (다른 관리자 전용 테이블들과 동일한 패턴).
+  let memberCode: string | null = null;
+  if (profile.student_code_id) {
+    const adminSupabase = createAdminClient();
+    const { data: codeRow } = await adminSupabase
+      .from("student_codes")
+      .select("code")
+      .eq("id", profile.student_code_id)
+      .maybeSingle();
+    memberCode = codeRow?.code ?? null;
+  }
+
   return (
-    <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-16">
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-900">회원정보 관리</h1>
-        <p className="mt-2 text-sm text-zinc-500">
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          Settings
+        </span>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+          회원정보 관리
+        </h1>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
+        <p className="text-sm text-zinc-500">
           가입 시 등록한 정보를 확인하고 직접 수정할 수 있습니다.
         </p>
       </div>
 
-      <EditProfileForm profile={profile} />
+      <EditProfileForm profile={profile} memberCode={memberCode} />
       <ChangePasswordForm />
     </section>
   );

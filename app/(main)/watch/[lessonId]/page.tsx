@@ -15,6 +15,7 @@ import {
 } from "@/lib/enrollments";
 import VideoPlayer from "./VideoPlayer";
 import NoteSection from "./NoteSection";
+import ProcessingNotice from "./ProcessingNotice";
 
 interface LessonRow {
   id: string;
@@ -156,14 +157,14 @@ export default async function WatchPage({
             prevLessonHref={prevLesson ? `/watch/${prevLesson.id}` : undefined}
             nextLessonHref={nextLesson ? `/watch/${nextLesson.id}` : undefined}
           />
-        ) : (
+        ) : lesson.status === "errored" ? (
           <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-zinc-100">
             <p className="text-sm text-zinc-500">
-              {lesson.status === "errored"
-                ? "영상 처리 중 문제가 발생했습니다. 관리자에게 문의해주세요."
-                : "영상을 처리하고 있습니다. 잠시 후 다시 시도해주세요."}
+              영상 처리 중 문제가 발생했습니다. 관리자에게 문의해주세요.
             </p>
           </div>
+        ) : (
+          <ProcessingNotice />
         )}
 
         <NoteSection lessonId={lesson.id} notes={notes} />

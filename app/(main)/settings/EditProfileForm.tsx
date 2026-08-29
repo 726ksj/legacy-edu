@@ -10,25 +10,41 @@ interface ProfileData {
   username: string;
   name: string;
   phone: string;
-  guardian_phone: string;
+  guardian_phone: string | null;
   address: string;
   school: string | null;
   grade: string | null;
 }
 
-export default function EditProfileForm({ profile }: { profile: ProfileData }) {
+export default function EditProfileForm({
+  profile,
+  memberCode,
+}: {
+  profile: ProfileData;
+  memberCode: string | null;
+}) {
   const [state, formAction, isPending] = useActionState(
     updateProfile,
     initialState,
   );
-  const [phone, setPhone] = useState(profile.phone);
-  const [guardianPhone, setGuardianPhone] = useState(profile.guardian_phone);
+  const [phone, setPhone] = useState(formatPhoneInput(profile.phone));
+  const [guardianPhone, setGuardianPhone] = useState(
+    formatPhoneInput(profile.guardian_phone),
+  );
 
   return (
     <form
       action={formAction}
       className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6"
     >
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        회원코드
+        <input
+          value={memberCode ?? "-"}
+          disabled
+          className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500"
+        />
+      </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         아이디 (수정 불가)
         <input

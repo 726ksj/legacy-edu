@@ -45,7 +45,7 @@ export default async function Page() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">성적 관리</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-            학생 마이페이지의 "점수 리포트"에 표시되는 카테고리를 관리하고,
+            학생 마이페이지의 "성적 리포트"에 표시되는 카테고리를 관리하고,
             엑셀로 성적을 일괄 등록할 수 있습니다.
           </p>
         </div>
@@ -91,7 +91,7 @@ export default async function Page() {
           <h2 className="text-lg font-bold text-zinc-900">성적 업로드</h2>
           <p className="mt-1 text-sm text-zinc-500">
             카테고리와 시험명을 지정하고 엑셀 파일을 올리면, 행마다 회원을
-            찾아 점수 리포트로 등록합니다.
+            찾아 성적 리포트로 등록합니다.
           </p>
 
           <div className="mt-4">

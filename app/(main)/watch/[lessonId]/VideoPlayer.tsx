@@ -68,6 +68,11 @@ export default function VideoPlayer({
   const [isGesturing, setIsGesturing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
+  // 재생 토큰은 6시간 후 만료된다(lib/mux.ts) - 그 시점을 넘겨 재생/탐색을
+  // 시도하면 Mux가 401/403으로 거절하며 error 이벤트가 뜬다. 원인을 세세히
+  // 구분하는 대신, 에러가 나면 새로고침을 안내한다(새로고침하면 서버
+  // 컴포넌트가 새 토큰을 발급한다).
+  const [playbackError, setPlaybackError] = useState(false);
   // mux-player가 "사용자 비활성"으로 판단했는지 여부. mux-player 자신의
   // 하단 컨트롤 바와 같은 타이밍에 나타났다 사라지게 하기 위해, 우리가
   // 따로 탭을 감지해서 토글하지 않고 mux-player가 쏘는 userinactivechange
@@ -516,12 +521,28 @@ export default function VideoPlayer({
               setIsPaused(true);
               setManuallyHidden(false);
             }}
+            onError={() => setPlaybackError(true)}
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
         </div>
       </div>
 
-      {controlsVisible && (
+      {playbackError && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/90 px-4 text-center">
+          <p className="text-sm text-white">
+            재생 세션이 만료됐습니다. 새로고침 후 다시 시도해주세요.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200"
+          >
+            새로고침
+          </button>
+        </div>
+      )}
+
+      {!playbackError && controlsVisible && (
         // 이 레이어 전체와 버튼들은 pointer-events: none이다. mux-player 위에
         // 얹힌 형제 엘리먼트가 실제로 마우스 이벤트를 가로채면, 커서가
         // 버튼으로 넘어가는 순간 mux-player 표면 기준 히트테스트 대상이

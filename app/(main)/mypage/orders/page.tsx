@@ -46,15 +46,21 @@ export default async function OrdersPage() {
     .returns<OrderRow[]>();
 
   return (
-    <section className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
-      <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
-        주문내역
-      </h1>
-      <p className="mt-2 text-sm text-zinc-500">
-        결제한 강좌와 결제 상태를 확인하세요.
-      </p>
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          Orders
+        </span>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+          주문내역
+        </h1>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
+        <p className="text-sm text-zinc-500">
+          결제한 강좌와 결제 상태를 확인하세요.
+        </p>
+      </div>
 
-      <div className="mt-8 flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {(orders ?? []).map((order) => (
           <div
             key={order.id}

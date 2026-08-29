@@ -8,15 +8,21 @@ export default async function Page() {
   const categories = await getScoreReportCategories();
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-start px-4 py-6 sm:px-6 sm:py-16">
-      <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl">
-        점수 리포트
-      </h1>
-      <p className="mt-3 max-w-2xl text-zinc-500">
-        영역별 성적 리포트를 확인할 수 있는 페이지입니다.
-      </p>
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          Score Report
+        </span>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+          성적 리포트
+        </h1>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
+        <p className="max-w-2xl text-sm text-zinc-500">
+          영역별 성적 리포트를 확인할 수 있는 페이지입니다.
+        </p>
+      </div>
 
-      <ul className="mt-8 flex w-full flex-col gap-3">
+      <ul className="flex w-full flex-col gap-3">
         {categories.map((category, index) => (
           <li key={category.id}>
             <Link

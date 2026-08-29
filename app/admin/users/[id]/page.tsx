@@ -213,7 +213,7 @@ export default async function Page({
               ))}
               {categories.length === 0 && (
                 <p className="text-sm text-zinc-400">
-                  등록된 리포트 카테고리가 없습니다. 관리자 메뉴의 "점수 리포트
+                  등록된 리포트 카테고리가 없습니다. 관리자 메뉴의 "성적 리포트
                   카테고리 관리"에서 먼저 추가해주세요.
                 </p>
               )}

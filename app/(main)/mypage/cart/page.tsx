@@ -39,27 +39,29 @@ export default async function CartPage() {
     .map((row) => ({ cartItemId: row.id, course: row.courses! }));
 
   return (
-    <section className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-16">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          Cart
+        </span>
+        <div className="flex items-end justify-between gap-4">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
             장바구니
           </h1>
-          <p className="mt-2 text-sm text-zinc-500">
-            담아둔 강좌를 확인하고 결제를 진행하세요.
-          </p>
+          <Link
+            href="/courses/high"
+            className="shrink-0 rounded-md border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-600 hover:border-brand hover:text-brand-dark"
+          >
+            + 강좌 더 담으러 가기
+          </Link>
         </div>
-        <Link
-          href="/courses/high"
-          className="shrink-0 rounded-md border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-600 hover:border-brand hover:text-brand-dark"
-        >
-          + 강좌 더 담으러 가기
-        </Link>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
+        <p className="text-sm text-zinc-500">
+          담아둔 강좌를 확인하고 결제를 진행하세요.
+        </p>
       </div>
 
-      <div className="mt-8">
-        <CartList items={items} />
-      </div>
+      <CartList items={items} />
     </section>
   );
 }
