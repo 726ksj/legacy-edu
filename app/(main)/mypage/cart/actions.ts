@@ -23,6 +23,23 @@ export async function addManyToCart(
 
   const supabase = createAdminClient();
 
+  const { data: existingEnrollments } = await supabase
+    .from("enrollments")
+    .select("courses(title)")
+    .eq("profile_id", user.id)
+    .in("course_id", courseIds)
+    .returns<{ courses: { title: string } | null }[]>();
+
+  if (existingEnrollments && existingEnrollments.length > 0) {
+    const titles = existingEnrollments
+      .map((row) => row.courses?.title)
+      .filter(Boolean)
+      .join(", ");
+    return {
+      error: `이미 수강 중인 강좌예요: ${titles}`,
+    };
+  }
+
   const { data: existing } = await supabase
     .from("cart_items")
     .select("courses(title)")
