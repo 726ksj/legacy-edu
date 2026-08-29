@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getAuthUser } from "@/lib/supabase/server";
+import { getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import MobileNav from "./MobileNav";
 import EnrollmentButton from "./EnrollmentButton";
@@ -49,18 +49,12 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-const EMAIL_DOMAIN = "legacyedu.local";
-
 export default async function Header() {
   const user = await getAuthUser();
 
-  const isAdmin =
-    Boolean(process.env.ADMIN_USERNAME) &&
-    user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
-
   const navItems: NavItem[] = [
     ...NAV_ITEMS,
-    isAdmin
+    isAdmin(user)
       ? {
           // 관리자 계정은 마이페이지 하위 메뉴(나의 강좌 등)가 의미 없으니
           // 관리자 페이지로 바로 돌아가는 링크만 보여준다.

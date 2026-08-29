@@ -66,18 +66,22 @@ const hasWebCrypto =
 
 const ADMIN_EMAIL_DOMAIN = "legacyedu.local";
 
+export function isAdmin(user: { email: string | null } | null) {
+  const adminUsername = process.env.ADMIN_USERNAME;
+  return (
+    Boolean(adminUsername) &&
+    user?.email === `${adminUsername}@${ADMIN_EMAIL_DOMAIN}`
+  );
+}
+
 // Server Action은 페이지 렌더링(및 app/admin/layout.tsx의 관리자 체크)을
 // 거치지 않고 Next-Action 헤더가 붙은 별도 POST로 직접 호출될 수 있다.
 // 그래서 모든 admin "use server" 액션은 DB 작업 전에 이 함수를 호출해
 // 인가를 다시 확인해야 한다.
 export async function requireAdmin() {
   const user = await getAuthUser();
-  const adminUsername = process.env.ADMIN_USERNAME;
-  const isAdmin =
-    Boolean(adminUsername) &&
-    user?.email === `${adminUsername}@${ADMIN_EMAIL_DOMAIN}`;
 
-  if (!isAdmin) {
+  if (!isAdmin(user)) {
     throw new Error("관리자만 사용할 수 있습니다.");
   }
 

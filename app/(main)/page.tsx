@@ -3,10 +3,8 @@ import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
 import CurriculumStickyNav from "@/components/home/CurriculumStickyNav";
 import MyCoursesStrip from "@/components/home/MyCoursesStrip";
-import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
-
-const EMAIL_DOMAIN = "legacyedu.local";
 
 interface Enrollment {
   courses: {
@@ -30,12 +28,8 @@ export default async function HomePage() {
     supabase.from("site_content").select("key, value"),
   ]);
 
-  const isAdmin =
-    Boolean(process.env.ADMIN_USERNAME) &&
-    user?.email === `${process.env.ADMIN_USERNAME}@${EMAIL_DOMAIN}`;
-
   let myCourses: NonNullable<Enrollment["courses"]>[] = [];
-  if (user && !isAdmin) {
+  if (user && !isAdmin(user)) {
     const { data: enrollments } = await supabase
       .from("enrollments")
       .select("courses(id, subject, title, teacher_name)")

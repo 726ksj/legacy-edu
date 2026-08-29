@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
-import { getAuthUser } from "@/lib/supabase/server";
+import { getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import AdminSidebar from "@/components/layout/AdminSidebar";
-
-const EMAIL_DOMAIN = "legacyedu.local";
 
 export default async function AdminLayout({
   children,
@@ -12,37 +10,40 @@ export default async function AdminLayout({
 }) {
   const user = await getAuthUser();
 
-  const adminUsername = process.env.ADMIN_USERNAME;
-  const isAdmin =
-    Boolean(adminUsername) &&
-    user?.email === `${adminUsername}@${EMAIL_DOMAIN}`;
-
-  if (!isAdmin) {
+  if (!isAdmin(user)) {
     redirect("/login");
   }
 
   const adminSupabase = createAdminClient();
 
   // 서로 무관한 집계 쿼리들이라 병렬로 요청한다.
-  const [{ data: newNote }, { count: pendingConsultationCount }] =
-    await Promise.all([
-      adminSupabase
-        .from("questions")
-        .select("id")
-        .is("question_read_at", null)
-        .limit(1)
-        .maybeSingle(),
-      adminSupabase
-        .from("consultation_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
-    ]);
+  const [
+    { data: newNote },
+    { count: pendingConsultationCount },
+    { count: pendingInquiryCount },
+  ] = await Promise.all([
+    adminSupabase
+      .from("questions")
+      .select("id")
+      .is("question_read_at", null)
+      .limit(1)
+      .maybeSingle(),
+    adminSupabase
+      .from("consultation_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    adminSupabase
+      .from("inquiries")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+  ]);
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <AdminSidebar
         hasNewNote={Boolean(newNote)}
         pendingConsultationCount={pendingConsultationCount ?? 0}
+        pendingInquiryCount={pendingInquiryCount ?? 0}
       />
       <div className="flex flex-1 flex-col bg-zinc-50">{children}</div>
     </div>
