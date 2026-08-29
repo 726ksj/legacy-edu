@@ -4,20 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 import { createMuxClient, pollUploadForAssetId } from "@/lib/mux";
+import { compareLessonTitles } from "@/lib/lessonOrdering";
 import type { LessonVisibility } from "@/lib/enrollments";
-
-// 차시 제목은 "1강 - 문법 정리"처럼 앞에 번호가 붙는 관례라, 제목에서 첫
-// 숫자를 뽑아 그 숫자로 비교한다. 단순 문자열 정렬로는 "10강"이 "2강"보다
-// 앞에 오는 문제가 생긴다.
-function compareLessonTitles(a: string, b: string): number {
-  const numA = a.match(/\d+/);
-  const numB = b.match(/\d+/);
-  if (numA && numB) {
-    const diff = Number(numA[0]) - Number(numB[0]);
-    if (diff !== 0) return diff;
-  }
-  return a.localeCompare(b, "ko");
-}
 
 export async function createDirectUpload(
   courseId: string,
