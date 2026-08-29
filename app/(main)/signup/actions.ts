@@ -10,6 +10,16 @@ export interface SignupState {
 
 const EMAIL_DOMAIN = "legacyedu.local";
 
+async function releaseStudentCode(
+  supabase: ReturnType<typeof createAdminClient>,
+  codeId: string,
+) {
+  await supabase
+    .from("student_codes")
+    .update({ is_used: false, used_at: null })
+    .eq("id", codeId);
+}
+
 export async function signup(
   _prevState: SignupState,
   formData: FormData,
@@ -59,6 +69,23 @@ export async function signup(
     return { error: "이미 사용된 학생코드입니다." };
   }
 
+  // 같은 코드로 거의 동시에 가입 요청이 두 번 들어오면 둘 다 위의
+  // is_used 확인을 통과할 수 있다. 계정을 만들기 전에 코드를 먼저
+  // 원자적으로 선점해서(is_used=false일 때만 반영되는 조건부 UPDATE),
+  // 동시 요청 중 하나만 실제로 계정을 만들도록 한다. 이후 단계가
+  // 실패하면 releaseStudentCode로 다시 미사용 상태로 되돌린다.
+  const { data: claimedCode } = await supabase
+    .from("student_codes")
+    .update({ is_used: true, used_at: new Date().toISOString() })
+    .eq("id", codeRow.id)
+    .eq("is_used", false)
+    .select("id")
+    .maybeSingle();
+
+  if (!claimedCode) {
+    return { error: "이미 사용된 학생코드입니다." };
+  }
+
   const { data: existingProfile } = await supabase
     .from("profiles")
     .select("id")
@@ -66,6 +93,7 @@ export async function signup(
     .maybeSingle();
 
   if (existingProfile) {
+    await releaseStudentCode(supabase, codeRow.id);
     return { error: "이미 사용 중인 아이디입니다." };
   }
 
@@ -77,6 +105,7 @@ export async function signup(
     });
 
   if (authError || !authData.user) {
+    await releaseStudentCode(supabase, codeRow.id);
     return { error: authError?.message ?? "회원가입 중 오류가 발생했습니다." };
   }
 
@@ -94,13 +123,9 @@ export async function signup(
 
   if (profileError) {
     await supabase.auth.admin.deleteUser(authData.user.id);
+    await releaseStudentCode(supabase, codeRow.id);
     return { error: "프로필 저장 중 오류가 발생했습니다." };
   }
-
-  await supabase
-    .from("student_codes")
-    .update({ is_used: true, used_at: new Date().toISOString() })
-    .eq("id", codeRow.id);
 
   return { success: true };
 }
