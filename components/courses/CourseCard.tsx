@@ -35,7 +35,7 @@ export default function CourseCard({
         )}
         <Link
           href={`/courses/${course.id}`}
-          className="mt-0.5 block text-lg font-semibold text-zinc-900 hover:text-brand-dark hover:underline"
+          className="mt-0.5 block text-base font-semibold text-zinc-900 hover:text-brand-dark hover:underline"
         >
           {course.title}
         </Link>
