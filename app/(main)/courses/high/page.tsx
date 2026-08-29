@@ -47,15 +47,21 @@ export default async function Page() {
   }));
 
   return (
-    <section className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-10">
-      <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
-        고등 강좌
-      </h1>
-      <p className="mt-2 text-sm text-zinc-500">
-        재학 중인 학교에 맞는 강좌를 선택해 수강 신청하세요.
-      </p>
+    <section className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
+          Courses
+        </span>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+          고등 강좌
+        </h1>
+        <div className="h-[3px] w-12 rounded-full bg-brand" />
+        <p className="text-sm text-zinc-500">
+          재학 중인 학교에 맞는 강좌를 선택해 수강 신청하세요.
+        </p>
+      </div>
 
-      <div className="mt-8">
+      <div className="mt-10">
         <CourseListing courses={items} />
       </div>
     </section>
