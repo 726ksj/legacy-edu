@@ -39,10 +39,13 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
+    label: "공지사항",
+    href: "/notice",
+  },
+  {
     label: "고객센터",
     href: "/customer-center",
     children: [
-      { label: "공지사항", href: "/notice" },
       { label: "자주하는 질문", href: "/customer-center" },
       { label: "1:1 이용문의", href: "/customer-center/inquiry" },
     ],
