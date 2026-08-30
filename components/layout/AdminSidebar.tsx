@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const ADMIN_NAV_ITEMS = [
   { label: "홈/소개 문구 관리", href: "/admin/content" },
+  { label: "팝업 관리", href: "/admin/popups" },
   { label: "상담 신청 관리", href: "/admin/consultations" },
   { label: "학생코드 관리", href: "/admin/student-codes" },
   { label: "회원 관리", href: "/admin/users" },

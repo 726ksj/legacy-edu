@@ -3,6 +3,7 @@ import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
 import CurriculumStickyNav from "@/components/home/CurriculumStickyNav";
 import MyCoursesStrip from "@/components/home/MyCoursesStrip";
+import HomePopups from "@/components/home/HomePopups";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
 
@@ -18,15 +19,22 @@ interface Enrollment {
 export default async function HomePage() {
   const supabase = await createClient();
 
-  // user 정보와 리뷰/사이트 콘텐츠는 서로 무관하니 병렬로 요청한다.
-  const [user, { data: reviews }, { data: contentRows }] = await Promise.all([
-    getAuthUser(),
-    supabase
-      .from("reviews")
-      .select("id, name, school, subject, summary, detail")
-      .order("created_at", { ascending: false }),
-    supabase.from("site_content").select("key, value"),
-  ]);
+  // user 정보와 리뷰/사이트 콘텐츠/팝업은 서로 무관하니 병렬로 요청한다.
+  const [user, { data: reviews }, { data: contentRows }, { data: popups }] =
+    await Promise.all([
+      getAuthUser(),
+      supabase
+        .from("reviews")
+        .select("id, name, school, subject, summary, detail")
+        .order("created_at", { ascending: false }),
+      supabase.from("site_content").select("key, value"),
+      supabase
+        .from("popups")
+        .select("id, title, body, image_url, link_url")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
 
   let myCourses: NonNullable<Enrollment["courses"]>[] = [];
   if (user && !isAdmin(user)) {
@@ -56,6 +64,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-1 flex-col">
+      <HomePopups popups={popups ?? []} />
       <section className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-10 px-4 py-6 sm:px-6 sm:py-16 lg:flex-row lg:items-center">
         <div className="flex w-full flex-col items-start gap-6">
           <h1 className="text-4xl font-bold leading-tight text-zinc-900 sm:text-5xl">
