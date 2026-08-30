@@ -61,34 +61,45 @@ export default async function OrdersPage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {(orders ?? []).map((order) => (
-          <div
-            key={order.id}
-            className="rounded-lg border border-zinc-200 bg-white p-4"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-400">
-                {formatDateTime(order.created_at)}
-              </span>
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  STATUS_STYLE[order.status] ?? "bg-zinc-100 text-zinc-600"
-                }`}
-              >
-                {STATUS_LABEL[order.status] ?? order.status}
-              </span>
+        {(orders ?? []).map((order) => {
+          const titles = order.order_items
+            .map((item) => item.courses?.title)
+            .filter((title): title is string => Boolean(title));
+
+          return (
+            <div
+              key={order.id}
+              className="rounded-lg border border-zinc-200 bg-white p-4"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-zinc-400">
+                  {formatDateTime(order.created_at)}
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    STATUS_STYLE[order.status] ?? "bg-zinc-100 text-zinc-600"
+                  }`}
+                >
+                  {STATUS_LABEL[order.status] ?? order.status}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-col gap-1">
+                {titles.length > 0 ? (
+                  titles.map((title, i) => (
+                    <p key={i} className="text-sm text-zinc-700">
+                      {title}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-sm text-zinc-700">강좌 정보 없음</p>
+                )}
+              </div>
+              <p className="mt-3 text-right text-base font-bold text-zinc-900">
+                {order.amount.toLocaleString("ko-KR")}원
+              </p>
             </div>
-            <p className="mt-2 text-sm text-zinc-700">
-              {order.order_items
-                .map((item) => item.courses?.title)
-                .filter(Boolean)
-                .join(", ") || "강좌 정보 없음"}
-            </p>
-            <p className="mt-2 text-right text-base font-bold text-zinc-900">
-              {order.amount.toLocaleString("ko-KR")}원
-            </p>
-          </div>
-        ))}
+          );
+        })}
         {(orders ?? []).length === 0 && (
           <p className="py-16 text-center text-sm text-zinc-400">
             주문 내역이 없습니다.

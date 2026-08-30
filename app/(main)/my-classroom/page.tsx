@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 
 interface Enrollment {
@@ -53,20 +54,23 @@ export default async function MyClassroomPage() {
             <Link
               key={course.id}
               href={`/my-classroom/${course.id}`}
-              className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-6 hover:border-brand"
+              className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white p-5 hover:border-brand sm:p-6"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold text-brand-dark">
                   {course.subject}
                 </p>
-                <h2 className="mt-1 text-lg font-bold text-zinc-900">
+                <h2 className="mt-1 text-base font-bold text-zinc-900 sm:text-lg">
                   {course.title}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
                   {course.teacher_name} 선생님
                 </p>
               </div>
-              <span className="text-sm text-zinc-400">차시 목록 보기 →</span>
+              <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-zinc-400 sm:text-sm">
+                <span className="hidden sm:inline">차시 목록 보기</span>
+                <ChevronRight className="h-4 w-4" />
+              </span>
             </Link>
           );
         })}
