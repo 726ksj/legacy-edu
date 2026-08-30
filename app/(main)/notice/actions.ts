@@ -1,9 +1,12 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
+
+const ATTACHMENT_BUCKET = "notice-attachments";
 
 export interface NoticeFormState {
   error?: string;
@@ -32,6 +35,42 @@ function revalidateNoticePaths(id?: string) {
   }
 }
 
+async function uploadAttachments(
+  supabase: ReturnType<typeof createAdminClient>,
+  noticeId: string,
+  formData: FormData,
+) {
+  const files = formData
+    .getAll("attachments")
+    .filter((file): file is File => file instanceof File && file.size > 0);
+
+  if (files.length === 0) return;
+
+  for (const file of files) {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const path = `${randomUUID()}${ext ? `.${ext}` : ""}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(ATTACHMENT_BUCKET)
+      .upload(path, file, { contentType: file.type || undefined });
+
+    if (uploadError) {
+      throw new Error(`첨부파일 업로드에 실패했습니다: ${uploadError.message}`);
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(path);
+
+    await supabase.from("notice_attachments").insert({
+      notice_id: noticeId,
+      file_name: file.name,
+      file_url: publicUrl,
+      file_type: file.type || null,
+    });
+  }
+}
+
 export async function createNotice(
   _prevState: NoticeFormState,
   formData: FormData,
@@ -41,10 +80,22 @@ export async function createNotice(
   if ("error" in parsed) return { error: parsed.error };
 
   const supabase = createAdminClient();
-  const { error } = await supabase.from("notices").insert(parsed.fields);
+  const { data: notice, error } = await supabase
+    .from("notices")
+    .insert(parsed.fields)
+    .select("id")
+    .single();
 
-  if (error) {
-    return { error: error.message };
+  if (error || !notice) {
+    return { error: error?.message ?? "등록에 실패했습니다." };
+  }
+
+  try {
+    await uploadAttachments(supabase, notice.id, formData);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "첨부파일 업로드에 실패했습니다.",
+    };
   }
 
   revalidateNoticePaths();
@@ -70,6 +121,14 @@ export async function updateNotice(
     return { error: error.message };
   }
 
+  try {
+    await uploadAttachments(supabase, id, formData);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "첨부파일 업로드에 실패했습니다.",
+    };
+  }
+
   revalidateNoticePaths(id);
   return { success: true };
 }
@@ -84,4 +143,14 @@ export async function deleteNotice(id: string) {
 export async function deleteNoticeAndRedirect(id: string) {
   await deleteNotice(id);
   redirect("/notice");
+}
+
+export async function deleteNoticeAttachment(
+  attachmentId: string,
+  noticeId: string,
+) {
+  await requireAdmin();
+  const supabase = createAdminClient();
+  await supabase.from("notice_attachments").delete().eq("id", attachmentId);
+  revalidateNoticePaths(noticeId);
 }

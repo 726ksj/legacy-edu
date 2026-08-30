@@ -58,6 +58,15 @@ export default function NoticeForm() {
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        첨부파일 (선택, 여러 개 가능)
+        <input
+          name="attachments"
+          type="file"
+          multiple
+          className="text-sm text-zinc-700 file:mr-3 file:rounded-md file:border file:border-zinc-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-zinc-700 hover:file:border-brand hover:file:text-brand-dark"
+        />
+      </label>
 
       {state.error && (
         <p className="text-sm font-medium text-red-500">{state.error}</p>

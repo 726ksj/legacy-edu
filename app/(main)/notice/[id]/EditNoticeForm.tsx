@@ -2,7 +2,13 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { updateNotice, type NoticeFormState } from "../actions";
+import { Paperclip } from "lucide-react";
+import {
+  updateNotice,
+  deleteNoticeAttachment,
+  type NoticeFormState,
+} from "../actions";
+import DeleteAttachmentButton from "./DeleteAttachmentButton";
 
 const initialState: NoticeFormState = {};
 
@@ -13,7 +19,19 @@ interface NoticeData {
   content: string;
 }
 
-export default function EditNoticeForm({ notice }: { notice: NoticeData }) {
+interface AttachmentData {
+  id: string;
+  file_name: string;
+  file_url: string;
+}
+
+export default function EditNoticeForm({
+  notice,
+  attachments,
+}: {
+  notice: NoticeData;
+  attachments: AttachmentData[];
+}) {
   const router = useRouter();
   const boundUpdateNotice = updateNotice.bind(null, notice.id);
   const [state, formAction, isPending] = useActionState(
@@ -63,6 +81,41 @@ export default function EditNoticeForm({ notice }: { notice: NoticeData }) {
           required
           rows={8}
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        />
+      </label>
+
+      {attachments.length > 0 && (
+        <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          첨부된 파일
+          <ul className="flex flex-col gap-1.5">
+            {attachments.map((attachment) => (
+              <li
+                key={attachment.id}
+                className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 px-3 py-2 text-sm font-normal text-zinc-600"
+              >
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <Paperclip className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                  <span className="truncate">{attachment.file_name}</span>
+                </span>
+                <DeleteAttachmentButton
+                  action={deleteNoticeAttachment.bind(
+                    null,
+                    attachment.id,
+                    notice.id,
+                  )}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        첨부파일 추가 (선택, 여러 개 가능)
+        <input
+          name="attachments"
+          type="file"
+          multiple
+          className="text-sm text-zinc-700 file:mr-3 file:rounded-md file:border file:border-zinc-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-zinc-700 hover:file:border-brand hover:file:text-brand-dark"
         />
       </label>
 
