@@ -1,9 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getAuthUser, isAdmin } from "@/lib/supabase/server";
+import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import MobileNav from "./MobileNav";
 import EnrollmentButton from "./EnrollmentButton";
+
+// 최근에 올라온 공지사항이면 상단 메뉴에 NEW 뱃지를 붙여준다. 게시글별
+// "읽음" 상태를 추적하려면 로그인 여부와 무관하게 모든 방문자를 다뤄야
+// 해서 복잡해지니, 등록된 지 며칠 안 된 글인지로 간단히 판단한다.
+const NEW_NOTICE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function checkHasNewNotice(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+) {
+  const { data } = await supabase
+    .from("notices")
+    .select("created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return false;
+  return Date.now() - new Date(data.created_at).getTime() < NEW_NOTICE_WINDOW_MS;
+}
 
 interface NavChild {
   label: string;
@@ -53,10 +72,16 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default async function Header() {
-  const user = await getAuthUser();
+  const supabase = await createClient();
+  const [user, hasNewNotice] = await Promise.all([
+    getAuthUser(),
+    checkHasNewNotice(supabase),
+  ]);
 
   const navItems: NavItem[] = [
-    ...NAV_ITEMS,
+    ...NAV_ITEMS.map((item) =>
+      item.href === "/notice" ? { ...item, badge: hasNewNotice } : item,
+    ),
     isAdmin(user)
       ? {
           // 관리자 계정은 마이페이지 하위 메뉴(나의 강좌 등)가 의미 없으니

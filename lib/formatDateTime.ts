@@ -14,3 +14,14 @@ export function formatDateTime(value: string | Date): string {
     timeZone: "Asia/Seoul",
   }).format(date);
 }
+
+// 시간까지는 필요 없고 등록일만 보여주면 되는 목록/게시판류 화면에서 쓴다.
+export function formatDate(value: string | Date): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}

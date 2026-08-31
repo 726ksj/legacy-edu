@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDate } from "@/lib/formatDateTime";
 import NoticeForm from "./NoticeForm";
 
 export const dynamic = "force-dynamic";
@@ -29,15 +30,17 @@ export default async function NoticePage({
   const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
-  const [user, { data: notices, count }] = await Promise.all([
-    getAuthUser(),
-    supabase
-      .from("notices")
-      .select("id, category, title, created_at", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range(from, to)
-      .returns<NoticeRow[]>(),
-  ]);
+  const user = await getAuthUser();
+  if (!user) {
+    redirect(`/login?redirect=${encodeURIComponent("/notice")}`);
+  }
+
+  const { data: notices, count } = await supabase
+    .from("notices")
+    .select("id, category, title, created_at", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to)
+    .returns<NoticeRow[]>();
 
   const admin = isAdmin(user);
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
@@ -74,18 +77,18 @@ export default async function NoticePage({
       )}
 
       {notices && notices.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <div className="hidden border-b border-zinc-200 bg-zinc-50 px-5 py-3 text-xs font-semibold text-zinc-500 sm:grid sm:grid-cols-[5rem_1fr_7rem]">
+        <div className="border-t-2 border-zinc-900">
+          <div className="hidden border-b border-zinc-200 px-2 py-3 text-xs font-semibold text-zinc-500 sm:grid sm:grid-cols-[5rem_1fr_7rem]">
             <span>분류</span>
             <span>제목</span>
             <span className="text-right">등록일</span>
           </div>
-          <ul className="flex flex-col divide-y divide-zinc-100">
+          <ul className="flex flex-col divide-y divide-zinc-200">
             {notices.map((notice) => (
               <li key={notice.id}>
                 <Link
                   href={`/notice/${notice.id}`}
-                  className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-zinc-50 sm:grid sm:grid-cols-[5rem_1fr_7rem]"
+                  className="flex items-center justify-between gap-4 px-2 py-4 transition-colors hover:bg-zinc-50 sm:grid sm:grid-cols-[5rem_1fr_7rem]"
                 >
                   <span
                     className={
@@ -100,7 +103,7 @@ export default async function NoticePage({
                     {notice.title}
                   </span>
                   <span className="shrink-0 text-xs text-zinc-400 sm:text-right">
-                    {formatDateTime(notice.created_at)}
+                    {formatDate(notice.created_at)}
                   </span>
                 </Link>
               </li>
