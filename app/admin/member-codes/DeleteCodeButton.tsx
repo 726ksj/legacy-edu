@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { deleteStudentCode, type DeleteStudentCodeState } from "./actions";
+import { deleteMemberCode, type DeleteMemberCodeState } from "./actions";
 
-const initialState: DeleteStudentCodeState = {};
+const initialState: DeleteMemberCodeState = {};
 
 export default function DeleteCodeButton({
   codeId,
@@ -13,7 +13,7 @@ export default function DeleteCodeButton({
   isUsed: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const boundDelete = deleteStudentCode.bind(null, codeId);
+  const boundDelete = deleteMemberCode.bind(null, codeId);
   const [state, formAction, isPending] = useActionState(
     boundDelete,
     initialState,
@@ -43,8 +43,8 @@ export default function DeleteCodeButton({
             </p>
             {isUsed && (
               <p className="mt-2 text-sm text-red-500">
-                이 코드로 가입한 학생 계정(로그인 정보, 이름, 주소 등)도
-                함께 삭제됩니다.
+                이 코드로 가입한 계정(로그인 정보, 이름 등)도 함께
+                삭제됩니다.
               </p>
             )}
             {state.error && (

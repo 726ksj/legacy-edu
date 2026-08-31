@@ -25,26 +25,45 @@ export async function updateProfile(
 
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
-  const guardianPhone = String(formData.get("guardianPhone") ?? "").trim();
-  const address = String(formData.get("address") ?? "").trim();
-  const school = String(formData.get("school") ?? "").trim();
-  const grade = String(formData.get("grade") ?? "").trim();
 
-  if (!name || !phone || !guardianPhone || !address) {
-    return { error: "이름, 전화번호, 보호자 전화번호, 주소는 비워둘 수 없습니다." };
+  if (!name || !phone) {
+    return { error: "이름과 전화번호는 비워둘 수 없습니다." };
   }
 
   const admin = createAdminClient();
+
+  const { data: existingProfile } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // 선생님 계정은 보호자연락처/주소/학교/학년 화면 자체가 없으니, 폼에서
+  // 안 보내온 값을 그대로 덮어써서 비워버리면 안 된다 - 학생 계정일
+  // 때만 이 필드들을 같이 갱신한다.
+  const isTeacher = existingProfile?.role === "teacher";
+
+  const update: Record<string, unknown> = { name, phone };
+
+  if (!isTeacher) {
+    const guardianPhone = String(formData.get("guardianPhone") ?? "").trim();
+    const address = String(formData.get("address") ?? "").trim();
+    const school = String(formData.get("school") ?? "").trim();
+    const grade = String(formData.get("grade") ?? "").trim();
+
+    if (!guardianPhone || !address) {
+      return { error: "보호자 전화번호와 주소는 비워둘 수 없습니다." };
+    }
+
+    update.guardian_phone = guardianPhone;
+    update.address = address;
+    update.school = school || null;
+    update.grade = grade || null;
+  }
+
   const { error } = await admin
     .from("profiles")
-    .update({
-      name,
-      phone,
-      guardian_phone: guardianPhone,
-      address,
-      school: school || null,
-      grade: grade || null,
-    })
+    .update(update)
     .eq("id", user.id);
 
   if (error) {

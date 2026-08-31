@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/formatDateTime";
 import NoticeForm from "./NoticeForm";
@@ -13,6 +12,7 @@ interface NoticeRow {
   category: string;
   title: string;
   created_at: string;
+  visibility: string;
 }
 
 function buildPageHref(page: number) {
@@ -30,14 +30,14 @@ export default async function NoticePage({
   const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
+  // 비회원은 로그인을 요구하지 않는다 - RLS가 이미 visibility='public'인
+  // 글만 anon 세션에 내려주므로, 로그인한 회원은 전체 공지가 보이고
+  // 비회원은 전체공개 공지만 자연스럽게 걸러져서 보인다.
   const user = await getAuthUser();
-  if (!user) {
-    redirect(`/login?redirect=${encodeURIComponent("/notice")}`);
-  }
 
   const { data: notices, count } = await supabase
     .from("notices")
-    .select("id, category, title, created_at", { count: "exact" })
+    .select("id, category, title, created_at, visibility", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to)
     .returns<NoticeRow[]>();
@@ -99,8 +99,15 @@ export default async function NoticePage({
                   >
                     {notice.category}
                   </span>
-                  <span className="truncate text-sm font-medium text-zinc-900">
-                    {notice.title}
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="truncate text-sm font-medium text-zinc-900">
+                      {notice.title}
+                    </span>
+                    {notice.visibility === "members" && (
+                      <span className="shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500">
+                        회원전용
+                      </span>
+                    )}
                   </span>
                   <span className="shrink-0 text-xs text-zinc-400 sm:text-right">
                     {formatDate(notice.created_at)}

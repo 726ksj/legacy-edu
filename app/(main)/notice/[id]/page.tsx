@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Paperclip } from "lucide-react";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
@@ -26,15 +26,16 @@ export default async function NoticeDetailPage({
   const { id } = await params;
   const { edit } = await searchParams;
   const supabase = await createClient();
+  // 로그인 요구 없이 그대로 조회한다 - 비회원 세션에는 RLS가 이미
+  // visibility='public'인 글만 내려주므로, 회원전용 글을 비회원이 열람
+  // 시도하면 자연스럽게 null이 되어 아래 notFound()로 이어진다
+  // (my-classroom의 미수강 학생 처리와 동일한 패턴).
   const user = await getAuthUser();
-  if (!user) {
-    redirect(`/login?redirect=${encodeURIComponent(`/notice/${id}`)}`);
-  }
 
   const [{ data: notice }, { data: attachments }] = await Promise.all([
     supabase
       .from("notices")
-      .select("id, category, title, content, created_at")
+      .select("id, category, title, content, created_at, visibility")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -96,6 +97,11 @@ export default async function NoticeDetailPage({
               <h1 className="truncate text-lg font-bold text-zinc-900 sm:text-xl">
                 {notice.title}
               </h1>
+              {notice.visibility === "members" && (
+                <span className="shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500">
+                  회원전용
+                </span>
+              )}
             </div>
             <span className="shrink-0 text-xs text-zinc-400">
               {formatDate(notice.created_at)}

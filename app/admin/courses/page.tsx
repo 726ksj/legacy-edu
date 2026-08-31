@@ -23,6 +23,12 @@ export default async function Page({
     .select("id, name, subject")
     .order("name", { ascending: true });
 
+  const { data: teachers } = await supabase
+    .from("profiles")
+    .select("id, name, username")
+    .eq("role", "teacher")
+    .order("name", { ascending: true });
+
   const { data: editingCourse } = edit
     ? await supabase
         .from("courses")
@@ -30,6 +36,14 @@ export default async function Page({
           "id, subject, title, instructor_id, school, overview, level, tagline, is_best, duration_days, price",
         )
         .eq("id", edit)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: currentAssignment } = edit
+    ? await supabase
+        .from("course_teachers")
+        .select("profile_id")
+        .eq("course_id", edit)
         .maybeSingle()
     : { data: null };
 
@@ -44,7 +58,9 @@ export default async function Page({
         <CourseForm
           key={editingCourse?.id ?? "new"}
           instructors={instructors ?? []}
+          teachers={teachers ?? []}
           editingCourse={editingCourse}
+          editingTeacherProfileId={currentAssignment?.profile_id ?? null}
         />
       </div>
 

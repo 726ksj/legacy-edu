@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
+import { isTeacherAccount } from "@/lib/teachers";
 import MobileNav from "./MobileNav";
 import EnrollmentButton from "./EnrollmentButton";
 
@@ -78,29 +79,43 @@ export default async function Header() {
     checkHasNewNotice(supabase),
   ]);
 
+  const admin = isAdmin(user);
+  // 선생님 여부는 profiles.role 조회가 필요해서(JWT만으로는 알 수 없음),
+  // 관리자가 아닌 로그인 사용자에 한해서만 확인한다.
+  const teacher =
+    Boolean(user) && !admin ? await isTeacherAccount(user!.id) : false;
+
   const navItems: NavItem[] = [
     ...NAV_ITEMS.map((item) =>
       item.href === "/notice" ? { ...item, badge: hasNewNotice } : item,
     ),
-    isAdmin(user)
-      ? {
-          // 관리자 계정은 마이페이지 하위 메뉴(나의 강좌 등)가 의미 없으니
+    ...(admin
+      ? [
+          // 관리자 계정은 마이페이지 하위 메뉴(나의 강의실 등)가 의미 없으니
           // 관리자 페이지로 바로 돌아가는 링크만 보여준다.
-          label: "관리자 페이지",
-          href: "/admin",
-        }
-      : {
-          label: "마이페이지",
-          href: "/mypage",
-          children: [
-            { label: "나의 강좌", href: "/my-classroom" },
-            { label: "나의 메모", href: "/mypage/notes" },
-            { label: "장바구니", href: "/mypage/cart" },
-            { label: "주문내역", href: "/mypage/orders" },
-            { label: "성적 리포트", href: "/mypage/score-report" },
+          { label: "관리자 페이지", href: "/admin" },
+        ]
+      : teacher
+        ? [
+            // 선생님 계정은 학생용 마이페이지 하위 메뉴(나의 강의실/장바구니
+            // 등)가 다 의미 없으니, 여기엔 회원정보 수정만 두고 강좌 관리는
+            // 우측 상단 "강좌 관리" 버튼으로 이미 갈 수 있어 중복으로 안 둔다.
             { label: "회원정보 관리", href: "/settings" },
-          ],
-        },
+          ]
+        : [
+            {
+              label: "마이페이지",
+              href: "/mypage",
+              children: [
+                { label: "나의 강의실", href: "/my-classroom" },
+                { label: "나의 메모", href: "/mypage/notes" },
+                { label: "장바구니", href: "/mypage/cart" },
+                { label: "주문내역", href: "/mypage/orders" },
+                { label: "성적 리포트", href: "/mypage/score-report" },
+                { label: "회원정보 관리", href: "/settings" },
+              ],
+            },
+          ]),
   ];
 
   return (
@@ -109,16 +124,16 @@ export default async function Header() {
       <div className="relative flex h-14 w-full items-center justify-between px-4 sm:px-8 md:h-16 md:justify-end lg:px-12">
         <Link
           href="/"
-          className="flex min-w-0 shrink items-center gap-1.5 md:absolute md:left-1/2 md:top-1/2 md:shrink-0 md:-translate-x-1/2 md:-translate-y-1/2 md:gap-2.5"
+          className="flex min-w-0 shrink items-center gap-1.5 text-base sm:text-lg md:absolute md:left-1/2 md:top-1/2 md:shrink-0 md:-translate-x-1/2 md:-translate-y-1/2 md:gap-2.5 md:text-xl lg:text-2xl"
         >
           <Image
             src="/logo.png"
             alt="LEGACY EDU"
-            width={32}
-            height={32}
-            className="h-6 w-6 shrink-0 md:h-8 md:w-8"
+            width={324}
+            height={251}
+            className="h-[1em] w-auto shrink-0"
           />
-          <span className="truncate text-base font-bold tracking-tight text-brand-dark sm:text-lg md:text-xl lg:text-2xl">
+          <span className="truncate text-[1em] font-bold tracking-tight text-brand-dark">
             LEGACY EDU
           </span>
         </Link>
@@ -126,7 +141,16 @@ export default async function Header() {
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
           {user ? (
             <>
-              <EnrollmentButton />
+              {teacher ? (
+                <Link
+                  href="/mypage/teaching"
+                  className="min-w-16 whitespace-nowrap rounded-md bg-accent px-2.5 py-1.5 text-center text-xs font-semibold text-white transition-colors hover:bg-accent-dark sm:min-w-[84px] sm:px-4 sm:py-2 sm:text-sm md:min-w-[108px] md:px-6 md:py-2.5 md:text-base"
+                >
+                  강좌 관리
+                </Link>
+              ) : (
+                <EnrollmentButton />
+              )}
               <form action={logout}>
                 <button
                   type="submit"

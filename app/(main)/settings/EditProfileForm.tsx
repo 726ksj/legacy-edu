@@ -14,6 +14,7 @@ interface ProfileData {
   address: string;
   school: string | null;
   grade: string | null;
+  role: string;
 }
 
 export default function EditProfileForm({
@@ -31,6 +32,7 @@ export default function EditProfileForm({
   const [guardianPhone, setGuardianPhone] = useState(
     formatPhoneInput(profile.guardian_phone),
   );
+  const isTeacher = profile.role === "teacher";
 
   return (
     <form
@@ -73,48 +75,52 @@ export default function EditProfileForm({
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        보호자 전화번호
-        <input
-          name="guardianPhone"
-          type="tel"
-          value={guardianPhone}
-          onChange={(e) => setGuardianPhone(formatPhoneInput(e.target.value))}
-          required
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        주소
-        <input
-          name="address"
-          defaultValue={profile.address}
-          required
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        학교
-        <input
-          name="school"
-          defaultValue={profile.school ?? ""}
-          placeholder="예: 분당고등학교"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        학년
-        <select
-          name="grade"
-          defaultValue={profile.grade ?? ""}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        >
-          <option value="">선택 안 함</option>
-          <option value="고1">고1</option>
-          <option value="고2">고2</option>
-          <option value="고3">고3</option>
-        </select>
-      </label>
+      {!isTeacher && (
+        <>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            보호자 전화번호
+            <input
+              name="guardianPhone"
+              type="tel"
+              value={guardianPhone}
+              onChange={(e) => setGuardianPhone(formatPhoneInput(e.target.value))}
+              required
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            주소
+            <input
+              name="address"
+              defaultValue={profile.address}
+              required
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            학교
+            <input
+              name="school"
+              defaultValue={profile.school ?? ""}
+              placeholder="예: 분당고등학교"
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            학년
+            <select
+              name="grade"
+              defaultValue={profile.grade ?? ""}
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            >
+              <option value="">선택 안 함</option>
+              <option value="고1">고1</option>
+              <option value="고2">고2</option>
+              <option value="고3">고3</option>
+            </select>
+          </label>
+        </>
+      )}
 
       {state.error && (
         <p className="text-sm font-medium text-red-500">{state.error}</p>

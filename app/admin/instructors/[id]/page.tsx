@@ -15,13 +15,32 @@ export default async function Page({
   const supabase = createAdminClient();
   const { data: instructor } = await supabase
     .from("instructors")
-    .select("id, name, subject, photo_url, bio")
+    .select("id, name, subject, photo_url, bio, profile_id")
     .eq("id", id)
     .maybeSingle();
 
   if (!instructor) {
     notFound();
   }
+
+  const { data: allTeachers } = await supabase
+    .from("profiles")
+    .select("id, name, username")
+    .eq("role", "teacher")
+    .order("name", { ascending: true });
+
+  const { data: linkedInstructors } = await supabase
+    .from("instructors")
+    .select("profile_id")
+    .neq("id", id)
+    .not("profile_id", "is", null);
+
+  const linkedElsewhere = new Set(
+    (linkedInstructors ?? []).map((row) => row.profile_id),
+  );
+  const teachers = (allTeachers ?? []).filter(
+    (teacher) => !linkedElsewhere.has(teacher.id),
+  );
 
   return (
     <div className="flex flex-1 flex-col p-8">
@@ -36,7 +55,7 @@ export default async function Page({
       </h1>
 
       <div className="mt-6 max-w-lg">
-        <EditInstructorForm instructor={instructor} />
+        <EditInstructorForm instructor={instructor} teachers={teachers} />
       </div>
 
       <div className="mt-6 max-w-lg rounded-lg border border-red-200 bg-red-50 p-4">

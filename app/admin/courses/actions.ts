@@ -28,6 +28,21 @@ async function resolveInstructor(
   return data;
 }
 
+// 담당 선생님 계정은 강좌당 하나만 지원한다(현재 단계 범위) - 기존 배정을
+// 지우고 새로 고른 계정으로 다시 넣는 식으로 항상 최신 상태로 맞춘다.
+async function syncCourseTeacher(
+  supabase: ReturnType<typeof createAdminClient>,
+  courseId: string,
+  teacherProfileId: string,
+) {
+  await supabase.from("course_teachers").delete().eq("course_id", courseId);
+  if (teacherProfileId) {
+    await supabase
+      .from("course_teachers")
+      .insert({ course_id: courseId, profile_id: teacherProfileId });
+  }
+}
+
 function readListingFields(formData: FormData) {
   const level = String(formData.get("level") ?? "").trim();
   const tagline = String(formData.get("tagline") ?? "").trim();
@@ -53,6 +68,7 @@ export async function createCourse(
   await requireAdmin();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
+  const teacherProfileId = String(formData.get("teacherProfileId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
   const listingFields = readListingFields(formData);
@@ -70,19 +86,25 @@ export async function createCourse(
     return { error: err instanceof Error ? err.message : "강사 조회에 실패했습니다." };
   }
 
-  const { error } = await supabase.from("courses").insert({
-    subject: instructor.subject,
-    title,
-    teacher_name: instructor.name,
-    instructor_id: instructorId,
-    school: school || null,
-    overview: overview || null,
-    ...listingFields,
-  });
+  const { data: inserted, error } = await supabase
+    .from("courses")
+    .insert({
+      subject: instructor.subject,
+      title,
+      teacher_name: instructor.name,
+      instructor_id: instructorId,
+      school: school || null,
+      overview: overview || null,
+      ...listingFields,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    return { error: error.message };
+  if (error || !inserted) {
+    return { error: error?.message ?? "등록에 실패했습니다." };
   }
+
+  await syncCourseTeacher(supabase, inserted.id, teacherProfileId);
 
   revalidatePath("/admin/courses");
   revalidatePath("/courses/high");
@@ -98,6 +120,7 @@ export async function updateCourse(
   await requireAdmin();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
+  const teacherProfileId = String(formData.get("teacherProfileId") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const overview = String(formData.get("overview") ?? "").trim();
   const listingFields = readListingFields(formData);
@@ -131,6 +154,8 @@ export async function updateCourse(
   if (error) {
     return { error: error.message };
   }
+
+  await syncCourseTeacher(supabase, courseId, teacherProfileId);
 
   revalidatePath("/admin/courses");
   revalidatePath(`/admin/courses/${courseId}`);

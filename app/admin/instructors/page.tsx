@@ -9,8 +9,24 @@ export default async function Page() {
   const supabase = createAdminClient();
   const { data: instructors, error } = await supabase
     .from("instructors")
-    .select("id, name, subject, photo_url, bio, created_at")
+    .select("id, name, subject, photo_url, bio, profile_id, created_at")
     .order("created_at", { ascending: false });
+
+  const { data: teachers } = await supabase
+    .from("profiles")
+    .select("id, name, username")
+    .eq("role", "teacher")
+    .order("name", { ascending: true });
+
+  const linkedProfileIds = new Set(
+    (instructors ?? []).map((row) => row.profile_id).filter(Boolean),
+  );
+  const availableTeachers = (teachers ?? []).filter(
+    (teacher) => !linkedProfileIds.has(teacher.id),
+  );
+  const teacherNameById = new Map(
+    (teachers ?? []).map((teacher) => [teacher.id, teacher.name]),
+  );
 
   return (
     <div className="flex flex-1 flex-col p-8">
@@ -21,7 +37,7 @@ export default async function Page() {
       </p>
 
       <div className="mt-6">
-        <InstructorForm />
+        <InstructorForm teachers={availableTeachers} />
       </div>
 
       {error && (
@@ -38,6 +54,7 @@ export default async function Page() {
               <th className="px-4 py-3">이름</th>
               <th className="px-4 py-3">과목</th>
               <th className="px-4 py-3">소개</th>
+              <th className="px-4 py-3">연결 계정</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -64,6 +81,11 @@ export default async function Page() {
                 <td className="max-w-xs truncate px-4 py-3 text-zinc-500">
                   {row.bio ?? "-"}
                 </td>
+                <td className="px-4 py-3 text-zinc-500">
+                  {row.profile_id
+                    ? (teacherNameById.get(row.profile_id) ?? "-")
+                    : "-"}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Link
                     href={`/admin/instructors/${row.id}`}
@@ -76,7 +98,7 @@ export default async function Page() {
             ))}
             {instructors?.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-zinc-400">
                   등록된 강사가 없습니다.
                 </td>
               </tr>

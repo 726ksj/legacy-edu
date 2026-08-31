@@ -44,6 +44,7 @@ export async function createInstructor(
   const subject = String(formData.get("subject") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const photo = formData.get("photo");
+  const profileId = String(formData.get("profileId") ?? "").trim() || null;
 
   if (!name || !subject) {
     return { error: "강사 이름과 과목을 입력해주세요." };
@@ -65,10 +66,16 @@ export async function createInstructor(
     subject,
     photo_url: photoUrl,
     bio: bio || null,
+    profile_id: profileId,
   });
 
   if (error) {
-    return { error: error.message };
+    return {
+      error:
+        error.code === "23505"
+          ? "이미 다른 강사 카드와 연결된 계정입니다."
+          : error.message,
+    };
   }
 
   revalidatePath("/admin/instructors");
@@ -86,6 +93,7 @@ export async function updateInstructor(
   const subject = String(formData.get("subject") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const photo = formData.get("photo");
+  const profileId = String(formData.get("profileId") ?? "").trim() || null;
 
   if (!name || !subject) {
     return { error: "강사 이름과 과목을 입력해주세요." };
@@ -97,11 +105,13 @@ export async function updateInstructor(
     name: string;
     subject: string;
     bio: string | null;
+    profile_id: string | null;
     photo_url?: string;
   } = {
     name,
     subject,
     bio: bio || null,
+    profile_id: profileId,
   };
 
   if (photo instanceof File && photo.size > 0) {
@@ -118,7 +128,12 @@ export async function updateInstructor(
     .eq("id", id);
 
   if (error) {
-    return { error: error.message };
+    return {
+      error:
+        error.code === "23505"
+          ? "이미 다른 강사 카드와 연결된 계정입니다."
+          : error.message,
+    };
   }
 
   revalidatePath("/admin/instructors");

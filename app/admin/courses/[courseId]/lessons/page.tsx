@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncLessonStatuses } from "@/lib/mux";
 import UploadLessonForm from "./UploadLessonForm";
@@ -18,6 +19,10 @@ interface EnrolledProfileRow {
   profiles: AudienceStudent | null;
 }
 
+interface AssignedTeacherRow {
+  profiles: { name: string } | null;
+}
+
 export default async function Page({
   params,
 }: {
@@ -26,11 +31,18 @@ export default async function Page({
   const { courseId } = await params;
   const supabase = createAdminClient();
 
-  const { data: course } = await supabase
-    .from("courses")
-    .select("id, subject, title, teacher_name")
-    .eq("id", courseId)
-    .maybeSingle();
+  const [{ data: course }, { data: assignedTeachers }] = await Promise.all([
+    supabase
+      .from("courses")
+      .select("id, subject, title, teacher_name")
+      .eq("id", courseId)
+      .maybeSingle(),
+    supabase
+      .from("course_teachers")
+      .select("profiles(name)")
+      .eq("course_id", courseId)
+      .returns<AssignedTeacherRow[]>(),
+  ]);
 
   if (!course) {
     notFound();
@@ -81,6 +93,19 @@ export default async function Page({
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         {course.teacher_name} 선생님 강좌의 영상을 업로드하고 관리합니다.
+      </p>
+      <p className="mt-1 text-xs text-zinc-400">
+        배정된 선생님 계정:{" "}
+        {assignedTeachers && assignedTeachers.length > 0
+          ? assignedTeachers.map((row) => row.profiles?.name).filter(Boolean).join(", ")
+          : "없음"}
+        {" · "}
+        <Link
+          href={`/mypage/teaching/${courseId}`}
+          className="font-semibold text-brand-dark hover:underline"
+        >
+          강좌별 공지 관리 화면 열기
+        </Link>
       </p>
 
       <div className="mt-6">

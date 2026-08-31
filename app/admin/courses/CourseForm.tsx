@@ -14,6 +14,12 @@ interface Instructor {
   subject: string;
 }
 
+interface TeacherAccount {
+  id: string;
+  name: string;
+  username: string;
+}
+
 export interface EditingCourse {
   id: string;
   subject: string;
@@ -30,10 +36,14 @@ export interface EditingCourse {
 
 export default function CourseForm({
   instructors,
+  teachers,
   editingCourse,
+  editingTeacherProfileId,
 }: {
   instructors: Instructor[];
+  teachers: TeacherAccount[];
   editingCourse?: EditingCourse | null;
+  editingTeacherProfileId?: string | null;
 }) {
   const action = editingCourse
     ? updateCourse.bind(null, editingCourse.id)
@@ -171,6 +181,26 @@ export default function CourseForm({
           autoComplete="off"
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
+      </label>
+
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        담당 선생님 계정 (선택)
+        <select
+          name="teacherProfileId"
+          defaultValue={editingTeacherProfileId ?? ""}
+          className="max-w-xs rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        >
+          <option value="">배정 안 함</option>
+          {teachers.map((teacher) => (
+            <option key={teacher.id} value={teacher.id}>
+              {teacher.name} ({teacher.username})
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-zinc-400">
+          이 강좌의 영상 업로드/강좌별 공지 작성 권한을 가질 로그인 계정입니다.
+          위의 &quot;강사&quot;(소개 카드)와는 별개예요.
+        </span>
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">

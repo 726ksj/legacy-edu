@@ -1,14 +1,14 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
-import { createStudentCode, type CreateStudentCodeState } from "./actions";
+import { createMemberCode, type CreateMemberCodeState } from "./actions";
 import { generateStudentCode } from "@/lib/student-code";
 
-const initialState: CreateStudentCodeState = {};
+const initialState: CreateMemberCodeState = {};
 
-export default function StudentCodeForm() {
+export default function MemberCodeForm() {
   const [state, formAction, isPending] = useActionState(
-    createStudentCode,
+    createMemberCode,
     initialState,
   );
   const formRef = useRef<HTMLFormElement>(null);
@@ -27,7 +27,7 @@ export default function StudentCodeForm() {
       className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-white p-4"
     >
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        학생코드
+        회원코드
         <div className="flex gap-2">
           <input
             ref={codeInputRef}
@@ -50,9 +50,20 @@ export default function StudentCodeForm() {
         </div>
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        학생 이름
+        역할
+        <select
+          name="role"
+          defaultValue="student"
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        >
+          <option value="student">학생</option>
+          <option value="teacher">선생님</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        회원 이름
         <input
-          name="studentName"
+          name="memberName"
           placeholder="예: 박짱구"
           required
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"

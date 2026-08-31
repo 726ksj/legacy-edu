@@ -3,11 +3,13 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useActionState, useRef, useState } from "react";
-import { signup, type SignupState } from "./actions";
+import { signup, signupTeacher, type SignupState } from "./actions";
 import { PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
 import { formatPhoneInput } from "@/lib/phone";
 
 const initialState: SignupState = {};
+
+type Role = "student" | "teacher";
 
 declare global {
   interface Window {
@@ -20,7 +22,19 @@ declare global {
 }
 
 export default function SignupPage() {
-  const [state, formAction, isPending] = useActionState(signup, initialState);
+  const [role, setRole] = useState<Role>("student");
+  const [studentState, studentFormAction, studentPending] = useActionState(
+    signup,
+    initialState,
+  );
+  const [teacherState, teacherFormAction, teacherPending] = useActionState(
+    signupTeacher,
+    initialState,
+  );
+  const state = role === "student" ? studentState : teacherState;
+  const formAction = role === "student" ? studentFormAction : teacherFormAction;
+  const isPending = role === "student" ? studentPending : teacherPending;
+
   const [zonecode, setZonecode] = useState("");
   const [roadAddress, setRoadAddress] = useState("");
   const [detailAddress, setDetailAddress] = useState("");
@@ -75,8 +89,35 @@ export default function SignupPage() {
       <div>
         <h1 className="text-3xl font-bold text-zinc-900">회원가입</h1>
         <p className="mt-2 text-sm text-zinc-500">
-          학원에서 상담 후 받은 학생코드를 입력해야 가입할 수 있습니다.
+          {role === "student"
+            ? "학원에서 상담 후 받은 회원코드를 입력해야 가입할 수 있습니다."
+            : "관리자에게 받은 회원코드를 입력해야 가입할 수 있습니다."}
         </p>
+      </div>
+
+      <div className="inline-flex w-fit rounded-full border border-zinc-200 bg-zinc-50 p-0.5">
+        {(
+          [
+            { value: "student", label: "학생으로 가입" },
+            { value: "teacher", label: "선생님으로 가입" },
+          ] as const
+        ).map((option) => (
+          <label
+            key={option.value}
+            className="cursor-pointer"
+          >
+            <input
+              type="radio"
+              name="roleToggle"
+              checked={role === option.value}
+              onChange={() => setRole(option.value)}
+              className="peer sr-only"
+            />
+            <span className="block rounded-full px-4 py-1.5 text-sm font-semibold text-zinc-500 transition-colors peer-checked:bg-white peer-checked:text-brand-dark peer-checked:shadow-sm">
+              {option.label}
+            </span>
+          </label>
+        ))}
       </div>
 
       <Script
@@ -84,104 +125,120 @@ export default function SignupPage() {
         strategy="afterInteractive"
       />
 
-      <form action={formAction} className="flex flex-col gap-4">
-        <Field label="이름" name="name" />
+      <form
+        key={role}
+        action={formAction}
+        className="flex flex-col gap-4"
+      >
+        {role === "student" && (
+          <>
+            <Field label="이름" name="name" />
 
-        <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          주소
-          <div className="flex gap-2">
-            <input
-              value={zonecode}
-              readOnly
-              placeholder="우편번호"
-              className="w-24 rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none"
-            />
-            <button
-              type="button"
-              onClick={openAddressSearch}
-              className="shrink-0 rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
-            >
-              주소 검색
-            </button>
-          </div>
-          <input
-            value={roadAddress}
-            readOnly
-            placeholder="주소 검색을 눌러주세요"
-            className="rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none"
-          />
-          <input
-            value={detailAddress}
-            onChange={(e) => setDetailAddress(e.target.value)}
-            placeholder="상세주소 (동/호수 등)"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-          />
-          <input type="hidden" name="address" value={fullAddress} />
-        </div>
-
-        {searchOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-            onClick={() => setSearchOpen(false)}
-          >
-            <div
-              className="w-full max-w-sm rounded-lg bg-white p-4 text-left shadow-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-sm font-bold text-zinc-900">주소 검색</p>
+            <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+              주소
+              <div className="flex gap-2">
+                <input
+                  value={zonecode}
+                  readOnly
+                  placeholder="우편번호"
+                  className="w-24 rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none"
+                />
                 <button
                   type="button"
-                  onClick={() => setSearchOpen(false)}
-                  className="text-xs text-zinc-400 hover:text-zinc-600"
+                  onClick={openAddressSearch}
+                  className="shrink-0 rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
                 >
-                  닫기
+                  주소 검색
                 </button>
               </div>
-              <div ref={mountPostcode} className="h-96 w-full" />
+              <input
+                value={roadAddress}
+                readOnly
+                placeholder="주소 검색을 눌러주세요"
+                className="rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none"
+              />
+              <input
+                value={detailAddress}
+                onChange={(e) => setDetailAddress(e.target.value)}
+                placeholder="상세주소 (동/호수 등)"
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+              />
+              <input type="hidden" name="address" value={fullAddress} />
             </div>
-          </div>
+
+            {searchOpen && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+                onClick={() => setSearchOpen(false)}
+              >
+                <div
+                  className="w-full max-w-sm rounded-lg bg-white p-4 text-left shadow-lg"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-sm font-bold text-zinc-900">
+                      주소 검색
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setSearchOpen(false)}
+                      className="text-xs text-zinc-400 hover:text-zinc-600"
+                    >
+                      닫기
+                    </button>
+                  </div>
+                  <div ref={mountPostcode} className="h-96 w-full" />
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         <Field
-          label="본인 전화번호"
+          label="전화번호"
           name="phone"
           type="tel"
           placeholder="010-0000-0000"
           value={phone}
           onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
         />
-        <Field
-          label="보호자 전화번호"
-          name="guardianPhone"
-          type="tel"
-          placeholder="010-0000-0000"
-          value={guardianPhone}
-          onChange={(e) => setGuardianPhone(formatPhoneInput(e.target.value))}
-        />
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <Field label="학교" name="school" placeholder="예: 분당고등학교" />
-          </div>
-          <div className="w-24">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              학년
-              <select
-                name="grade"
-                required
-                defaultValue=""
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-              >
-                <option value="" disabled>
-                  선택
-                </option>
-                <option value="고1">고1</option>
-                <option value="고2">고2</option>
-                <option value="고3">고3</option>
-              </select>
-            </label>
-          </div>
-        </div>
+
+        {role === "student" && (
+          <>
+            <Field
+              label="보호자 전화번호"
+              name="guardianPhone"
+              type="tel"
+              placeholder="010-0000-0000"
+              value={guardianPhone}
+              onChange={(e) => setGuardianPhone(formatPhoneInput(e.target.value))}
+            />
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <Field label="학교" name="school" placeholder="예: 분당고등학교" />
+              </div>
+              <div className="w-24">
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+                  학년
+                  <select
+                    name="grade"
+                    required
+                    defaultValue=""
+                    className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+                  >
+                    <option value="" disabled>
+                      선택
+                    </option>
+                    <option value="고1">고1</option>
+                    <option value="고2">고2</option>
+                    <option value="고3">고3</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </>
+        )}
+
         <Field label="아이디" name="username" />
         <Field
           label="비밀번호"
@@ -206,9 +263,13 @@ export default function SignupPage() {
           )}
         </div>
         <Field
-          label="학생코드"
-          name="studentCode"
-          placeholder="학원에서 받은 코드를 입력하세요"
+          label="회원코드"
+          name="memberCode"
+          placeholder={
+            role === "student"
+              ? "학원에서 받은 코드를 입력하세요"
+              : "관리자에게 받은 코드를 입력하세요"
+          }
         />
 
         {state.error && (

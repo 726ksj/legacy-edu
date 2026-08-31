@@ -17,6 +17,7 @@ function readNoticeFields(formData: FormData) {
   const category = String(formData.get("category") ?? "공지").trim();
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
+  const visibility = String(formData.get("visibility") ?? "members").trim();
 
   if (!title || !content) {
     return { error: "제목과 내용을 입력해주세요." } as const;
@@ -24,8 +25,11 @@ function readNoticeFields(formData: FormData) {
   if (category !== "공지" && category !== "이벤트") {
     return { error: "구분을 다시 선택해주세요." } as const;
   }
+  if (visibility !== "public" && visibility !== "members") {
+    return { error: "공개 범위를 다시 선택해주세요." } as const;
+  }
 
-  return { fields: { category, title, content } } as const;
+  return { fields: { category, title, content, visibility } } as const;
 }
 
 function revalidateNoticePaths(id?: string) {

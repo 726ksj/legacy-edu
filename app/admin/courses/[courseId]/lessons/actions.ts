@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireAdmin } from "@/lib/supabase/server";
+import { requireCourseManager } from "@/lib/teachers";
 import { createMuxClient, pollUploadForAssetId } from "@/lib/mux";
 import { compareLessonTitles } from "@/lib/lessonOrdering";
 import type { LessonVisibility } from "@/lib/enrollments";
@@ -12,7 +12,7 @@ export async function createDirectUpload(
 ): Promise<
   { uploadUrl: string; uploadId: string } | { error: string }
 > {
-  await requireAdmin();
+  await requireCourseManager(courseId);
   const mux = createMuxClient();
   try {
     const upload = await mux.video.uploads.create({
@@ -35,7 +35,7 @@ export async function saveLesson(
   visibility: LessonVisibility,
   profileIds: string[],
 ): Promise<{ error?: string }> {
-  await requireAdmin();
+  await requireCourseManager(courseId);
   const mux = createMuxClient();
   let upload;
   try {
@@ -105,6 +105,7 @@ export async function saveLesson(
   );
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/mypage/teaching/${courseId}`);
   revalidatePath(`/my-classroom/${courseId}`);
   return {};
 }
@@ -120,7 +121,7 @@ export async function updateLessonInfo(
   _prevState: UpdateLessonInfoState,
   formData: FormData,
 ): Promise<UpdateLessonInfoState> {
-  await requireAdmin();
+  await requireCourseManager(courseId);
   const title = String(formData.get("title") ?? "").trim();
   const orderNoRaw = String(formData.get("orderNo") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -162,12 +163,13 @@ export async function updateLessonInfo(
   }
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/mypage/teaching/${courseId}`);
   revalidatePath(`/my-classroom/${courseId}`);
   return { success: true };
 }
 
 export async function deleteLesson(lessonId: string, courseId: string) {
-  await requireAdmin();
+  await requireCourseManager(courseId);
   const supabase = createAdminClient();
   const { data: lesson } = await supabase
     .from("lessons")
@@ -186,4 +188,5 @@ export async function deleteLesson(lessonId: string, courseId: string) {
 
   await supabase.from("lessons").delete().eq("id", lessonId);
   revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/mypage/teaching/${courseId}`);
 }

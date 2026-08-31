@@ -6,7 +6,7 @@ import { logout } from "@/lib/supabase/auth-actions";
 export const dynamic = "force-dynamic";
 
 const MYPAGE_LINKS = [
-  { label: "나의 강좌", href: "/my-classroom" },
+  { label: "나의 강의실", href: "/my-classroom" },
   { label: "나의 메모", href: "/mypage/notes" },
   { label: "장바구니", href: "/mypage/cart" },
   { label: "주문내역", href: "/mypage/orders" },

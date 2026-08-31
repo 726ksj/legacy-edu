@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/formatDateTime";
 import { syncLessonStatuses } from "@/lib/mux";
 import {
   isEnrolled,
@@ -33,6 +34,13 @@ interface Lesson {
   visibility: LessonVisibility;
 }
 
+interface CourseNotice {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+}
+
 export default async function CourseClassroomPage({
   params,
 }: {
@@ -46,26 +54,33 @@ export default async function CourseClassroomPage({
     redirect("/login");
   }
 
-  // 셋 다 courseId만 있으면 되고 서로 의존하지 않으니 병렬로 요청한다.
-  const [enrolled, { data: course }, { data: allLessons }] = await Promise.all([
-    isEnrolled(supabase, user.id, courseId),
-    supabase
-      .from("courses")
-      .select(
-        "id, subject, title, overview, instructors(name, photo_url, bio)",
-      )
-      .eq("id", courseId)
-      .maybeSingle()
-      .returns<Course>(),
-    supabase
-      .from("lessons")
-      .select(
-        "id, order_no, title, description, status, mux_asset_id, visibility",
-      )
-      .eq("course_id", courseId)
-      .order("order_no", { ascending: true })
-      .returns<Lesson[]>(),
-  ]);
+  // 넷 다 courseId만 있으면 되고 서로 의존하지 않으니 병렬로 요청한다.
+  const [enrolled, { data: course }, { data: allLessons }, { data: courseNotices }] =
+    await Promise.all([
+      isEnrolled(supabase, user.id, courseId),
+      supabase
+        .from("courses")
+        .select(
+          "id, subject, title, overview, instructors(name, photo_url, bio)",
+        )
+        .eq("id", courseId)
+        .maybeSingle()
+        .returns<Course>(),
+      supabase
+        .from("lessons")
+        .select(
+          "id, order_no, title, description, status, mux_asset_id, visibility",
+        )
+        .eq("course_id", courseId)
+        .order("order_no", { ascending: true })
+        .returns<Lesson[]>(),
+      supabase
+        .from("course_notices")
+        .select("id, title, content, created_at")
+        .eq("course_id", courseId)
+        .order("created_at", { ascending: false })
+        .returns<CourseNotice[]>(),
+    ]);
 
   if (!enrolled) {
     notFound();
@@ -150,6 +165,30 @@ export default async function CourseClassroomPage({
           </ul>
         </div>
       </div>
+
+      {courseNotices && courseNotices.length > 0 && (
+        <div>
+          <h2 className="text-lg font-bold text-zinc-900">공지</h2>
+          <ul className="mt-3 flex flex-col gap-3">
+            {courseNotices.map((notice) => (
+              <li
+                key={notice.id}
+                className="rounded-lg border border-zinc-200 bg-white p-6"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-semibold text-zinc-900">{notice.title}</p>
+                  <span className="shrink-0 text-xs text-zinc-400">
+                    {formatDate(notice.created_at)}
+                  </span>
+                </div>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-600">
+                  {notice.content}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {instructor && (
         <div>

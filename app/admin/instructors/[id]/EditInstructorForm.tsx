@@ -13,12 +13,21 @@ interface InstructorData {
   subject: string;
   photo_url: string | null;
   bio: string | null;
+  profile_id: string | null;
+}
+
+interface TeacherAccount {
+  id: string;
+  name: string;
+  username: string;
 }
 
 export default function EditInstructorForm({
   instructor,
+  teachers,
 }: {
   instructor: InstructorData;
+  teachers: TeacherAccount[];
 }) {
   const boundUpdateInstructor = updateInstructor.bind(null, instructor.id);
   const [state, formAction, isPending] = useActionState(
@@ -88,6 +97,24 @@ export default function EditInstructorForm({
           rows={4}
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        연결된 선생님 계정 (선택)
+        <select
+          name="profileId"
+          defaultValue={instructor.profile_id ?? ""}
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        >
+          <option value="">연결 안 함</option>
+          {teachers.map((teacher) => (
+            <option key={teacher.id} value={teacher.id}>
+              {teacher.name} ({teacher.username})
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-zinc-400">
+          연결하면 회원코드 관리에서 이 계정을 삭제할 때 강사 카드도 함께 삭제됩니다.
+        </span>
       </label>
 
       {state.error && (

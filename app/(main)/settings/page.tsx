@@ -17,7 +17,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "username, name, phone, guardian_phone, address, school, grade, student_code_id",
+      "username, name, phone, guardian_phone, address, school, grade, member_code_id, role",
     )
     .eq("id", user.id)
     .single();
@@ -26,15 +26,15 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  // student_codes는 RLS에 select 정책이 없어 서비스롤로만 조회할 수 있다
+  // member_codes는 RLS에 select 정책이 없어 서비스롤로만 조회할 수 있다
   // (다른 관리자 전용 테이블들과 동일한 패턴).
   let memberCode: string | null = null;
-  if (profile.student_code_id) {
+  if (profile.member_code_id) {
     const adminSupabase = createAdminClient();
     const { data: codeRow } = await adminSupabase
-      .from("student_codes")
+      .from("member_codes")
       .select("code")
-      .eq("id", profile.student_code_id)
+      .eq("id", profile.member_code_id)
       .maybeSingle();
     memberCode = codeRow?.code ?? null;
   }

@@ -17,6 +17,7 @@ interface NoticeData {
   category: string;
   title: string;
   content: string;
+  visibility: string;
 }
 
 interface AttachmentData {
@@ -73,6 +74,17 @@ export default function EditNoticeForm({
           />
         </label>
       </div>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        공개 범위
+        <select
+          name="visibility"
+          defaultValue={notice.visibility}
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        >
+          <option value="members">회원공개 (로그인해야 볼 수 있음)</option>
+          <option value="public">전체공개 (비회원도 볼 수 있음)</option>
+        </select>
+      </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         내용
         <textarea
