@@ -121,7 +121,7 @@ export default function CurriculumSection({
           LEGACY ACADEMIC SYSTEM
         </span>
         <h2 className="mt-1 text-2xl font-bold text-zinc-900 sm:text-3xl lg:text-4xl">
-          영어 커리큘럼
+          레가시 아카데미 시스템
         </h2>
         <p className="mt-3 max-w-2xl whitespace-pre-line text-sm text-zinc-500 sm:text-base">
           {intro}

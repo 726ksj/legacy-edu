@@ -66,7 +66,7 @@ export default function SiteContentForm({
 
       <div className="flex flex-col gap-4 border-t border-zinc-100 pt-6">
         <p className="text-sm font-semibold text-zinc-900">
-          영어 커리큘럼 (LEGACY ACADEMIC SYSTEM)
+          레가시 아카데미 시스템 (LEGACY ACADEMIC SYSTEM)
         </p>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           소개 문구

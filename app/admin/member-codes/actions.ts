@@ -21,7 +21,7 @@ export async function createMemberCode(
   if (!code || !memberName) {
     return { error: "코드와 회원 이름을 입력해주세요." };
   }
-  if (role !== "student" && role !== "teacher") {
+  if (role !== "student" && role !== "teacher" && role !== "assistant") {
     return { error: "역할을 다시 선택해주세요." };
   }
 

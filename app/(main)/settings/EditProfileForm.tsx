@@ -32,7 +32,7 @@ export default function EditProfileForm({
   const [guardianPhone, setGuardianPhone] = useState(
     formatPhoneInput(profile.guardian_phone),
   );
-  const isTeacher = profile.role === "teacher";
+  const isStaff = profile.role !== "student";
 
   return (
     <form
@@ -75,7 +75,7 @@ export default function EditProfileForm({
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>
-      {!isTeacher && (
+      {!isStaff && (
         <>
           <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
             보호자 전화번호

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
-import { isTeacherAccount } from "@/lib/teachers";
+import { getMemberRole } from "@/lib/teachers";
 import MobileNav from "./MobileNav";
 import EnrollmentButton from "./EnrollmentButton";
 
@@ -80,10 +80,11 @@ export default async function Header() {
   ]);
 
   const admin = isAdmin(user);
-  // 선생님 여부는 profiles.role 조회가 필요해서(JWT만으로는 알 수 없음),
-  // 관리자가 아닌 로그인 사용자에 한해서만 확인한다.
-  const teacher =
-    Boolean(user) && !admin ? await isTeacherAccount(user!.id) : false;
+  // 선생님/조교 여부는 profiles.role 조회가 필요해서(JWT만으로는 알 수
+  // 없음), 관리자가 아닌 로그인 사용자에 한해서만 확인한다.
+  const role = Boolean(user) && !admin ? await getMemberRole(user!.id) : null;
+  const teacher = role === "teacher";
+  const assistant = role === "assistant";
 
   const navItems: NavItem[] = [
     ...NAV_ITEMS.map((item) =>
@@ -95,11 +96,12 @@ export default async function Header() {
           // 관리자 페이지로 바로 돌아가는 링크만 보여준다.
           { label: "관리자 페이지", href: "/admin" },
         ]
-      : teacher
+      : teacher || assistant
         ? [
-            // 선생님 계정은 학생용 마이페이지 하위 메뉴(나의 강의실/장바구니
-            // 등)가 다 의미 없으니, 여기엔 회원정보 수정만 두고 강좌 관리는
-            // 우측 상단 "강좌 관리" 버튼으로 이미 갈 수 있어 중복으로 안 둔다.
+            // 선생님/조교 계정은 학생용 마이페이지 하위 메뉴(나의 강의실/
+            // 장바구니 등)가 다 의미 없으니, 여기엔 회원정보 수정만 둔다.
+            // (선생님은 강좌 관리를 우측 상단 버튼으로 이미 갈 수 있어
+            // 중복으로 안 둔다. 조교는 아직 전용 화면이 없다.)
             { label: "회원정보 관리", href: "/settings" },
           ]
         : [
@@ -124,17 +126,17 @@ export default async function Header() {
       <div className="relative flex h-14 w-full items-center justify-between px-4 sm:px-8 md:h-16 md:justify-end lg:px-12">
         <Link
           href="/"
-          className="flex min-w-0 shrink items-center gap-1.5 text-base sm:text-lg md:absolute md:left-1/2 md:top-1/2 md:shrink-0 md:-translate-x-1/2 md:-translate-y-1/2 md:gap-2.5 md:text-xl lg:text-2xl"
+          className="flex min-w-0 shrink items-baseline text-base sm:text-lg md:absolute md:left-1/2 md:top-1/2 md:shrink-0 md:-translate-x-1/2 md:-translate-y-1/2 md:text-xl lg:text-2xl"
         >
           <Image
             src="/logo.png"
             alt="LEGACY EDU"
             width={324}
             height={251}
-            className="h-[1em] w-auto shrink-0"
+            className="h-[0.727em] w-auto shrink-0"
           />
           <span className="truncate text-[1em] font-bold tracking-tight text-brand-dark">
-            LEGACY EDU
+            EGACY EDU
           </span>
         </Link>
 
@@ -148,7 +150,7 @@ export default async function Header() {
                 >
                   강좌 관리
                 </Link>
-              ) : (
+              ) : assistant ? null : (
                 <EnrollmentButton />
               )}
               <form action={logout}>

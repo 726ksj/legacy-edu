@@ -58,6 +58,7 @@ export default function MemberCodeForm() {
         >
           <option value="student">학생</option>
           <option value="teacher">선생님</option>
+          <option value="assistant">조교</option>
         </select>
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">

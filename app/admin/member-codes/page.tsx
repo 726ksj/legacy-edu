@@ -8,6 +8,13 @@ export const dynamic = "force-dynamic";
 const ROLE_LABEL: Record<string, string> = {
   student: "학생",
   teacher: "선생님",
+  assistant: "조교",
+};
+
+const ROLE_BADGE_CLASS: Record<string, string> = {
+  teacher: "rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent-dark",
+  assistant: "rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700",
+  student: "rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600",
 };
 
 export default async function Page() {
@@ -21,7 +28,7 @@ export default async function Page() {
     <div className="flex flex-1 flex-col p-8">
       <h1 className="text-2xl font-bold text-zinc-900">회원코드 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        회원가입에 사용되는 코드를 발급/관리합니다. 역할(학생/선생님)에
+        회원가입에 사용되는 코드를 발급/관리합니다. 역할(학생/선생님/조교)에
         따라 가입 화면에서 요구하는 정보가 달라집니다. 선생님으로 가입한
         계정의 담당 강좌는 강좌 관리에서 배정합니다.
       </p>
@@ -59,9 +66,7 @@ export default async function Page() {
                 <td className="px-4 py-3">
                   <span
                     className={
-                      row.role === "teacher"
-                        ? "rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent-dark"
-                        : "rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600"
+                      ROLE_BADGE_CLASS[row.role] ?? ROLE_BADGE_CLASS.student
                     }
                   >
                     {ROLE_LABEL[row.role] ?? row.role}

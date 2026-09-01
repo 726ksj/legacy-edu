@@ -3,13 +3,18 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useActionState, useRef, useState } from "react";
-import { signup, signupTeacher, type SignupState } from "./actions";
+import {
+  signup,
+  signupTeacher,
+  signupAssistant,
+  type SignupState,
+} from "./actions";
 import { PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
 import { formatPhoneInput } from "@/lib/phone";
 
 const initialState: SignupState = {};
 
-type Role = "student" | "teacher";
+type Role = "student" | "teacher" | "assistant";
 
 declare global {
   interface Window {
@@ -31,9 +36,30 @@ export default function SignupPage() {
     signupTeacher,
     initialState,
   );
-  const state = role === "student" ? studentState : teacherState;
-  const formAction = role === "student" ? studentFormAction : teacherFormAction;
-  const isPending = role === "student" ? studentPending : teacherPending;
+  const [assistantState, assistantFormAction, assistantPending] =
+    useActionState(signupAssistant, initialState);
+
+  const STAFF_ACTION: Record<"teacher" | "assistant", {
+    state: SignupState;
+    formAction: (formData: FormData) => void;
+    isPending: boolean;
+  }> = {
+    teacher: {
+      state: teacherState,
+      formAction: teacherFormAction,
+      isPending: teacherPending,
+    },
+    assistant: {
+      state: assistantState,
+      formAction: assistantFormAction,
+      isPending: assistantPending,
+    },
+  };
+
+  const { state, formAction, isPending } =
+    role === "student"
+      ? { state: studentState, formAction: studentFormAction, isPending: studentPending }
+      : STAFF_ACTION[role];
 
   const [zonecode, setZonecode] = useState("");
   const [roadAddress, setRoadAddress] = useState("");
@@ -100,6 +126,7 @@ export default function SignupPage() {
           [
             { value: "student", label: "학생으로 가입" },
             { value: "teacher", label: "선생님으로 가입" },
+            { value: "assistant", label: "조교로 가입" },
           ] as const
         ).map((option) => (
           <label
@@ -238,6 +265,13 @@ export default function SignupPage() {
             </div>
           </>
         )}
+
+        <Field
+          label="이메일"
+          name="email"
+          type="email"
+          placeholder="example@naver.com"
+        />
 
         <Field label="아이디" name="username" />
         <Field

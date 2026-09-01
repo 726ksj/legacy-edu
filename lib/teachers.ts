@@ -26,14 +26,16 @@ export async function getTeacherCourseIds(
   return (data ?? []).map((row) => row.course_id as string);
 }
 
-export async function isTeacherAccount(profileId: string): Promise<boolean> {
+export async function getMemberRole(
+  profileId: string,
+): Promise<"student" | "teacher" | "assistant" | null> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", profileId)
     .maybeSingle();
-  return data?.role === "teacher";
+  return (data?.role as "student" | "teacher" | "assistant" | undefined) ?? null;
 }
 
 // 강좌 관리 권한(영상 업로드, 강좌별 공지 작성)을 확인한다. 관리자는 모든

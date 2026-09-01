@@ -38,14 +38,14 @@ export async function updateProfile(
     .eq("id", user.id)
     .maybeSingle();
 
-  // 선생님 계정은 보호자연락처/주소/학교/학년 화면 자체가 없으니, 폼에서
-  // 안 보내온 값을 그대로 덮어써서 비워버리면 안 된다 - 학생 계정일
-  // 때만 이 필드들을 같이 갱신한다.
-  const isTeacher = existingProfile?.role === "teacher";
+  // 선생님/조교 계정은 보호자연락처/주소/학교/학년 화면 자체가 없으니,
+  // 폼에서 안 보내온 값을 그대로 덮어써서 비워버리면 안 된다 - 학생
+  // 계정일 때만 이 필드들을 같이 갱신한다.
+  const isStaff = existingProfile?.role !== "student";
 
   const update: Record<string, unknown> = { name, phone };
 
-  if (!isTeacher) {
+  if (!isStaff) {
     const guardianPhone = String(formData.get("guardianPhone") ?? "").trim();
     const address = String(formData.get("address") ?? "").trim();
     const school = String(formData.get("school") ?? "").trim();

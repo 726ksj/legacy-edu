@@ -21,7 +21,7 @@ export default async function Page() {
     <div className="flex flex-1 flex-col p-8">
       <h1 className="text-2xl font-bold text-zinc-900">홈/소개 문구 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        홈 화면 히어로 문구, LEGACY 소개 페이지 본문, 영어 커리큘럼 문구,
+        홈 화면 히어로 문구, LEGACY 소개 페이지 본문, 레가시 아카데미 시스템 문구,
         하단 푸터의 사업자 정보를 수정하는 페이지입니다.
       </p>
 
