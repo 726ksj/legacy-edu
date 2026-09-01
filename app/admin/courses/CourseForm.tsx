@@ -37,13 +37,17 @@ export interface EditingCourse {
 export default function CourseForm({
   instructors,
   teachers,
+  assistants,
   editingCourse,
   editingTeacherProfileId,
+  editingAssistantProfileId,
 }: {
   instructors: Instructor[];
   teachers: TeacherAccount[];
+  assistants: TeacherAccount[];
   editingCourse?: EditingCourse | null;
   editingTeacherProfileId?: string | null;
+  editingAssistantProfileId?: string | null;
 }) {
   const action = editingCourse
     ? updateCourse.bind(null, editingCourse.id)
@@ -200,6 +204,25 @@ export default function CourseForm({
         <span className="text-xs text-zinc-400">
           이 강좌의 영상 업로드/강좌별 공지 작성 권한을 가질 로그인 계정입니다.
           위의 &quot;강사&quot;(소개 카드)와는 별개예요.
+        </span>
+      </label>
+
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        담당 조교 계정 (선택)
+        <select
+          name="assistantProfileId"
+          defaultValue={editingAssistantProfileId ?? ""}
+          className="max-w-xs rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        >
+          <option value="">배정 안 함</option>
+          {assistants.map((assistant) => (
+            <option key={assistant.id} value={assistant.id}>
+              {assistant.name} ({assistant.username})
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-zinc-400">
+          이 강좌 수강생의 성적 관리 권한을 가질 로그인 계정입니다.
         </span>
       </label>
 

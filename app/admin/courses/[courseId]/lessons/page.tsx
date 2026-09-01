@@ -41,6 +41,7 @@ export default async function Page({
       .from("course_teachers")
       .select("profiles(name)")
       .eq("course_id", courseId)
+      .eq("role", "teacher")
       .returns<AssignedTeacherRow[]>(),
   ]);
 

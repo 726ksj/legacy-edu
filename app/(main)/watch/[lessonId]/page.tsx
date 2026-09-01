@@ -125,6 +125,24 @@ export default async function WatchPage({
     createdAt: formatDateTime(note.created_at),
   }));
 
+  const { data: progressRows } = upNext.length
+    ? await supabase
+        .from("lesson_progress")
+        .select("lesson_id, percent, completed_at")
+        .eq("profile_id", user.id)
+        .in(
+          "lesson_id",
+          upNext.map((sibling) => sibling.id),
+        )
+    : { data: [] };
+
+  const progressByLessonId = new Map(
+    (progressRows ?? []).map((row) => [
+      row.lesson_id as string,
+      { percent: row.percent as number, completed: Boolean(row.completed_at) },
+    ]),
+  );
+
   const currentIndex = upNext.findIndex((sibling) => sibling.id === lesson.id);
   const prevLesson =
     currentIndex > 0 ? upNext[currentIndex - 1] : undefined;
@@ -154,6 +172,7 @@ export default async function WatchPage({
             token={await signPlaybackToken(lesson.mux_playback_id)}
             title={lesson.title}
             poster={posterUrl}
+            lessonId={lesson.id}
             prevLessonHref={prevLesson ? `/watch/${prevLesson.id}` : undefined}
             nextLessonHref={nextLesson ? `/watch/${nextLesson.id}` : undefined}
           />
@@ -192,7 +211,7 @@ export default async function WatchPage({
                     />
                   )}
                 </div>
-                <div className="flex min-w-0 flex-col justify-center">
+                <div className="flex min-w-0 flex-col justify-center gap-1">
                   <span
                     className={`line-clamp-2 text-sm ${
                       sibling.id === lesson.id
@@ -202,6 +221,25 @@ export default async function WatchPage({
                   >
                     {sibling.title}
                   </span>
+                  {(() => {
+                    const progress = progressByLessonId.get(sibling.id);
+                    if (!progress) return null;
+                    return (
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-1 w-16 overflow-hidden rounded-full bg-zinc-200">
+                          <span
+                            className={`block h-full rounded-full ${
+                              progress.completed ? "bg-brand" : "bg-zinc-400"
+                            }`}
+                            style={{ width: `${progress.percent}%` }}
+                          />
+                        </span>
+                        <span className="text-[11px] text-zinc-400">
+                          {progress.completed ? "완료" : `${progress.percent}%`}
+                        </span>
+                      </span>
+                    );
+                  })()}
                 </div>
               </Link>
             </li>

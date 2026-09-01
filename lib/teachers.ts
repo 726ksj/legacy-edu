@@ -11,6 +11,23 @@ export async function isAssignedTeacher(
     .select("id")
     .eq("course_id", courseId)
     .eq("profile_id", profileId)
+    .eq("role", "teacher")
+    .maybeSingle();
+  return Boolean(data);
+}
+
+// 성적 관리는 그 강좌에 배정된 선생님/조교 둘 다에게 열어준다 - 영상/공지
+// 권한(isAssignedTeacher)과 달리 role을 가리지 않는다.
+export async function isAssignedStaff(
+  courseId: string,
+  profileId: string,
+): Promise<boolean> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("course_teachers")
+    .select("id")
+    .eq("course_id", courseId)
+    .eq("profile_id", profileId)
     .maybeSingle();
   return Boolean(data);
 }
@@ -18,6 +35,16 @@ export async function isAssignedTeacher(
 export async function getTeacherCourseIds(
   profileId: string,
 ): Promise<string[]> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("course_teachers")
+    .select("course_id")
+    .eq("profile_id", profileId)
+    .eq("role", "teacher");
+  return (data ?? []).map((row) => row.course_id as string);
+}
+
+export async function getStaffCourseIds(profileId: string): Promise<string[]> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("course_teachers")
@@ -55,4 +82,20 @@ export async function requireCourseManager(courseId: string) {
     return user;
   }
   throw new Error("이 강좌를 관리할 권한이 없습니다.");
+}
+
+// 성적 관리 권한 확인. requireCourseManager와 같은 구조지만 조교도
+// 통과시킨다(isAssignedStaff는 role을 안 가림).
+export async function requireCourseGradeManager(courseId: string) {
+  const user = await getAuthUser();
+  if (!user) {
+    throw new Error("로그인이 필요합니다.");
+  }
+  if (isAdmin(user)) {
+    return user;
+  }
+  if (await isAssignedStaff(courseId, user.id)) {
+    return user;
+  }
+  throw new Error("이 강좌의 성적을 관리할 권한이 없습니다.");
 }

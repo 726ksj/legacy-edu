@@ -29,6 +29,12 @@ export default async function Page({
     .eq("role", "teacher")
     .order("name", { ascending: true });
 
+  const { data: assistants } = await supabase
+    .from("profiles")
+    .select("id, name, username")
+    .eq("role", "assistant")
+    .order("name", { ascending: true });
+
   const { data: editingCourse } = edit
     ? await supabase
         .from("courses")
@@ -39,13 +45,19 @@ export default async function Page({
         .maybeSingle()
     : { data: null };
 
-  const { data: currentAssignment } = edit
+  const { data: currentAssignments } = edit
     ? await supabase
         .from("course_teachers")
-        .select("profile_id")
+        .select("profile_id, role")
         .eq("course_id", edit)
-        .maybeSingle()
     : { data: null };
+
+  const currentTeacherProfileId =
+    currentAssignments?.find((row) => row.role === "teacher")?.profile_id ??
+    null;
+  const currentAssistantProfileId =
+    currentAssignments?.find((row) => row.role === "assistant")?.profile_id ??
+    null;
 
   return (
     <div className="flex flex-1 flex-col p-8">
@@ -59,8 +71,10 @@ export default async function Page({
           key={editingCourse?.id ?? "new"}
           instructors={instructors ?? []}
           teachers={teachers ?? []}
+          assistants={assistants ?? []}
           editingCourse={editingCourse}
-          editingTeacherProfileId={currentAssignment?.profile_id ?? null}
+          editingTeacherProfileId={currentTeacherProfileId}
+          editingAssistantProfileId={currentAssistantProfileId}
         />
       </div>
 

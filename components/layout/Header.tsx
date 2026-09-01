@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
@@ -99,9 +98,10 @@ export default async function Header() {
       : teacher || assistant
         ? [
             // 선생님/조교 계정은 학생용 마이페이지 하위 메뉴(나의 강의실/
-            // 장바구니 등)가 다 의미 없으니, 여기엔 회원정보 수정만 둔다.
-            // (선생님은 강좌 관리를 우측 상단 버튼으로 이미 갈 수 있어
-            // 중복으로 안 둔다. 조교는 아직 전용 화면이 없다.)
+            // 장바구니 등)가 다 의미 없으니, 여기엔 성적 관리 + 회원정보
+            // 수정만 둔다. (선생님의 강의/공지 관리는 우측 상단 "강좌
+            // 관리" 버튼으로 이미 갈 수 있어 중복으로 안 둔다.)
+            { label: "성적 관리", href: "/mypage/grading" },
             { label: "회원정보 관리", href: "/settings" },
           ]
         : [
@@ -128,15 +128,8 @@ export default async function Header() {
           href="/"
           className="flex min-w-0 shrink items-baseline text-base sm:text-lg md:absolute md:left-1/2 md:top-1/2 md:shrink-0 md:-translate-x-1/2 md:-translate-y-1/2 md:text-xl lg:text-2xl"
         >
-          <Image
-            src="/logo.png"
-            alt="LEGACY EDU"
-            width={324}
-            height={251}
-            className="h-[0.727em] w-auto shrink-0"
-          />
           <span className="truncate text-[1em] font-bold tracking-tight text-brand-dark">
-            EGACY EDU
+            LEGACY EDU
           </span>
         </Link>
 

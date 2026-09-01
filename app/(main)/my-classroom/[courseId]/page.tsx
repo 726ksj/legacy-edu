@@ -102,6 +102,27 @@ export default async function CourseClassroomPage({
     readyLessons,
   );
 
+  const { data: progressRows } = lessons.length
+    ? await supabase
+        .from("lesson_progress")
+        .select("lesson_id, percent, completed_at")
+        .eq("profile_id", user.id)
+        .in(
+          "lesson_id",
+          lessons.map((lesson) => lesson.id),
+        )
+    : { data: [] };
+
+  const progressByLessonId = new Map(
+    (progressRows ?? []).map((row) => [
+      row.lesson_id as string,
+      { percent: row.percent as number, completed: Boolean(row.completed_at) },
+    ]),
+  );
+  const completedCount = Array.from(progressByLessonId.values()).filter(
+    (p) => p.completed,
+  ).length;
+
   const instructor = course.instructors;
 
   return (
@@ -131,7 +152,7 @@ export default async function CourseClassroomPage({
           <h2 className="text-lg font-bold text-zinc-900">커리큘럼</h2>
           {lessons && lessons.length > 0 && (
             <span className="text-xs text-zinc-400">
-              총 {lessons.length}개 차시
+              총 {lessons.length}개 차시 · {completedCount}개 완료
             </span>
           )}
         </div>
@@ -142,7 +163,9 @@ export default async function CourseClassroomPage({
             </p>
           )}
           <ul className="max-h-[26rem] divide-y divide-zinc-100 overflow-y-auto">
-            {lessons?.map((lesson) => (
+            {lessons?.map((lesson) => {
+              const progress = progressByLessonId.get(lesson.id);
+              return (
               <li key={lesson.id}>
                 <Link
                   href={`/watch/${lesson.id}`}
@@ -155,13 +178,29 @@ export default async function CourseClassroomPage({
                         {lesson.description}
                       </span>
                     )}
+                    {progress && (
+                      <span className="mt-1 flex items-center gap-1.5">
+                        <span className="h-1 w-20 overflow-hidden rounded-full bg-zinc-200">
+                          <span
+                            className={`block h-full rounded-full ${
+                              progress.completed ? "bg-brand" : "bg-zinc-400"
+                            }`}
+                            style={{ width: `${progress.percent}%` }}
+                          />
+                        </span>
+                        <span className="text-[11px] text-zinc-400">
+                          {progress.completed ? "완료" : `${progress.percent}%`}
+                        </span>
+                      </span>
+                    )}
                   </span>
                   <span className="shrink-0 text-xs text-zinc-400">
                     시청하기 →
                   </span>
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       </div>

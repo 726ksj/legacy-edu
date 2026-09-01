@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { saveLessonProgress } from "./progress-actions";
+
+const PROGRESS_REPORT_INTERVAL_MS = 15000;
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
@@ -45,6 +48,7 @@ export default function VideoPlayer({
   token,
   title,
   poster,
+  lessonId,
   prevLessonHref,
   nextLessonHref,
 }: {
@@ -52,6 +56,7 @@ export default function VideoPlayer({
   token: string;
   title: string;
   poster?: string;
+  lessonId: string;
   prevLessonHref?: string;
   nextLessonHref?: string;
 }) {
@@ -208,6 +213,36 @@ export default function VideoPlayer({
     }
     pokeMuxActivity();
   }, [pokeMuxActivity]);
+
+  // 시청 진도를 서버에 저장한다. 되감기로 진도가 줄어드는 건 서버(action)
+  // 쪽에서 막아준다 - 여기서는 그냥 현재 위치만 보고한다.
+  const reportProgress = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    const duration = player.duration;
+    const currentTime = player.currentTime;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    if (!Number.isFinite(currentTime) || currentTime <= 0) return;
+    saveLessonProgress(lessonId, currentTime, duration);
+  }, [lessonId]);
+
+  // 재생 중에는 주기적으로, 일시정지/차시 이탈 시점에는 즉시 진도를
+  // 저장한다. 탭을 그냥 닫는 경우까지는 못 잡지만(beforeunload로
+  // Server Action을 안정적으로 보낼 방법이 마땅치 않음), 15초 간격이면
+  // 실질적으로 큰 손실은 없다.
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(reportProgress, PROGRESS_REPORT_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [isPaused, reportProgress]);
+
+  useEffect(() => {
+    if (isPaused) reportProgress();
+  }, [isPaused, reportProgress]);
+
+  useEffect(() => {
+    return () => reportProgress();
+  }, [reportProgress]);
 
   // mux-player 자신의 하단 컨트롤 바는 자체적으로 탭/호버에 따라 표시·자동
   // 숨김을 관리한다(일시정지 중엔 안 숨는 것까지 포함). 우리 중앙 컨트롤을
@@ -521,6 +556,7 @@ export default function VideoPlayer({
               setIsPaused(true);
               setManuallyHidden(false);
             }}
+            onEnded={reportProgress}
             onError={() => setPlaybackError(true)}
             className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
           />
