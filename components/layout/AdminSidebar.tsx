@@ -12,6 +12,7 @@ const ADMIN_NAV_ITEMS = [
   { label: "상담 신청 관리", href: "/admin/consultations" },
   { label: "회원코드 관리", href: "/admin/member-codes" },
   { label: "회원 관리", href: "/admin/users" },
+  { label: "조교 계정 관리", href: "/admin/assistant-accounts" },
   { label: "FAQ 관리", href: "/admin/faqs" },
   { label: "1:1 문의 관리", href: "/admin/inquiries" },
   { label: "수강생 Review 관리", href: "/admin/reviews" },

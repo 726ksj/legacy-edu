@@ -58,6 +58,15 @@ export default async function Page({
         <EditInstructorForm instructor={instructor} teachers={teachers} />
       </div>
 
+      {instructor.profile_id && (
+        <Link
+          href={`/admin/teacher-accounts/${instructor.profile_id}`}
+          className="mt-4 w-fit text-sm font-semibold text-brand-dark hover:underline"
+        >
+          연결된 선생님 계정 관리하기 →
+        </Link>
+      )}
+
       <div className="mt-6 max-w-lg rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="text-sm font-semibold text-red-700">위험 구역</p>
         <p className="mt-1 text-xs text-red-600">

@@ -27,13 +27,17 @@ export default async function Page() {
   const teacherNameById = new Map(
     (teachers ?? []).map((teacher) => [teacher.id, teacher.name]),
   );
+  // 카드에 연결 안 된 선생님 계정도 여기서 관리할 수 있어야 하니 따로
+  // 목록에 보여준다(availableTeachers와 동일 목록, 이름만 다르게 씀).
+  const unlinkedTeachers = availableTeachers;
 
   return (
     <div className="flex flex-1 flex-col p-8">
       <h1 className="text-2xl font-bold text-zinc-900">강사 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         강좌 상세 화면에 노출되는 강사 프로필(사진/소개)을 등록/관리합니다.
-        등록한 강사는 강좌 관리에서 선택해 연결할 수 있습니다.
+        등록한 강사는 강좌 관리에서 선택해 연결할 수 있습니다. 선생님 로그인
+        계정 관리(정보 수정/삭제)도 여기서 함께 합니다.
       </p>
 
       <div className="mt-6">
@@ -82,9 +86,16 @@ export default async function Page() {
                   {row.bio ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {row.profile_id
-                    ? (teacherNameById.get(row.profile_id) ?? "-")
-                    : "-"}
+                  {row.profile_id ? (
+                    <Link
+                      href={`/admin/teacher-accounts/${row.profile_id}`}
+                      className="font-medium text-brand-dark hover:underline"
+                    >
+                      {teacherNameById.get(row.profile_id) ?? "계정 관리"}
+                    </Link>
+                  ) : (
+                    "-"
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link
@@ -106,6 +117,30 @@ export default async function Page() {
           </tbody>
         </table>
       </div>
+
+      {unlinkedTeachers.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-sm font-semibold text-zinc-700">
+            강사 카드에 연결되지 않은 선생님 계정
+          </h2>
+          <p className="mt-1 text-xs text-zinc-400">
+            위 목록의 강사 카드와 아직 연결 안 된 선생님 계정입니다. 이름만
+            눌러도 계정 관리 화면으로 이동합니다.
+          </p>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {unlinkedTeachers.map((teacher) => (
+              <li key={teacher.id}>
+                <Link
+                  href={`/admin/teacher-accounts/${teacher.id}`}
+                  className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:border-brand hover:text-brand-dark"
+                >
+                  {teacher.name} ({teacher.username})
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
