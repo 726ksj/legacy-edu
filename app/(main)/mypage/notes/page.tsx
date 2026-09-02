@@ -67,19 +67,19 @@ export default async function MyNotesPage() {
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
       <div className="flex flex-col gap-4">
         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
-          Notes
+          Questions
         </span>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
-          나의 메모
+          나의 질문
         </h1>
         <div className="h-[3px] w-12 rounded-full bg-brand" />
         <p className="text-sm text-zinc-500">
-          강의를 들으며 남긴 메모를 강좌별로 모아볼 수 있어요.
+          강의를 들으며 남긴 질문을 강좌별로 모아볼 수 있어요.
         </p>
       </div>
 
       {(!notes || notes.length === 0) && (
-        <p className="text-sm text-zinc-500">아직 남긴 메모가 없습니다.</p>
+        <p className="text-sm text-zinc-500">아직 남긴 질문이 없습니다.</p>
       )}
 
       <div className="flex flex-col gap-8">

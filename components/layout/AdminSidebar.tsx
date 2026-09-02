@@ -6,22 +6,45 @@ import { usePathname } from "next/navigation";
 import { Menu, X, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ADMIN_NAV_ITEMS = [
-  { label: "홈/소개 문구 관리", href: "/admin/content" },
-  { label: "팝업 관리", href: "/admin/popups" },
-  { label: "상담 신청 관리", href: "/admin/consultations" },
-  { label: "회원코드 관리", href: "/admin/member-codes" },
-  { label: "회원 관리", href: "/admin/users" },
-  { label: "조교 계정 관리", href: "/admin/assistant-accounts" },
-  { label: "FAQ 관리", href: "/admin/faqs" },
-  { label: "1:1 문의 관리", href: "/admin/inquiries" },
-  { label: "수강생 Review 관리", href: "/admin/reviews" },
-  { label: "강사 관리", href: "/admin/instructors" },
-  { label: "강좌 관리", href: "/admin/courses" },
-  { label: "주문/결제 관리", href: "/admin/orders" },
-  { label: "메모 관리", href: "/admin/notes" },
-  { label: "수강 권한 관리", href: "/admin/enrollments" },
-  { label: "성적 관리", href: "/admin/score-report-categories" },
+const ADMIN_NAV_GROUPS = [
+  {
+    title: "콘텐츠/홈 화면",
+    items: [
+      { label: "홈/소개 문구 관리", href: "/admin/content" },
+      { label: "팝업 관리", href: "/admin/popups" },
+      { label: "FAQ 관리", href: "/admin/faqs" },
+      { label: "수강생 Review 관리", href: "/admin/reviews" },
+    ],
+  },
+  {
+    title: "강좌 운영",
+    items: [
+      { label: "강좌 관리", href: "/admin/courses" },
+      { label: "성적 관리", href: "/admin/score-report-categories" },
+      { label: "질의응답 관리", href: "/admin/notes" },
+      { label: "수강 권한 관리", href: "/admin/enrollments" },
+    ],
+  },
+  {
+    title: "회원 관리",
+    items: [
+      { label: "회원코드 관리", href: "/admin/member-codes" },
+      { label: "회원 관리", href: "/admin/users" },
+      { label: "조교 관리", href: "/admin/assistant-accounts" },
+      { label: "강사 관리", href: "/admin/instructors" },
+    ],
+  },
+  {
+    title: "문의/상담",
+    items: [
+      { label: "상담 신청 관리", href: "/admin/consultations" },
+      { label: "1:1 문의 관리", href: "/admin/inquiries" },
+    ],
+  },
+  {
+    title: "주문/결제",
+    items: [{ label: "주문/결제 관리", href: "/admin/orders" }],
+  },
 ];
 
 export default function AdminSidebar({
@@ -87,44 +110,59 @@ export default function AdminSidebar({
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {ADMIN_NAV_ITEMS.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+        <nav className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
+          {ADMIN_NAV_GROUPS.map((group) => (
+            <div
+              key={group.title}
+              className="rounded-lg border border-zinc-200 bg-zinc-50 p-2"
+            >
+              <p className="px-2 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-dark">
+                {group.title}
+              </p>
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = pathname.startsWith(item.href);
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-brand-light text-brand-dark"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                )}
-              >
-                {item.label}
-                {item.href === "/admin/notes" && hasNewNote && (
-                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                    NEW
-                  </span>
-                )}
-                {item.href === "/admin/consultations" &&
-                  pendingConsultationCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
-                      {pendingConsultationCount > 99
-                        ? "99+"
-                        : pendingConsultationCount}
-                    </span>
-                  )}
-                {item.href === "/admin/inquiries" && pendingInquiryCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
-                    {pendingInquiryCount > 99 ? "99+" : pendingInquiryCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-brand-light text-brand-dark"
+                          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                      )}
+                    >
+                      {item.label}
+                      {item.href === "/admin/notes" && hasNewNote && (
+                        <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                          NEW
+                        </span>
+                      )}
+                      {item.href === "/admin/consultations" &&
+                        pendingConsultationCount > 0 && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
+                            {pendingConsultationCount > 99
+                              ? "99+"
+                              : pendingConsultationCount}
+                          </span>
+                        )}
+                      {item.href === "/admin/inquiries" &&
+                        pendingInquiryCount > 0 && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
+                            {pendingInquiryCount > 99
+                              ? "99+"
+                              : pendingInquiryCount}
+                          </span>
+                        )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-zinc-200 p-3">

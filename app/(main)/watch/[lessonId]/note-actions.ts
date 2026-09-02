@@ -16,7 +16,7 @@ export async function saveNote(
   const content = String(formData.get("content") ?? "").trim();
 
   if (!content) {
-    return { error: "메모 내용을 입력해주세요." };
+    return { error: "질문 내용을 입력해주세요." };
   }
 
   const supabase = await createClient();
@@ -57,7 +57,7 @@ export async function updateNote(
   const content = String(formData.get("content") ?? "").trim();
 
   if (!content) {
-    return { error: "메모 내용을 입력해주세요." };
+    return { error: "질문 내용을 입력해주세요." };
   }
 
   const supabase = await createClient();

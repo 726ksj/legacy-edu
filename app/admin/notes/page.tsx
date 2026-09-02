@@ -13,9 +13,9 @@ export default async function Page() {
 
   return (
     <div className="flex flex-1 flex-col p-8">
-      <h1 className="text-2xl font-bold text-zinc-900">메모 관리</h1>
+      <h1 className="text-2xl font-bold text-zinc-900">질의응답 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        강좌를 선택하면 그 강좌의 차시별로 학생들이 남긴 메모를 확인할 수
+        강좌를 선택하면 그 강좌의 차시별로 학생들이 남긴 질문을 확인할 수
         있습니다.
       </p>
 
@@ -58,7 +58,7 @@ export default async function Page() {
                     href={`/admin/notes/${row.id}`}
                     className="text-xs font-semibold text-brand-dark hover:underline"
                   >
-                    메모 보기
+                    질문 보기
                   </Link>
                 </td>
               </tr>

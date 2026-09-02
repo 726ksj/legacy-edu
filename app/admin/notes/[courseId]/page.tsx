@@ -91,14 +91,14 @@ export default async function Page({
         href="/admin/notes"
         className="mb-2 text-xs font-medium text-zinc-400 hover:text-brand-dark"
       >
-        ← 메모 관리
+        ← 질의응답 관리
       </Link>
       <h1 className="text-2xl font-bold text-zinc-900">
         [{course.subject}] {course.title}
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        {course.teacher_name} 선생님 강좌의 차시별 학생 메모입니다. 각
-        차시의 「메모 보기」를 눌러 확인할 수 있습니다.
+        {course.teacher_name} 선생님 강좌의 차시별 학생 질문입니다. 각
+        차시의 「질문 보기」를 눌러 확인할 수 있습니다.
       </p>
 
       <div className="mt-6 max-w-2xl">

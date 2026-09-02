@@ -35,9 +35,9 @@ export default function NoteSection({
   return (
     <div className="flex flex-col gap-4 border-t border-zinc-200 pt-6">
       <div>
-        <p className="text-sm font-semibold text-zinc-700">메모장</p>
+        <p className="text-sm font-semibold text-zinc-700">질문하기</p>
         <p className="text-xs text-zinc-400">
-          마이페이지 - 나의 메모에서 언제든 다시 확인할 수 있어요.
+          마이페이지 - 나의 질문에서 언제든 다시 확인할 수 있어요.
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export default function NoteSection({
           name="content"
           required
           rows={3}
-          placeholder="이 강의를 들으며 남기고 싶은 메모를 적어보세요."
+          placeholder="이 강의를 들으며 궁금한 점을 질문해보세요."
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
         {state.error && (
@@ -57,13 +57,13 @@ export default function NoteSection({
           disabled={isPending}
           className="self-start rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
         >
-          {isPending ? "저장 중..." : "메모 저장"}
+          {isPending ? "등록 중..." : "질문 등록"}
         </button>
       </form>
 
       {notes.length > 0 && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-semibold text-zinc-700">내 메모</p>
+          <p className="text-sm font-semibold text-zinc-700">내 질문</p>
           {notes.map((note) => (
             <NoteCard
               key={note.id}

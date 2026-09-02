@@ -69,7 +69,7 @@ function LessonNotesRow({
           onClick={() => setIsOpen((prev) => !prev)}
           className="shrink-0 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-brand hover:text-brand-dark"
         >
-          메모 보기 ({lesson.notes.length}) {isOpen ? "▲" : "▼"}
+          질문 보기 ({lesson.notes.length}) {isOpen ? "▲" : "▼"}
         </button>
       </div>
 
@@ -77,7 +77,7 @@ function LessonNotesRow({
         <div className="mt-3 flex flex-col gap-3 border-t border-zinc-100 pt-3">
           {lesson.notes.length === 0 && (
             <p className="text-center text-sm text-zinc-400">
-              학생이 남긴 메모가 없습니다.
+              학생이 남긴 질문이 없습니다.
             </p>
           )}
           {lesson.notes.map((note) => (

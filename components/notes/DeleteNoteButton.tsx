@@ -9,7 +9,7 @@ export default function DeleteNoteButton({
     <form
       action={action}
       onSubmit={(e) => {
-        if (!window.confirm("이 메모를 삭제할까요? 되돌릴 수 없습니다.")) {
+        if (!window.confirm("이 질문을 삭제할까요? 되돌릴 수 없습니다.")) {
           e.preventDefault();
         }
       }}
