@@ -15,16 +15,21 @@ interface NoticeRow {
   visibility: string;
 }
 
-function buildPageHref(page: number) {
-  return page <= 1 ? "/notice" : `/notice?page=${page}`;
+function buildPageHref(page: number, query: string) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (query) params.set("q", query);
+  const qs = params.toString();
+  return qs ? `/notice?${qs}` : "/notice";
 }
 
 export default async function NoticePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; write?: string }>;
+  searchParams: Promise<{ page?: string; write?: string; q?: string }>;
 }) {
-  const { page: pageParam, write } = await searchParams;
+  const { page: pageParam, write, q } = await searchParams;
+  const query = (q ?? "").trim();
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -35,10 +40,16 @@ export default async function NoticePage({
   // 비회원은 전체공개 공지만 자연스럽게 걸러져서 보인다.
   const user = await getAuthUser();
 
-  const { data: notices, count } = await supabase
+  let noticesQuery = supabase
     .from("notices")
     .select("id, category, title, created_at, visibility", { count: "exact" })
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (query) {
+    noticesQuery = noticesQuery.ilike("title", `%${query}%`);
+  }
+
+  const { data: notices, count } = await noticesQuery
     .range(from, to)
     .returns<NoticeRow[]>();
 
@@ -72,8 +83,28 @@ export default async function NoticePage({
 
       {admin && write && <NoticeForm />}
 
+      <form action="/notice" method="get" className="flex gap-2">
+        <input
+          type="text"
+          name="q"
+          defaultValue={query}
+          placeholder="제목으로 검색"
+          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        />
+        <button
+          type="submit"
+          className="shrink-0 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+        >
+          검색
+        </button>
+      </form>
+
       {(!notices || notices.length === 0) && (
-        <p className="text-sm text-zinc-500">등록된 공지사항이 없습니다.</p>
+        <p className="text-sm text-zinc-500">
+          {query
+            ? `'${query}'에 대한 검색 결과가 없습니다.`
+            : "등록된 공지사항이 없습니다."}
+        </p>
       )}
 
       {notices && notices.length > 0 && (
@@ -122,7 +153,7 @@ export default async function NoticePage({
       {totalPages > 1 && (
         <nav className="flex items-center justify-center gap-1.5">
           <Link
-            href={buildPageHref(Math.max(1, page - 1))}
+            href={buildPageHref(Math.max(1, page - 1), query)}
             aria-disabled={page <= 1}
             className={
               page <= 1
@@ -135,7 +166,7 @@ export default async function NoticePage({
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
             <Link
               key={n}
-              href={buildPageHref(n)}
+              href={buildPageHref(n, query)}
               className={
                 n === page
                   ? "flex h-8 w-8 items-center justify-center rounded-md bg-brand text-sm font-semibold text-white"
@@ -146,7 +177,7 @@ export default async function NoticePage({
             </Link>
           ))}
           <Link
-            href={buildPageHref(Math.min(totalPages, page + 1))}
+            href={buildPageHref(Math.min(totalPages, page + 1), query)}
             aria-disabled={page >= totalPages}
             className={
               page >= totalPages
