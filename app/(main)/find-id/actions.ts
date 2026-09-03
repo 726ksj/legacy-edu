@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { sendEmail } from "@/lib/mailer";
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_PER_PHONE = 5;
@@ -11,7 +12,7 @@ const RATE_LIMIT_MESSAGE =
 
 export interface FindIdState {
   error?: string;
-  username?: string;
+  sent?: boolean;
 }
 
 function digitsOnly(value: string) {
@@ -55,16 +56,28 @@ export async function findId(
   // 있음), 숫자만 비교해야 정확히 매칭된다.
   const { data: candidates } = await supabase
     .from("profiles")
-    .select("username, phone")
+    .select("username, phone, email")
     .eq("name", name);
 
   const match = (candidates ?? []).find(
     (candidate) => digitsOnly(candidate.phone) === digitsOnly(phone),
   );
 
-  if (!match) {
-    return { error: "일치하는 회원 정보를 찾을 수 없습니다." };
+  // 일치 여부와 무관하게 항상 같은 응답을 준다 - 화면 메시지가 달라지면
+  // 그 자체로 "이 이름+전화번호 조합의 계정이 존재하는지"가 새어나간다.
+  // 발송 자체가 실패해도(메일 서비스 장애 등) 마찬가지로 화면엔 그대로
+  // 성공 문구를 보여준다.
+  if (match?.email) {
+    try {
+      await sendEmail({
+        to: match.email,
+        subject: "[LEGACY EDU] 아이디 찾기 결과",
+        text: `안녕하세요, LEGACY EDU입니다.\n\n요청하신 아이디는 다음과 같습니다.\n\n아이디: ${match.username}\n\n본인이 요청하지 않았다면 이 이메일을 무시해주세요.`,
+      });
+    } catch (error) {
+      console.error("아이디 찾기 이메일 발송 실패:", error);
+    }
   }
 
-  return { username: match.username };
+  return { sent: true };
 }

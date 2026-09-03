@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
+import { isValidEmail } from "@/lib/email";
 
 export interface UpdateUserState {
   error?: string;
@@ -22,9 +23,13 @@ export async function updateUser(
   const address = String(formData.get("address") ?? "").trim();
   const school = String(formData.get("school") ?? "").trim();
   const grade = String(formData.get("grade") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
 
   if (!name || !phone || !address) {
     return { error: "이름, 전화번호, 주소는 비워둘 수 없습니다." };
+  }
+  if (email && !isValidEmail(email)) {
+    return { error: "이메일 형식이 올바르지 않습니다." };
   }
 
   const supabase = createAdminClient();
@@ -37,6 +42,7 @@ export async function updateUser(
       address,
       school: school || null,
       grade: grade || null,
+      email: email || null,
     })
     .eq("id", id);
 

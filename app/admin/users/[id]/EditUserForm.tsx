@@ -17,6 +17,7 @@ interface UserData {
   address: string;
   school: string | null;
   grade: string | null;
+  email: string | null;
 }
 
 export default function EditUserForm({ user }: { user: UserData }) {
@@ -71,6 +72,16 @@ export default function EditUserForm({ user }: { user: UserData }) {
           name="guardianPhone"
           type="tel"
           defaultValue={formatPhone(user.guardian_phone)}
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 sm:col-span-2">
+        이메일
+        <input
+          name="email"
+          type="email"
+          defaultValue={user.email ?? ""}
+          placeholder="example@gmail.com"
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>

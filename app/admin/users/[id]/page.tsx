@@ -54,7 +54,7 @@ export default async function Page({
   const { data: user } = await supabase
     .from("profiles")
     .select(
-      "id, username, name, phone, guardian_phone, address, school, grade, created_at",
+      "id, username, name, phone, guardian_phone, address, school, grade, email, created_at",
     )
     .eq("id", id)
     .maybeSingle();
