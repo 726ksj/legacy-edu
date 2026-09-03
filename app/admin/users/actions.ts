@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 import { isValidEmail } from "@/lib/email";
+import { isProtectedAdminAccount } from "@/lib/adminProtection";
 
 export interface UpdateUserState {
   error?: string;
@@ -77,6 +78,10 @@ export async function deleteUser(
   _prevState: DeleteUserState,
 ): Promise<DeleteUserState> {
   await requireAdmin();
+  if (await isProtectedAdminAccount(id)) {
+    return { error: "관리자 계정은 이 화면에서 삭제할 수 없습니다." };
+  }
+
   const supabase = createAdminClient();
   // auth 유저 삭제 시 profiles 행(및 enrollments)도 on delete cascade로 함께 삭제됨
   const { error } = await supabase.auth.admin.deleteUser(id);

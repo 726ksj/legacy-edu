@@ -13,6 +13,7 @@ import {
   filterWatchableLessons,
   type LessonVisibility,
 } from "@/lib/enrollments";
+import { buildThreads } from "@/lib/questionThreads";
 import VideoPlayer from "./VideoPlayer";
 import NoteSection from "./NoteSection";
 import ProcessingNotice from "./ProcessingNotice";
@@ -78,12 +79,14 @@ export default async function WatchPage({
         .eq("course_id", lesson.course_id)
         .order("order_no", { ascending: true })
         .returns<SiblingLesson[]>(),
+      // RLS(questions_select_own_thread)가 "본인이 쓴 질문 + 그 질문에
+      // 달린 답글(스태프 포함)"만 걸러서 내려주므로, profile_id로 다시
+      // 필터링할 필요가 없다 - 그러면 스태프가 쓴 답글까지 함께 빠진다.
       supabase
         .from("questions")
-        .select("id, content, created_at")
+        .select("id, parent_id, content, created_at, profile_id")
         .eq("lesson_id", lessonId)
-        .eq("profile_id", user.id)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: true }),
     ]);
 
   if (!enrolled) {
@@ -119,10 +122,22 @@ export default async function WatchPage({
     })),
   );
 
-  const notes = (noteRows ?? []).map((note) => ({
-    id: note.id,
-    content: note.content,
-    createdAt: formatDateTime(note.created_at),
+  const threads = buildThreads(
+    (noteRows ?? []).map((row) => ({
+      ...row,
+      lesson_id: lessonId,
+      question_read_at: null,
+      answer_read_at: null,
+    })),
+  ).map((thread) => ({
+    id: thread.id,
+    messages: thread.messages.map((message) => ({
+      id: message.id,
+      authorLabel: message.profileId === user.id ? "나" : "답변",
+      isFromStudent: message.profileId === thread.studentProfileId,
+      content: message.content,
+      createdAt: formatDateTime(message.createdAt),
+    })),
   }));
 
   const { data: progressRows } = upNext.length
@@ -186,7 +201,7 @@ export default async function WatchPage({
           <ProcessingNotice />
         )}
 
-        <NoteSection lessonId={lesson.id} notes={notes} />
+        <NoteSection lessonId={lesson.id} threads={threads} />
       </div>
 
       <aside className="flex w-full flex-col gap-3 lg:w-80 lg:shrink-0">

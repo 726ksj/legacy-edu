@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidPassword, PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
+import { isValidEmail } from "@/lib/email";
 
 export interface UpdateProfileState {
   error?: string;
@@ -25,9 +26,13 @@ export async function updateProfile(
 
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
 
   if (!name || !phone) {
     return { error: "이름과 전화번호는 비워둘 수 없습니다." };
+  }
+  if (email && !isValidEmail(email)) {
+    return { error: "이메일 형식이 올바르지 않습니다." };
   }
 
   const admin = createAdminClient();
@@ -43,7 +48,7 @@ export async function updateProfile(
   // 계정일 때만 이 필드들을 같이 갱신한다.
   const isStaff = existingProfile?.role !== "student";
 
-  const update: Record<string, unknown> = { name, phone };
+  const update: Record<string, unknown> = { name, phone, email: email || null };
 
   if (!isStaff) {
     const guardianPhone = String(formData.get("guardianPhone") ?? "").trim();

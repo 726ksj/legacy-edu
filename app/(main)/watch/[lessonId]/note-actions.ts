@@ -86,6 +86,50 @@ export async function updateNote(
   return { success: true };
 }
 
+export interface ReplyState {
+  error?: string;
+  success?: boolean;
+}
+
+// 이미 답변이 달린 질문 아래에서 학생이 이어서 남기는 후속 질문. RLS의
+// questions_insert_own_thread 정책이 "자기 소유 스레드에만 답글 가능"을
+// DB 레벨에서도 강제한다.
+export async function replyToOwnQuestion(
+  rootId: string,
+  lessonId: string,
+  formData: FormData,
+): Promise<ReplyState> {
+  const content = String(formData.get("content") ?? "").trim();
+
+  if (!content) {
+    return { error: "질문 내용을 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "로그인이 필요합니다." };
+  }
+
+  const { error } = await supabase.from("questions").insert({
+    lesson_id: lessonId,
+    profile_id: user.id,
+    parent_id: rootId,
+    content,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/watch/${lessonId}`);
+  revalidatePath("/mypage/notes");
+  return { success: true };
+}
+
 export async function deleteNote(id: string, lessonId: string) {
   const supabase = await createClient();
   const {

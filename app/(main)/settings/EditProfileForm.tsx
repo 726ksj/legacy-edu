@@ -14,6 +14,7 @@ interface ProfileData {
   address: string;
   school: string | null;
   grade: string | null;
+  email: string | null;
   role: string;
 }
 
@@ -74,6 +75,19 @@ export default function EditProfileForm({
           required
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
+      </label>
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+        이메일
+        <input
+          name="email"
+          type="email"
+          defaultValue={profile.email ?? ""}
+          placeholder="example@gmail.com"
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        />
+        <span className="text-xs font-normal text-zinc-400">
+          아이디 찾기 결과를 받을 이메일이에요.
+        </span>
       </label>
       {!isStaff && (
         <>

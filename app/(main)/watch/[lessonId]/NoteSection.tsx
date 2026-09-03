@@ -1,23 +1,30 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
-import { saveNote, updateNote, deleteNote, type SaveNoteState } from "./note-actions";
-import NoteCard from "@/components/notes/NoteCard";
+import {
+  saveNote,
+  updateNote,
+  deleteNote,
+  replyToOwnQuestion,
+  type SaveNoteState,
+} from "./note-actions";
+import QuestionThread, {
+  type ThreadMessageView,
+} from "@/components/notes/QuestionThread";
 
-interface NoteItem {
+interface ThreadItem {
   id: string;
-  content: string;
-  createdAt: string;
+  messages: ThreadMessageView[];
 }
 
 const initialState: SaveNoteState = {};
 
 export default function NoteSection({
   lessonId,
-  notes,
+  threads,
 }: {
   lessonId: string;
-  notes: NoteItem[];
+  threads: ThreadItem[];
 }) {
   const boundSaveNote = saveNote.bind(null, lessonId);
   const [state, formAction, isPending] = useActionState(
@@ -61,18 +68,22 @@ export default function NoteSection({
         </button>
       </form>
 
-      {notes.length > 0 && (
+      {threads.length > 0 && (
         <div className="flex flex-col gap-3">
           <p className="text-sm font-semibold text-zinc-700">내 질문</p>
-          {notes.map((note) => (
-            <NoteCard
-              key={note.id}
-              content={note.content}
-              updateAction={updateNote.bind(null, note.id, lessonId, {})}
-              deleteAction={deleteNote.bind(null, note.id, lessonId)}
-              footer={
-                <p className="mt-1 text-xs text-zinc-400">{note.createdAt}</p>
+          {threads.map((thread) => (
+            <QuestionThread
+              key={thread.id}
+              messages={thread.messages}
+              updateRootAction={(formData) =>
+                updateNote(thread.id, lessonId, {}, formData)
               }
+              deleteRootAction={() => deleteNote(thread.id, lessonId)}
+              replyAction={(formData) =>
+                replyToOwnQuestion(thread.id, lessonId, formData)
+              }
+              replyPlaceholder="답변에 이어서 궁금한 점을 남겨보세요."
+              replyButtonLabel="질문 등록"
             />
           ))}
         </div>

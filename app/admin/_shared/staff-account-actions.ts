@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 import { isValidEmail } from "@/lib/email";
+import { isProtectedAdminAccount } from "@/lib/adminProtection";
 import type { StaffRole } from "@/lib/staffAccounts";
 
 const BASE_PATH: Record<StaffRole, string> = {
@@ -92,6 +93,9 @@ export async function deleteStaffAccount(
 
   if (!profile) {
     return { error: "대상을 찾을 수 없습니다." };
+  }
+  if (await isProtectedAdminAccount(id)) {
+    return { error: "관리자 계정은 이 화면에서 삭제할 수 없습니다." };
   }
 
   // auth 유저 삭제 시 profiles 행(및 course_teachers 배정, 연결된 강사

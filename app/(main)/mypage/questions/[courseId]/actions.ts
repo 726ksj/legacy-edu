@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireAdmin } from "@/lib/supabase/server";
+import { requireCourseGradeManager } from "@/lib/teachers";
 
 export interface UpdateNoteState {
   error?: string;
@@ -14,7 +14,7 @@ export async function updateNote(
   id: string,
   formData: FormData,
 ): Promise<UpdateNoteState> {
-  await requireAdmin();
+  await requireCourseGradeManager(courseId);
   const content = String(formData.get("content") ?? "").trim();
 
   if (!content) {
@@ -31,7 +31,7 @@ export async function updateNote(
     return { error: error.message };
   }
 
-  revalidatePath(`/admin/notes/${courseId}`);
+  revalidatePath(`/mypage/questions/${courseId}`);
   revalidatePath("/mypage/notes");
   return { success: true };
 }
@@ -46,7 +46,7 @@ export async function answerQuestion(
   rootId: string,
   formData: FormData,
 ): Promise<AnswerQuestionState> {
-  const adminUser = await requireAdmin();
+  const staffUser = await requireCourseGradeManager(courseId);
   const content = String(formData.get("content") ?? "").trim();
 
   if (!content) {
@@ -67,7 +67,7 @@ export async function answerQuestion(
 
   const { error } = await supabase.from("questions").insert({
     lesson_id: root.lesson_id,
-    profile_id: adminUser!.id,
+    profile_id: staffUser.id,
     parent_id: root.id,
     content,
   });
@@ -76,9 +76,9 @@ export async function answerQuestion(
     return { error: error.message };
   }
 
-  revalidatePath(`/admin/notes/${courseId}`);
+  revalidatePath(`/mypage/questions/${courseId}`);
+  revalidatePath("/admin/notes");
   revalidatePath("/mypage/notes");
-  revalidatePath("/mypage/questions");
   revalidatePath(`/watch/${root.lesson_id}`);
   return { success: true };
 }
