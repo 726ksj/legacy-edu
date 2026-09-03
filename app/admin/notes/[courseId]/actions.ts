@@ -82,3 +82,26 @@ export async function answerQuestion(
   revalidatePath(`/watch/${root.lesson_id}`);
   return { success: true };
 }
+
+// 답변(후속 질문이 아닌, 최초 질문에 달린 자식 메시지) 삭제. 최초 질문
+// 자체는 삭제 대상이 아니라서 parent_id가 있는 행만 지운다 - 실수로
+// 스레드 전체가 사라지는 걸 막는다.
+export async function deleteAnswer(courseId: string, id: string) {
+  await requireAdmin();
+  const supabase = createAdminClient();
+  const { data: row } = await supabase
+    .from("questions")
+    .select("lesson_id")
+    .eq("id", id)
+    .not("parent_id", "is", null)
+    .maybeSingle();
+
+  if (!row) return;
+
+  await supabase.from("questions").delete().eq("id", id);
+
+  revalidatePath(`/admin/notes/${courseId}`);
+  revalidatePath("/mypage/notes");
+  revalidatePath("/mypage/questions");
+  revalidatePath(`/watch/${row.lesson_id}`);
+}

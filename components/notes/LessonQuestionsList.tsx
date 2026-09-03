@@ -27,10 +27,12 @@ interface ActionResult {
 export default function LessonQuestionsList({
   lessons,
   updateAction,
+  deleteAction,
   replyAction,
 }: {
   lessons: LessonItem[];
   updateAction: (id: string, formData: FormData) => Promise<ActionResult>;
+  deleteAction: (id: string) => Promise<void>;
   replyAction: (
     rootId: string,
     formData: FormData,
@@ -43,6 +45,7 @@ export default function LessonQuestionsList({
           key={lesson.id}
           lesson={lesson}
           updateAction={updateAction}
+          deleteAction={deleteAction}
           replyAction={replyAction}
         />
       ))}
@@ -53,10 +56,12 @@ export default function LessonQuestionsList({
 function LessonQuestionsRow({
   lesson,
   updateAction,
+  deleteAction,
   replyAction,
 }: {
   lesson: LessonItem;
   updateAction: (id: string, formData: FormData) => Promise<ActionResult>;
+  deleteAction: (id: string) => Promise<void>;
   replyAction: (
     rootId: string,
     formData: FormData,
@@ -109,9 +114,8 @@ function LessonQuestionsRow({
               </p>
               <QuestionThread
                 messages={thread.messages}
-                updateRootAction={(formData) =>
-                  updateAction(thread.id, formData)
-                }
+                updateMessageAction={updateAction}
+                deleteMessageAction={deleteAction}
                 replyAction={(formData) => replyAction(thread.id, formData)}
                 replyPlaceholder="답변을 입력하세요"
                 replyButtonLabel="답변 등록"

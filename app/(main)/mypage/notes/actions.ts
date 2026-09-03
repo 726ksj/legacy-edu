@@ -10,7 +10,6 @@ export interface UpdateNoteState {
 
 export async function updateNote(
   id: string,
-  _prevState: UpdateNoteState,
   formData: FormData,
 ): Promise<UpdateNoteState> {
   const content = String(formData.get("content") ?? "").trim();

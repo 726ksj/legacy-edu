@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAuthUser } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatDateTime";
 import { buildThreads, countUnreadFromStudent } from "@/lib/questionThreads";
-import { updateNote, answerQuestion } from "./actions";
+import { updateNote, answerQuestion, deleteAnswer } from "./actions";
 import LessonQuestionsList, {
   type LessonItem,
 } from "@/components/notes/LessonQuestionsList";
@@ -29,6 +30,7 @@ export default async function Page({
 }) {
   const { courseId } = await params;
   const supabase = createAdminClient();
+  const viewer = await getAuthUser();
 
   const { data: course } = await supabase
     .from("courses")
@@ -104,13 +106,22 @@ export default async function Page({
         studentName: studentProfile?.name ?? "-",
         studentUsername: studentProfile?.username ?? "-",
         unreadFromStudent: countUnreadFromStudent(thread),
-        messages: thread.messages.map((message) => ({
-          id: message.id,
-          authorLabel: profileById.get(message.profileId)?.name ?? "-",
-          isFromStudent: message.profileId === thread.studentProfileId,
-          content: message.content,
-          createdAt: formatDateTime(message.createdAt),
-        })),
+        messages: thread.messages.map((message, index) => {
+          const isRoot = index === 0;
+          // 최초 질문은 내용 수정(모더레이션)만 가능하고, 본인이 쓴
+          // 답변은 수정·삭제 둘 다 가능하다. 다른 스태프가 쓴 답변은
+          // 손댈 수 없다.
+          const isOwnAnswer = !isRoot && message.profileId === viewer?.id;
+          return {
+            id: message.id,
+            authorLabel: profileById.get(message.profileId)?.name ?? "-",
+            isFromStudent: message.profileId === thread.studentProfileId,
+            content: message.content,
+            createdAt: formatDateTime(message.createdAt),
+            canEdit: isRoot || isOwnAnswer,
+            canDelete: isOwnAnswer,
+          };
+        }),
       };
     }),
   }));
@@ -141,6 +152,7 @@ export default async function Page({
           <LessonQuestionsList
             lessons={lessonItems}
             updateAction={updateNote.bind(null, courseId)}
+            deleteAction={deleteAnswer.bind(null, courseId)}
             replyAction={answerQuestion.bind(null, courseId)}
           />
         )}

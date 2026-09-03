@@ -103,13 +103,18 @@ export default async function MyNotesPage() {
       createdAt: new Date(
         thread.messages[0].createdAt,
       ).toLocaleDateString("ko-KR"),
-      messages: thread.messages.map((message) => ({
-        id: message.id,
-        authorLabel: message.profileId === user.id ? "나" : "답변",
-        isFromStudent: message.profileId === thread.studentProfileId,
-        content: message.content,
-        createdAt: new Date(message.createdAt).toLocaleDateString("ko-KR"),
-      })),
+      messages: thread.messages.map((message) => {
+        const isFromStudent = message.profileId === thread.studentProfileId;
+        return {
+          id: message.id,
+          authorLabel: message.profileId === user.id ? "나" : "답변",
+          isFromStudent,
+          content: message.content,
+          createdAt: new Date(message.createdAt).toLocaleDateString("ko-KR"),
+          canEdit: isFromStudent,
+          canDelete: isFromStudent,
+        };
+      }),
     });
   }
 
@@ -161,8 +166,8 @@ export default async function MyNotesPage() {
                   </div>
                   <QuestionThread
                     messages={thread.messages}
-                    updateRootAction={updateNote.bind(null, thread.id, {})}
-                    deleteRootAction={deleteNote.bind(null, thread.id)}
+                    updateMessageAction={updateNote}
+                    deleteMessageAction={deleteNote}
                     replyAction={replyToOwnQuestion.bind(null, thread.id)}
                     replyPlaceholder="답변에 이어서 궁금한 점을 남겨보세요."
                     replyButtonLabel="질문 등록"

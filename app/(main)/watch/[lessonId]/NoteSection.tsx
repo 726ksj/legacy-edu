@@ -75,10 +75,12 @@ export default function NoteSection({
             <QuestionThread
               key={thread.id}
               messages={thread.messages}
-              updateRootAction={(formData) =>
-                updateNote(thread.id, lessonId, {}, formData)
+              updateMessageAction={(messageId, formData) =>
+                updateNote(messageId, lessonId, {}, formData)
               }
-              deleteRootAction={() => deleteNote(thread.id, lessonId)}
+              deleteMessageAction={(messageId) =>
+                deleteNote(messageId, lessonId)
+              }
               replyAction={(formData) =>
                 replyToOwnQuestion(thread.id, lessonId, formData)
               }

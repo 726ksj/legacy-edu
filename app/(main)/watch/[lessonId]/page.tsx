@@ -131,13 +131,18 @@ export default async function WatchPage({
     })),
   ).map((thread) => ({
     id: thread.id,
-    messages: thread.messages.map((message) => ({
-      id: message.id,
-      authorLabel: message.profileId === user.id ? "나" : "답변",
-      isFromStudent: message.profileId === thread.studentProfileId,
-      content: message.content,
-      createdAt: formatDateTime(message.createdAt),
-    })),
+    messages: thread.messages.map((message) => {
+      const isFromStudent = message.profileId === thread.studentProfileId;
+      return {
+        id: message.id,
+        authorLabel: message.profileId === user.id ? "나" : "답변",
+        isFromStudent,
+        content: message.content,
+        createdAt: formatDateTime(message.createdAt),
+        canEdit: isFromStudent,
+        canDelete: isFromStudent,
+      };
+    }),
   }));
 
   const { data: progressRows } = upNext.length
