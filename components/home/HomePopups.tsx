@@ -98,27 +98,29 @@ export default function HomePopups({ popups }: { popups: PopupData[] }) {
 
 function PopupBody({ popup }: { popup: PopupData }) {
   return (
-    <>
+    <div className="flex flex-col gap-3 pb-4 pt-6">
+      <div className="flex flex-col gap-2 px-6 pr-12">
+        <div className="h-[3px] w-10 rounded-full bg-brand" />
+        <h2 className="text-lg font-bold text-zinc-900">{popup.title}</h2>
+      </div>
       {popup.image_url && (
-        <div className="relative aspect-square w-full">
+        // 세로로 긴 이미지도 잘리지 않도록 object-contain을 쓴다 - 컨테이너
+        // 비율과 실제 이미지 비율이 달라도 크롭 대신 여백으로 처리된다.
+        <div className="relative aspect-[3/4] w-full">
           <Image
             src={popup.image_url}
             alt={popup.title}
             fill
             sizes="(max-width: 480px) 100vw, 384px"
-            className="object-cover"
+            className="object-contain"
           />
         </div>
       )}
-      <div className="flex flex-col gap-3 p-6 pr-10">
-        <div className="h-[3px] w-10 rounded-full bg-brand" />
-        <h2 className="text-lg font-bold text-zinc-900">{popup.title}</h2>
-        {popup.body && (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-600">
-            {popup.body}
-          </p>
-        )}
-      </div>
-    </>
+      {popup.body && (
+        <p className="whitespace-pre-wrap px-6 text-xs leading-relaxed text-zinc-500">
+          {popup.body}
+        </p>
+      )}
+    </div>
   );
 }
