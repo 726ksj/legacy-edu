@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Menu, X } from "lucide-react";
+import NoticeNewBadge from "./NoticeNewBadge";
 
 interface NavChild {
   label: string;
@@ -17,7 +18,13 @@ interface NavItem {
   children?: NavChild[];
 }
 
-export default function MobileNav({ navItems }: { navItems: NavItem[] }) {
+export default function MobileNav({
+  navItems,
+  recentNoticeId,
+}: {
+  navItems: NavItem[];
+  recentNoticeId: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -63,9 +70,7 @@ export default function MobileNav({ navItems }: { navItems: NavItem[] }) {
                       <span className="flex items-center gap-1.5">
                         {item.label}
                         {item.badge && (
-                          <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                            NEW
-                          </span>
+                          <NoticeNewBadge noticeId={recentNoticeId} />
                         )}
                       </span>
                       <ChevronDown
@@ -80,9 +85,7 @@ export default function MobileNav({ navItems }: { navItems: NavItem[] }) {
                     >
                       {item.label}
                       {item.badge && (
-                        <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                          NEW
-                        </span>
+                        <NoticeNewBadge noticeId={recentNoticeId} />
                       )}
                     </Link>
                   )}

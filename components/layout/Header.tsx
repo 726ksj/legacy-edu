@@ -4,24 +4,28 @@ import { logout } from "@/lib/supabase/auth-actions";
 import { getMemberRole } from "@/lib/teachers";
 import MobileNav from "./MobileNav";
 import EnrollmentButton from "./EnrollmentButton";
+import NoticeNewBadge from "./NoticeNewBadge";
 
-// 최근에 올라온 공지사항이면 상단 메뉴에 NEW 뱃지를 붙여준다. 게시글별
-// "읽음" 상태를 추적하려면 로그인 여부와 무관하게 모든 방문자를 다뤄야
-// 해서 복잡해지니, 등록된 지 며칠 안 된 글인지로 간단히 판단한다.
+// 최근(7일 이내)에 올라온 공지사항이 있으면 상단 메뉴에 NEW 뱃지 후보로
+// 띄운다. 실제로 뱃지를 보여줄지는 NoticeNewBadge가 브라우저에 저장된
+// "마지막으로 본 공지" 기록과 비교해서 다시 한번 판단한다 - 그래서 글을
+// 읽고 나면(= /notice를 방문하면) 7일이 지나기 전에도 뱃지가 사라진다.
 const NEW_NOTICE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-async function checkHasNewNotice(
+async function getRecentNoticeId(
   supabase: Awaited<ReturnType<typeof createClient>>,
-) {
+): Promise<string | null> {
   const { data } = await supabase
     .from("notices")
-    .select("created_at")
+    .select("id, created_at")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (!data) return false;
-  return Date.now() - new Date(data.created_at).getTime() < NEW_NOTICE_WINDOW_MS;
+  if (!data) return null;
+  const isRecent =
+    Date.now() - new Date(data.created_at).getTime() < NEW_NOTICE_WINDOW_MS;
+  return isRecent ? data.id : null;
 }
 
 interface NavChild {
@@ -73,9 +77,9 @@ const NAV_ITEMS: NavItem[] = [
 
 export default async function Header() {
   const supabase = await createClient();
-  const [user, hasNewNotice] = await Promise.all([
+  const [user, recentNoticeId] = await Promise.all([
     getAuthUser(),
-    checkHasNewNotice(supabase),
+    getRecentNoticeId(supabase),
   ]);
 
   const admin = isAdmin(user);
@@ -87,7 +91,7 @@ export default async function Header() {
 
   const navItems: NavItem[] = [
     ...NAV_ITEMS.map((item) =>
-      item.href === "/notice" ? { ...item, badge: hasNewNotice } : item,
+      item.href === "/notice" ? { ...item, badge: Boolean(recentNoticeId) } : item,
     ),
     ...(admin
       ? [
@@ -171,7 +175,7 @@ export default async function Header() {
               </Link>
             </>
           )}
-          <MobileNav navItems={navItems} />
+          <MobileNav navItems={navItems} recentNoticeId={recentNoticeId} />
         </div>
       </div>
 
@@ -188,20 +192,12 @@ export default async function Header() {
               {hasChildren ? (
                 <span className={labelClassName}>
                   {item.label}
-                  {item.badge && (
-                    <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                      NEW
-                    </span>
-                  )}
+                  {item.badge && <NoticeNewBadge noticeId={recentNoticeId} />}
                 </span>
               ) : (
                 <Link href={item.href} className={labelClassName}>
                   {item.label}
-                  {item.badge && (
-                    <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                      NEW
-                    </span>
-                  )}
+                  {item.badge && <NoticeNewBadge noticeId={recentNoticeId} />}
                 </Link>
               )}
 

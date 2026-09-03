@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/formatDateTime";
 import NoticeForm from "./NoticeForm";
+import MarkNoticeSeen from "@/components/notice/MarkNoticeSeen";
 
 export const dynamic = "force-dynamic";
 
@@ -53,11 +54,21 @@ export default async function NoticePage({
     .range(from, to)
     .returns<NoticeRow[]>();
 
+  // 검색/페이지네이션과 무관하게 "가장 최근 글"을 따로 조회한다 - 헤더의
+  // NEW 뱃지가 보는 기준과 항상 일치시키기 위해서다.
+  const { data: latestNotice } = await supabase
+    .from("notices")
+    .select("id")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const admin = isAdmin(user);
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
+      <MarkNoticeSeen noticeId={latestNotice?.id ?? null} />
       <div className="flex flex-col gap-4">
         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-brand">
           Notice
