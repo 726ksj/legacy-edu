@@ -144,7 +144,7 @@ export default async function WatchPage({
         <div>
           {course && (
             <p className="text-xs font-semibold text-brand-dark">
-              [{course.subject}] {course.title} · {course.teacher_name} 선생님
+              [{course.subject}] {course.title} · {course.teacher_name} 강사
             </p>
           )}
           <h1 className="mt-1 text-2xl font-bold text-zinc-900">

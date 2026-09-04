@@ -125,7 +125,7 @@ export default function SignupPage() {
         {(
           [
             { value: "student", label: "학생으로 가입" },
-            { value: "teacher", label: "선생님으로 가입" },
+            { value: "teacher", label: "강사로 가입" },
             { value: "assistant", label: "조교로 가입" },
           ] as const
         ).map((option) => (

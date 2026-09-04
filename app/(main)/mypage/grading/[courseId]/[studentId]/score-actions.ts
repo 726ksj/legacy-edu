@@ -36,7 +36,7 @@ function parseScoreForm(formData: FormData, extraFieldLabels: string[]) {
   } as const;
 }
 
-// 강좌 담당 선생님/조교가 이 강좌에 실제로 수강 중인 학생인지 확인한다 -
+// 강좌 담당 강사/조교가 이 강좌에 실제로 수강 중인 학생인지 확인한다 -
 // requireCourseGradeManager만으로는 "이 강좌를 관리할 권한"만 확인될 뿐,
 // studentId로 아무 프로필이나 넘겨서 성적을 조작하는 걸 막지는 못한다.
 async function assertEnrolled(

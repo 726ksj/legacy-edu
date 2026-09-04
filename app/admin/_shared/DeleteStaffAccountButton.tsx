@@ -10,7 +10,7 @@ import type { StaffRole } from "@/lib/staffAccounts";
 const initialState: DeleteStaffAccountState = {};
 
 const ROLE_LABEL: Record<StaffRole, string> = {
-  teacher: "선생님",
+  teacher: "강사",
   assistant: "조교",
 };
 

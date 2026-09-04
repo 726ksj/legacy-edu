@@ -48,7 +48,7 @@ export default async function Page({
         [{course.subject}] {course.title}
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        {course.teacher_name} 선생님 강좌의 학생별 채팅방입니다.
+        {course.teacher_name} 강사 강좌의 학생별 채팅방입니다.
       </p>
 
       <div className="mt-6 max-w-2xl">

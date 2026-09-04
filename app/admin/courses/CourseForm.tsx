@@ -188,7 +188,7 @@ export default function CourseForm({
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        담당 선생님 계정 (선택)
+        담당 강사 계정 (선택)
         <select
           name="teacherProfileId"
           defaultValue={editingTeacherProfileId ?? ""}

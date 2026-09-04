@@ -63,7 +63,7 @@ export default async function MyClassroomPage() {
                   {course.title}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {course.teacher_name} 선생님
+                  {course.teacher_name} 강사
                 </p>
               </div>
               <div className="flex shrink-0 flex-col gap-2">

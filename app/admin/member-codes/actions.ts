@@ -60,7 +60,7 @@ export async function deleteMemberCode(
 
   if (profile) {
     // auth 유저 삭제 시 profiles 행도 on delete cascade로 함께 삭제되고,
-    // (선생님이었다면) course_teachers 배정도 profile_id의 cascade로
+    // (강사였다면) course_teachers 배정도 profile_id의 cascade로
     // 함께 삭제된다.
     const { error: deleteUserError } = await supabase.auth.admin.deleteUser(
       profile.id,

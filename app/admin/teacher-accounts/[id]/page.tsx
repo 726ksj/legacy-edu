@@ -38,13 +38,13 @@ export default async function Page({
   return (
     <div className="flex flex-1 flex-col p-8">
       <Link
-        href="/admin/teacher-accounts"
+        href="/admin/instructors"
         className="mb-2 text-xs font-medium text-zinc-400 hover:text-brand-dark"
       >
-        ← 선생님 계정 관리
+        ← 강사 관리
       </Link>
       <h1 className="text-2xl font-bold text-zinc-900">
-        {account.name} 선생님 계정 정보
+        {account.name} 강사 계정 정보
       </h1>
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">

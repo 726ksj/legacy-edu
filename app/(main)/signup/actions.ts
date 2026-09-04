@@ -25,11 +25,11 @@ type StaffRole = "teacher" | "assistant";
 
 const ROLE_LABEL: Record<"student" | StaffRole, string> = {
   student: "학생",
-  teacher: "선생님",
+  teacher: "강사",
   assistant: "조교",
 };
 
-// 학생/선생님/조교 가입 모두 같은 회원코드 체계를 쓰되, 코드에 박힌 역할과
+// 학생/강사/조교 가입 모두 같은 회원코드 체계를 쓰되, 코드에 박힌 역할과
 // 지금 시도하는 가입 화면이 일치하는지 먼저 확인한다. 동시 가입 요청에
 // 대비해 계정을 만들기 전에 코드를 원자적으로 선점한다(is_used=false일
 // 때만 반영되는 조건부 UPDATE) - 실패하면 releaseMemberCode로 되돌린다.
@@ -161,7 +161,7 @@ export async function signup(
   return { success: true };
 }
 
-// 선생님/조교는 학생과 달리 보호자연락처/주소/학교/학년이 필요 없어
+// 강사/조교는 학생과 달리 보호자연락처/주소/학교/학년이 필요 없어
 // 최소 정보만 받는다 - 둘 다 같은 흐름이라 role만 다르게 받아 공유한다.
 async function signupStaff(
   role: StaffRole,

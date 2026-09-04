@@ -84,7 +84,7 @@ export default function CourseTable({
             <tr>
               <th className="px-4 py-3">과목</th>
               <th className="px-4 py-3">강좌명</th>
-              <th className="px-4 py-3">선생님</th>
+              <th className="px-4 py-3">강사</th>
               <th className="px-4 py-3">학교</th>
               <th className="px-4 py-3">과정</th>
               <th className="px-4 py-3">가격</th>

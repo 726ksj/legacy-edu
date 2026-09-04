@@ -43,7 +43,7 @@ export async function updateProfile(
     .eq("id", user.id)
     .maybeSingle();
 
-  // 선생님/조교 계정은 보호자연락처/주소/학교/학년 화면 자체가 없으니,
+  // 강사/조교 계정은 보호자연락처/주소/학교/학년 화면 자체가 없으니,
   // 폼에서 안 보내온 값을 그대로 덮어써서 비워버리면 안 된다 - 학생
   // 계정일 때만 이 필드들을 같이 갱신한다.
   const isStaff = existingProfile?.role !== "student";

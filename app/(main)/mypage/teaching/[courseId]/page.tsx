@@ -30,7 +30,7 @@ export default async function Page({
 }) {
   const { courseId } = await params;
 
-  // 관리자 또는 이 강좌에 배정된 선생님만 들어올 수 있다. Server Action이
+  // 관리자 또는 이 강좌에 배정된 강사만 들어올 수 있다. Server Action이
   // 아니라 페이지 자체 접근이라, 여기서도 별도로 확인해야 한다.
   try {
     await requireCourseManager(courseId);

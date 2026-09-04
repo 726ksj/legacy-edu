@@ -27,7 +27,7 @@ export default function MyCoursesStrip({ courses }: { courses: CourseItem[] }) {
               {course.title}
             </p>
             <p className="mt-1 text-xs text-zinc-500 lg:text-sm">
-              {course.teacher_name} 선생님
+              {course.teacher_name} 강사
             </p>
           </Link>
         ))}

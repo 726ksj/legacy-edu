@@ -44,22 +44,15 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   {
     label: "LEGACY를 소개합니다",
-    href: "/about",
-    children: [{ label: "대표 인사말", href: "/about/greeting" }],
+    href: "/about/greeting",
   },
   {
     label: "커리큘럼",
-    href: "/curriculum",
-    children: [{ label: "LEGACY 커리큘럼", href: "/curriculum/legacy" }],
+    href: "/curriculum/legacy",
   },
   {
     label: "수강생 Review",
     href: "/reviews/course",
-    children: [
-      { label: "수강 후기", href: "/reviews/course" },
-      { label: "강좌 후기", href: "/reviews/lecture" },
-      { label: "학원 실제 후기", href: "/reviews/youtube" },
-    ],
   },
   {
     label: "공지사항",
@@ -83,7 +76,7 @@ export default async function Header() {
   ]);
 
   const admin = isAdmin(user);
-  // 선생님/조교 여부는 profiles.role 조회가 필요해서(JWT만으로는 알 수
+  // 강사/조교 여부는 profiles.role 조회가 필요해서(JWT만으로는 알 수
   // 없음), 관리자가 아닌 로그인 사용자에 한해서만 확인한다.
   const role = Boolean(user) && !admin ? await getMemberRole(user!.id) : null;
   const teacher = role === "teacher";
@@ -101,9 +94,9 @@ export default async function Header() {
         ]
       : teacher || assistant
         ? [
-            // 선생님/조교 계정은 학생용 마이페이지 하위 메뉴(나의 강의실/
+            // 강사/조교 계정은 학생용 마이페이지 하위 메뉴(나의 강의실/
             // 장바구니 등)가 다 의미 없으니, 여기엔 성적 관리 + 채팅 +
-            // 회원정보 수정만 둔다. (선생님의 강의/공지 관리는 우측 상단
+            // 회원정보 수정만 둔다. (강사의 강의/공지 관리는 우측 상단
             // "강좌 관리" 버튼으로 이미 갈 수 있어 중복으로 안 둔다.)
             { label: "성적 관리", href: "/mypage/grading" },
             { label: "채팅", href: "/mypage/chat" },

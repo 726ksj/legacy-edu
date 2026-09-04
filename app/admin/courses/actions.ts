@@ -28,9 +28,9 @@ async function resolveInstructor(
   return data;
 }
 
-// 담당 선생님/조교 계정은 강좌당 각각 하나만 지원한다(현재 단계 범위).
+// 담당 강사/조교 계정은 강좌당 각각 하나만 지원한다(현재 단계 범위).
 // role별로 기존 배정을 지우고 새로 고른 계정으로 다시 넣는 식으로 항상
-// 최신 상태로 맞춘다 - 선생님 배정을 바꿀 때 조교 배정까지 지워지면
+// 최신 상태로 맞춘다 - 강사 배정을 바꿀 때 조교 배정까지 지워지면
 // 안 되니 role을 걸고 지운다.
 async function syncCourseStaff(
   supabase: ReturnType<typeof createAdminClient>,

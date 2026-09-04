@@ -93,10 +93,10 @@ export default async function Page({
         [{course.subject}] {course.title} — 차시 관리
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        {course.teacher_name} 선생님 강좌의 영상을 업로드하고 관리합니다.
+        {course.teacher_name} 강사 강좌의 영상을 업로드하고 관리합니다.
       </p>
       <p className="mt-1 text-xs text-zinc-400">
-        배정된 선생님 계정:{" "}
+        배정된 강사 계정:{" "}
         {assignedTeachers && assignedTeachers.length > 0
           ? assignedTeachers.map((row) => row.profiles?.name).filter(Boolean).join(", ")
           : "없음"}

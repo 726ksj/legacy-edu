@@ -54,19 +54,8 @@ export default async function Page({
         {instructor.name} 강사 정보 수정
       </h1>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="mt-6">
         <EditInstructorForm instructor={instructor} teachers={teachers} />
-
-        {instructor.profile_id && (
-          <div>
-            <Link
-              href={`/admin/teacher-accounts/${instructor.profile_id}`}
-              className="w-fit text-sm font-semibold text-brand-dark hover:underline"
-            >
-              연결된 선생님 계정 관리하기 →
-            </Link>
-          </div>
-        )}
       </div>
 
       <div className="mt-6 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-4">
