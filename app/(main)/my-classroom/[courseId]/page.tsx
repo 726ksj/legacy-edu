@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/formatDateTime";
 import { syncLessonStatuses } from "@/lib/mux";
@@ -137,9 +138,18 @@ export default async function CourseClassroomPage({
         <p className="mt-8 text-sm font-semibold text-brand-dark sm:mt-10 sm:text-base">
           {course.subject}
         </p>
-        <h1 className="mt-1 text-3xl font-bold text-zinc-900 sm:text-4xl">
-          {course.title}
-        </h1>
+        <div className="mt-1 flex items-center justify-between gap-4">
+          <h1 className="min-w-0 text-3xl font-bold text-zinc-900 sm:text-4xl">
+            {course.title}
+          </h1>
+          <Link
+            href={`/my-classroom/${courseId}/chat`}
+            className="flex shrink-0 items-center gap-1.5 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          >
+            <MessageCircle className="h-4 w-4" />
+            채팅방 바로가기
+          </Link>
+        </div>
         {course.overview && (
           <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-600">
             {course.overview}

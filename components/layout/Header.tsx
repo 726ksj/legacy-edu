@@ -28,24 +28,6 @@ async function getRecentNoticeId(
   return isRecent ? data.id : null;
 }
 
-// 학생이 남긴 질문에 아직 확인 안 한 답변이 있는지 확인한다 - questions엔
-// 이미 answer/answer_read_at 컬럼이 있어서(과거에 만들어두고 화면만
-// 없었음) 새 저장소 없이 그대로 쓸 수 있다.
-async function hasUnreadAnswer(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  profileId: string,
-): Promise<boolean> {
-  const { data } = await supabase
-    .from("questions")
-    .select("id")
-    .eq("profile_id", profileId)
-    .not("answer", "is", null)
-    .is("answer_read_at", null)
-    .limit(1)
-    .maybeSingle();
-  return Boolean(data);
-}
-
 interface NavChild {
   label: string;
   href: string;
@@ -106,12 +88,6 @@ export default async function Header() {
   const role = Boolean(user) && !admin ? await getMemberRole(user!.id) : null;
   const teacher = role === "teacher";
   const assistant = role === "assistant";
-  // 학생(관리자/선생님/조교가 아닌 일반 로그인 사용자)일 때만 "나의 질문"
-  // 뱃지 여부를 확인한다.
-  const unreadAnswer =
-    user && !admin && !teacher && !assistant
-      ? await hasUnreadAnswer(supabase, user.id)
-      : false;
 
   const navItems: NavItem[] = [
     ...NAV_ITEMS.map((item) =>
@@ -126,11 +102,11 @@ export default async function Header() {
       : teacher || assistant
         ? [
             // 선생님/조교 계정은 학생용 마이페이지 하위 메뉴(나의 강의실/
-            // 장바구니 등)가 다 의미 없으니, 여기엔 성적 관리 + 질문 관리 +
+            // 장바구니 등)가 다 의미 없으니, 여기엔 성적 관리 + 채팅 +
             // 회원정보 수정만 둔다. (선생님의 강의/공지 관리는 우측 상단
             // "강좌 관리" 버튼으로 이미 갈 수 있어 중복으로 안 둔다.)
             { label: "성적 관리", href: "/mypage/grading" },
-            { label: "질문 관리", href: "/mypage/questions" },
+            { label: "채팅", href: "/mypage/chat" },
             { label: "회원정보 관리", href: "/settings" },
           ]
         : [
@@ -139,11 +115,6 @@ export default async function Header() {
               href: "/mypage",
               children: [
                 { label: "나의 강의실", href: "/my-classroom" },
-                {
-                  label: "나의 질문",
-                  href: "/mypage/notes",
-                  badge: unreadAnswer,
-                },
                 { label: "장바구니", href: "/mypage/cart" },
                 { label: "주문내역", href: "/mypage/orders" },
                 { label: "성적 리포트", href: "/mypage/score-report" },

@@ -21,7 +21,7 @@ const ADMIN_NAV_GROUPS = [
     items: [
       { label: "강좌 관리", href: "/admin/courses" },
       { label: "성적 관리", href: "/admin/score-report-categories" },
-      { label: "질의응답 관리", href: "/admin/notes" },
+      { label: "채팅 모니터링", href: "/admin/chat" },
       { label: "수강 권한 관리", href: "/admin/enrollments" },
     ],
   },
@@ -48,11 +48,9 @@ const ADMIN_NAV_GROUPS = [
 ];
 
 export default function AdminSidebar({
-  hasNewNote = false,
   pendingConsultationCount = 0,
   pendingInquiryCount = 0,
 }: {
-  hasNewNote?: boolean;
   pendingConsultationCount?: number;
   pendingInquiryCount?: number;
 }) {
@@ -136,11 +134,6 @@ export default function AdminSidebar({
                       )}
                     >
                       {item.label}
-                      {item.href === "/admin/notes" && hasNewNote && (
-                        <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                          NEW
-                        </span>
-                      )}
                       {item.href === "/admin/consultations" &&
                         pendingConsultationCount > 0 && (
                           <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">

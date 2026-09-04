@@ -1,8 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
-import { formatDateTime } from "@/lib/formatDateTime";
 import {
   signPlaybackToken,
   signThumbnailToken,
@@ -13,9 +13,7 @@ import {
   filterWatchableLessons,
   type LessonVisibility,
 } from "@/lib/enrollments";
-import { buildThreads } from "@/lib/questionThreads";
 import VideoPlayer from "./VideoPlayer";
-import NoteSection from "./NoteSection";
 import ProcessingNotice from "./ProcessingNotice";
 
 interface LessonRow {
@@ -66,28 +64,19 @@ export default async function WatchPage({
     notFound();
   }
 
-  // 셋 다 lesson.course_id/lessonId/user.id만 있으면 되고 서로 의존하지
-  // 않으니 병렬로 요청한다.
-  const [enrolled, { data: allSiblings }, { data: noteRows }] =
-    await Promise.all([
-      canWatchLesson(supabase, user.id, lesson),
-      supabase
-        .from("lessons")
-        .select(
-          "id, order_no, title, status, mux_asset_id, mux_playback_id, visibility",
-        )
-        .eq("course_id", lesson.course_id)
-        .order("order_no", { ascending: true })
-        .returns<SiblingLesson[]>(),
-      // RLS(questions_select_own_thread)가 "본인이 쓴 질문 + 그 질문에
-      // 달린 답글(스태프 포함)"만 걸러서 내려주므로, profile_id로 다시
-      // 필터링할 필요가 없다 - 그러면 스태프가 쓴 답글까지 함께 빠진다.
-      supabase
-        .from("questions")
-        .select("id, parent_id, content, created_at, profile_id")
-        .eq("lesson_id", lessonId)
-        .order("created_at", { ascending: true }),
-    ]);
+  // 둘 다 lesson.course_id/user.id만 있으면 되고 서로 의존하지 않으니
+  // 병렬로 요청한다.
+  const [enrolled, { data: allSiblings }] = await Promise.all([
+    canWatchLesson(supabase, user.id, lesson),
+    supabase
+      .from("lessons")
+      .select(
+        "id, order_no, title, status, mux_asset_id, mux_playback_id, visibility",
+      )
+      .eq("course_id", lesson.course_id)
+      .order("order_no", { ascending: true })
+      .returns<SiblingLesson[]>(),
+  ]);
 
   if (!enrolled) {
     notFound();
@@ -121,29 +110,6 @@ export default async function WatchPage({
         : null,
     })),
   );
-
-  const threads = buildThreads(
-    (noteRows ?? []).map((row) => ({
-      ...row,
-      lesson_id: lessonId,
-      question_read_at: null,
-      answer_read_at: null,
-    })),
-  ).map((thread) => ({
-    id: thread.id,
-    messages: thread.messages.map((message) => {
-      const isFromStudent = message.profileId === thread.studentProfileId;
-      return {
-        id: message.id,
-        authorLabel: message.profileId === user.id ? "나" : "답변",
-        isFromStudent,
-        content: message.content,
-        createdAt: formatDateTime(message.createdAt),
-        canEdit: isFromStudent,
-        canDelete: isFromStudent,
-      };
-    }),
-  }));
 
   const { data: progressRows } = upNext.length
     ? await supabase
@@ -206,7 +172,13 @@ export default async function WatchPage({
           <ProcessingNotice />
         )}
 
-        <NoteSection lessonId={lesson.id} threads={threads} />
+        <Link
+          href={`/my-classroom/${lesson.course_id}/chat`}
+          className="flex items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-brand-dark hover:border-brand"
+        >
+          <MessageCircle className="h-4 w-4" />
+          채팅방에서 질문하기
+        </Link>
       </div>
 
       <aside className="flex w-full flex-col gap-3 lg:w-80 lg:shrink-0">
