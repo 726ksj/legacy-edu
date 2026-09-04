@@ -38,7 +38,7 @@ export default function EditInstructorForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6"
+      className="grid grid-cols-1 gap-4 rounded-lg border border-zinc-200 bg-white p-6 sm:grid-cols-2"
     >
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         강사 이름
@@ -64,7 +64,7 @@ export default function EditInstructorForm({
           ))}
         </select>
       </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 sm:col-span-2">
         사진
         <div className="flex items-center gap-3">
           {instructor.photo_url && (
@@ -89,7 +89,7 @@ export default function EditInstructorForm({
           새 사진을 선택하면 기존 사진을 대체합니다.
         </span>
       </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 sm:col-span-2">
         소개
         <textarea
           name="bio"
@@ -98,7 +98,7 @@ export default function EditInstructorForm({
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700 sm:col-span-2">
         연결된 선생님 계정 (선택)
         <select
           name="profileId"
@@ -118,16 +118,20 @@ export default function EditInstructorForm({
       </label>
 
       {state.error && (
-        <p className="text-sm font-medium text-red-500">{state.error}</p>
+        <p className="text-sm font-medium text-red-500 sm:col-span-2">
+          {state.error}
+        </p>
       )}
       {state.success && (
-        <p className="text-sm font-medium text-brand-dark">저장되었습니다.</p>
+        <p className="text-sm font-medium text-brand-dark sm:col-span-2">
+          저장되었습니다.
+        </p>
       )}
 
       <button
         type="submit"
         disabled={isPending}
-        className="self-start rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        className="self-start rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60 sm:col-span-2"
       >
         {isPending ? "저장 중..." : "저장"}
       </button>

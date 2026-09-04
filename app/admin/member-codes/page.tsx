@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const ROLE_LABEL: Record<string, string> = {
   student: "학생",
-  teacher: "선생님",
+  teacher: "강사",
   assistant: "조교",
 };
 
@@ -28,8 +28,8 @@ export default async function Page() {
     <div className="flex flex-1 flex-col p-8">
       <h1 className="text-2xl font-bold text-zinc-900">회원코드 관리</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        회원가입에 사용되는 코드를 발급/관리합니다. 역할(학생/선생님/조교)에
-        따라 가입 화면에서 요구하는 정보가 달라집니다. 선생님으로 가입한
+        회원가입에 사용되는 코드를 발급/관리합니다. 역할(학생/강사/조교)에
+        따라 가입 화면에서 요구하는 정보가 달라집니다. 강사로 가입한
         계정의 담당 강좌는 강좌 관리에서 배정합니다.
       </p>
 

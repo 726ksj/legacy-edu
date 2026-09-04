@@ -57,7 +57,7 @@ export default function MemberCodeForm() {
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         >
           <option value="student">학생</option>
-          <option value="teacher">선생님</option>
+          <option value="teacher">강사</option>
           <option value="assistant">조교</option>
         </select>
       </label>

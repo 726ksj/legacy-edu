@@ -54,20 +54,22 @@ export default async function Page({
         {instructor.name} 강사 정보 수정
       </h1>
 
-      <div className="mt-6 max-w-lg">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <EditInstructorForm instructor={instructor} teachers={teachers} />
+
+        {instructor.profile_id && (
+          <div>
+            <Link
+              href={`/admin/teacher-accounts/${instructor.profile_id}`}
+              className="w-fit text-sm font-semibold text-brand-dark hover:underline"
+            >
+              연결된 선생님 계정 관리하기 →
+            </Link>
+          </div>
+        )}
       </div>
 
-      {instructor.profile_id && (
-        <Link
-          href={`/admin/teacher-accounts/${instructor.profile_id}`}
-          className="mt-4 w-fit text-sm font-semibold text-brand-dark hover:underline"
-        >
-          연결된 선생님 계정 관리하기 →
-        </Link>
-      )}
-
-      <div className="mt-6 max-w-lg rounded-lg border border-red-200 bg-red-50 p-4">
+      <div className="mt-6 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="text-sm font-semibold text-red-700">위험 구역</p>
         <p className="mt-1 text-xs text-red-600">
           삭제하면 이 강사를 연결한 강좌에서 강사 정보가 사라집니다.

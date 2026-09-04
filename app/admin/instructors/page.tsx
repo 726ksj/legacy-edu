@@ -102,7 +102,7 @@ export default async function Page() {
                     href={`/admin/instructors/${row.id}`}
                     className="text-xs font-semibold text-brand-dark hover:underline"
                   >
-                    수정
+                    자세히 보기
                   </Link>
                 </td>
               </tr>
