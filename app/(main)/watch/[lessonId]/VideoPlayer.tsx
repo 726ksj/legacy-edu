@@ -73,6 +73,7 @@ function isPlainVideoSurfaceTarget(e: Event): boolean {
 export default function VideoPlayer({
   playbackId,
   token,
+  src,
   title,
   poster,
   lessonId,
@@ -81,6 +82,11 @@ export default function VideoPlayer({
 }: {
   playbackId: string;
   token: string;
+  // 최고화질 mp4(static rendition)가 준비돼 있으면 서버 컴포넌트가 이걸
+  // 채워준다 - HLS(hls.js) 자체를 안 거치게 돼서, hls.js가 내부 복구를
+  // 시도하다 조용히 완전히 멈춰버리는 문제를 구조적으로 피할 수 있다.
+  // 없으면 기존처럼 playbackId+token으로 HLS 재생한다.
+  src?: string;
   title: string;
   poster?: string;
   lessonId: string;
@@ -672,10 +678,11 @@ export default function VideoPlayer({
             // 멈춘 상태에서 벗어날 수 있어서, prop만 바꾸는 걸로는 부족하다.
             key={playerKey}
             ref={playerRef}
-            playbackId={playbackId}
-            tokens={{ playback: token }}
-            poster={poster}
+            // mp4(src)가 있으면 hls.js를 아예 안 거치도록 그쪽을 쓰고,
+            // 없으면 기존 HLS(playbackId+tokens) 방식으로 재생한다.
+            {...(src ? { src } : { playbackId, tokens: { playback: token } })}
             streamType="on-demand"
+            poster={poster}
             metadata={{ video_title: title }}
             _hlsConfig={hlsConfig}
             defaultHiddenCaptions

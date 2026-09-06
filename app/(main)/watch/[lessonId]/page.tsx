@@ -4,6 +4,8 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { createClient, getAuthUser } from "@/lib/supabase/server";
 import {
+  buildMp4Url,
+  ensureMp4Ready,
   signPlaybackToken,
   signThumbnailToken,
   syncLessonStatuses,
@@ -25,6 +27,8 @@ interface LessonRow {
   mux_playback_id: string | null;
   course_id: string;
   visibility: LessonVisibility;
+  mp4_ready: boolean;
+  created_at: string;
   courses: { subject: string; title: string; teacher_name: string } | null;
 }
 
@@ -54,7 +58,7 @@ export default async function WatchPage({
   const { data: lesson } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, visibility, courses(subject, title, teacher_name)",
+      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, visibility, mp4_ready, created_at, courses(subject, title, teacher_name)",
     )
     .eq("id", lessonId)
     .maybeSingle()
@@ -138,6 +142,20 @@ export default async function WatchPage({
     (currentIndex >= 0 ? upNext[currentIndex].thumbnailUrl : undefined) ??
     undefined;
 
+  // hls.js가 재생 도중 내부적으로 복구를 시도하다 조용히 완전히 멈춰버리는
+  // 문제를 피하려고, 최고화질 mp4가 준비돼 있으면 HLS 대신 그걸로 재생한다
+  // (화질 자동전환은 포기하는 대신 hls.js 자체를 안 거치게 된다).
+  const playbackToken =
+    lesson.status === "ready" && lesson.mux_playback_id
+      ? await signPlaybackToken(lesson.mux_playback_id)
+      : null;
+  const mp4Ready =
+    lesson.status === "ready" && (await ensureMp4Ready(supabase, lesson));
+  const videoSrc =
+    mp4Ready && lesson.mux_playback_id && playbackToken
+      ? buildMp4Url(lesson.mux_playback_id, playbackToken)
+      : undefined;
+
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-16 lg:flex-row lg:items-start">
       <div className="flex flex-1 flex-col gap-4">
@@ -152,10 +170,11 @@ export default async function WatchPage({
           </h1>
         </div>
 
-        {lesson.status === "ready" && lesson.mux_playback_id ? (
+        {lesson.status === "ready" && lesson.mux_playback_id && playbackToken ? (
           <VideoPlayer
             playbackId={lesson.mux_playback_id}
-            token={await signPlaybackToken(lesson.mux_playback_id)}
+            token={playbackToken}
+            src={videoSrc}
             title={lesson.title}
             poster={posterUrl}
             lessonId={lesson.id}

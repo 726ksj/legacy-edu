@@ -134,3 +134,55 @@ export async function unwrapMuxWebhookEvent(body: string, headers: Headers) {
   const mux = createMuxClient();
   return mux.webhooks.unwrap(body, headers, process.env.MUX_WEBHOOK_SECRET);
 }
+
+// createDirectUpload에서 static_renditions로 요청하는 해상도와 맞춰뒀다 -
+// "highest"를 요청하면 Mux가 이 이름으로 파일을 만든다.
+const MP4_RENDITION_NAME = "highest.mp4";
+
+// mp4(static rendition)는 asset 본체가 ready된 뒤에도 한동안 더 걸려
+// 준비된다. static_renditions를 애초에 요청하지 않은(이 기능 이전에
+// 업로드된) 오래된 lesson들까지 매번 다시 물어보는 낭비를 막기 위해,
+// 생성된 지 이 시간 안쪽인 lesson만 재확인한다 - 80분짜리 영상도 이
+// 안에 충분히 끝난다.
+const MP4_READY_CHECK_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+interface Mp4CheckableLesson {
+  id: string;
+  mux_asset_id: string | null;
+  mp4_ready: boolean;
+  created_at: string;
+}
+
+// mp4 준비가 끝났으면 DB에 캐시해두고 true를 반환한다. 이미 캐시돼 있으면
+// Mux를 다시 조회하지 않는다.
+export async function ensureMp4Ready(
+  supabase: SupabaseClient,
+  lesson: Mp4CheckableLesson,
+): Promise<boolean> {
+  if (lesson.mp4_ready) return true;
+  if (!lesson.mux_asset_id) return false;
+  if (Date.now() - new Date(lesson.created_at).getTime() > MP4_READY_CHECK_WINDOW_MS) {
+    return false;
+  }
+
+  try {
+    const mux = createMuxClient();
+    const asset = await mux.video.assets.retrieve(lesson.mux_asset_id);
+    // static_renditions 자체에는 종합 status 필드가 없다 - 우리가 요청한
+    // 해상도(highest)의 파일 하나를 찾아 그 파일의 status를 봐야 한다.
+    const file = asset.static_renditions?.files?.find(
+      (f) => f.name === MP4_RENDITION_NAME,
+    );
+    if (file?.status !== "ready") return false;
+
+    await supabase.from("lessons").update({ mp4_ready: true }).eq("id", lesson.id);
+    return true;
+  } catch {
+    // 일시적 오류일 수 있음 - 다음 새로고침에 재시도
+    return false;
+  }
+}
+
+export function buildMp4Url(playbackId: string, token: string) {
+  return `https://stream.mux.com/${playbackId}/${MP4_RENDITION_NAME}?token=${token}`;
+}

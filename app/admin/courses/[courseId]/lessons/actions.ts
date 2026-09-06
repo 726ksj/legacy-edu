@@ -24,6 +24,12 @@ export async function createDirectUpload(
         // 관측돼 한 단계 올렸다 - 재생(전송) 비용은 등급과 무관하게
         // 해상도 기준으로만 매겨지고, 인코딩 시 1회성 비용만 늘어난다.
         video_quality: "plus",
+        // hls.js가 재생 도중 내부적으로 복구를 시도하다 조용히 완전히
+        // 멈춰버리는(알려진 hls.js 버그로 추정) 문제가 있어, 최고화질
+        // mp4도 같이 만들어둔다 - 준비되면 HLS 대신 이 mp4로 재생해서
+        // hls.js/MediaSource 자체를 안 거치게 만들 수 있다(화질 자동전환은
+        // 포기). ensureMp4Ready(lib/mux.ts)가 준비 여부를 추적한다.
+        static_renditions: [{ resolution: "highest" }],
       },
     });
     return { uploadUrl: upload.url ?? "", uploadId: upload.id };
