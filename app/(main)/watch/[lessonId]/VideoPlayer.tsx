@@ -12,7 +12,7 @@ import {
   SkipForward,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { saveLessonProgress } from "./progress-actions";
 
 const PROGRESS_REPORT_INTERVAL_MS = 15000;
@@ -116,10 +116,18 @@ export default function VideoPlayer({
   // 시도한다 - 아래 MAX_AUTO_RECOVERY_ATTEMPTS 참고.
   const [stalled, setStalled] = useState(false);
   const [playerKey, setPlayerKey] = useState(0);
-  const lastProgressRef = useRef({ time: 0, at: Date.now() });
-  const pendingResumeRef = useRef<number | null>(null);
+  // 복구 시 이동할 위치. 새 플레이어 인스턴스가 마운트된 직후 currentTime을
+  // 수동으로 옮기면 hls.js가 아직 준비되기 전이라 무시되고 0초부터
+  // 시작해버리는 경우가 있었다 - hls.js가 정식으로 지원하는 startPosition
+  // 설정으로 "처음부터 이 위치에서 시작"하도록 넘기면 이 경합이 없어진다.
+  const [resumeFrom, setResumeFrom] = useState<number | null>(null);
+  const lastProgressRef = useRef({ time: 0, at: 0 });
   const recoveryAttemptsRef = useRef(0);
   const lastRecoveryAtRef = useRef(0);
+  const hlsConfig = useMemo(
+    () => (resumeFrom != null ? { ...HLS_CONFIG, startPosition: resumeFrom } : HLS_CONFIG),
+    [resumeFrom],
+  );
   // mux-player가 "사용자 비활성"으로 판단했는지 여부. mux-player 자신의
   // 하단 컨트롤 바와 같은 타이밍에 나타났다 사라지게 하기 위해, 우리가
   // 따로 탭을 감지해서 토글하지 않고 mux-player가 쏘는 userinactivechange
@@ -306,8 +314,8 @@ export default function VideoPlayer({
     lastRecoveryAtRef.current = now;
 
     const resumeAt = playerRef.current?.currentTime ?? lastProgressRef.current.time;
-    pendingResumeRef.current = resumeAt;
     lastProgressRef.current = { time: resumeAt, at: now };
+    setResumeFrom(resumeAt);
     setPlayerKey((k) => k + 1);
   }, []);
 
@@ -658,20 +666,16 @@ export default function VideoPlayer({
             poster={poster}
             streamType="on-demand"
             metadata={{ video_title: title }}
-            _hlsConfig={HLS_CONFIG}
+            _hlsConfig={hlsConfig}
             defaultHiddenCaptions
             disablePictureInPicture
             onLoadedMetadata={() => {
-              // 자동 복구로 새로 마운트된 인스턴스라면, 멈추기 직전 위치로
-              // 이동한 뒤 이어서 재생한다 - 사용자는 짧은 재로딩만 보고
-              // 넘어가고 새로고침을 직접 할 필요가 없다.
-              const resumeAt = pendingResumeRef.current;
-              if (resumeAt == null) return;
-              pendingResumeRef.current = null;
-              const player = playerRef.current;
-              if (!player) return;
-              player.currentTime = resumeAt;
-              player.play().catch(() => {});
+              // 자동 복구로 새로 마운트된 인스턴스라면(hlsConfig의
+              // startPosition이 이미 멈추기 직전 위치로 이동을 처리해준다)
+              // 이어서 재생만 해준다 - 사용자는 짧은 재로딩만 보고 넘어가고
+              // 새로고침을 직접 할 필요가 없다.
+              if (resumeFrom == null) return;
+              playerRef.current?.play().catch(() => {});
             }}
             onPlay={() => {
               setIsPaused(false);
