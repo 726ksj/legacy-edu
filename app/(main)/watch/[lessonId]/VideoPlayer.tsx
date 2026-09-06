@@ -16,6 +16,33 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { saveLessonProgress } from "./progress-actions";
 
 const PROGRESS_REPORT_INTERVAL_MS = 15000;
+// 멈춘 걸 얼마나 빨리 알아채는지가 곧 "얼마나 티가 안 나게 복구되는지"를
+// 정한다 - 짧을수록 사용자는 잠깐의 버벅임 정도로만 느낀다.
+const STALL_TIMEOUT_MS = 5000;
+const STALL_CHECK_INTERVAL_MS = 1000;
+// 멈춤이 감지되면 우선 플레이어를 새로 붙여서 같은 위치부터 자동으로
+// 이어 재생을 시도한다. 이 시도가 짧은 시간 안에 반복해서 실패하면(즉,
+// 재시작해도 곧바로 다시 멈추면) 재시작으로 해결되는 문제가 아니라고
+// 보고 그때 가서야 새로고침 안내를 띄운다.
+const MAX_AUTO_RECOVERY_ATTEMPTS = 3;
+const RECOVERY_ATTEMPT_RESET_MS = 60000;
+
+// hls.js 기본값은 버퍼를 짧게 잡고 재시도도 적게 하고 포기한다 - 그래서
+// 일시적인 네트워크 지연/CDN 응답 지연 정도에도 복구를 포기하고 멈춰버리는
+// 것으로 보인다. 버퍼를 더 넉넉히 들고, 매니페스트/세그먼트 재시도 횟수와
+// 버퍼링 시 재생위치를 살짝 밀어보는(nudge) 재시도 횟수를 늘려서 애초에
+// "포기하는" 상황 자체가 덜 생기게 한다.
+const HLS_CONFIG = {
+  maxBufferLength: 60,
+  maxMaxBufferLength: 900,
+  manifestLoadingMaxRetry: 4,
+  manifestLoadingRetryDelay: 1000,
+  levelLoadingMaxRetry: 8,
+  levelLoadingRetryDelay: 1000,
+  fragLoadingMaxRetry: 10,
+  fragLoadingRetryDelay: 1000,
+  nudgeMaxRetry: 6,
+};
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
@@ -78,6 +105,21 @@ export default function VideoPlayer({
   // 구분하는 대신, 에러가 나면 새로고침을 안내한다(새로고침하면 서버
   // 컴포넌트가 새 토큰을 발급한다).
   const [playbackError, setPlaybackError] = useState(false);
+  // 간헐적인 네트워크 문제나 hls.js 내부 복구 실패로 mux-player가 그대로
+  // 멈춰버리는 경우가 있다 - 이때는 error/waiting 이벤트가 전혀 안 뜨고
+  // (내부적으로 재시도하다 조용히 포기하는 경우도 있음) 콘솔에도 아무
+  // 로그가 안 남아서, 겉보기엔 그냥 "영상이 멈춘" 것처럼 보인다. 특정
+  // 이벤트에 의존하는 대신, 재생 중인데 currentTime 자체가 일정 시간
+  // 안 움직이면 원인과 무관하게 멈춘 것으로 간주한다. 이때 바로 사용자에게
+  // 새로고침을 요구하는 대신, playerKey를 바꿔 플레이어를 통째로 새로
+  // 붙이고(=hls.js도 새로 시작) 같은 위치로 이동시켜 자동 복구를 먼저
+  // 시도한다 - 아래 MAX_AUTO_RECOVERY_ATTEMPTS 참고.
+  const [stalled, setStalled] = useState(false);
+  const [playerKey, setPlayerKey] = useState(0);
+  const lastProgressRef = useRef({ time: 0, at: Date.now() });
+  const pendingResumeRef = useRef<number | null>(null);
+  const recoveryAttemptsRef = useRef(0);
+  const lastRecoveryAtRef = useRef(0);
   // mux-player가 "사용자 비활성"으로 판단했는지 여부. mux-player 자신의
   // 하단 컨트롤 바와 같은 타이밍에 나타났다 사라지게 하기 위해, 우리가
   // 따로 탭을 감지해서 토글하지 않고 mux-player가 쏘는 userinactivechange
@@ -243,6 +285,62 @@ export default function VideoPlayer({
   useEffect(() => {
     return () => reportProgress();
   }, [reportProgress]);
+
+  // 멈춤이 감지됐을 때 바로 사용자에게 새로고침을 요구하지 않고, 먼저
+  // 플레이어를 통째로 새로 붙여서(playerKey 변경 → hls.js도 새로 시작)
+  // 같은 위치로 이동 후 자동 재생을 시도한다. 최근 RECOVERY_ATTEMPT_RESET_MS
+  // 안에 이미 여러 번 시도했는데도 계속 멈춘다면(재시작으로 안 고쳐지는
+  // 문제라는 뜻) 그때는 포기하고 새로고침 안내를 띄운다.
+  const attemptRecovery = useCallback(() => {
+    const now = Date.now();
+    if (now - lastRecoveryAtRef.current > RECOVERY_ATTEMPT_RESET_MS) {
+      recoveryAttemptsRef.current = 0;
+    }
+
+    if (recoveryAttemptsRef.current >= MAX_AUTO_RECOVERY_ATTEMPTS) {
+      setStalled(true);
+      return;
+    }
+
+    recoveryAttemptsRef.current += 1;
+    lastRecoveryAtRef.current = now;
+
+    const resumeAt = playerRef.current?.currentTime ?? lastProgressRef.current.time;
+    pendingResumeRef.current = resumeAt;
+    lastProgressRef.current = { time: resumeAt, at: now };
+    setPlayerKey((k) => k + 1);
+  }, []);
+
+  // 재생 중인데 currentTime이 STALL_TIMEOUT_MS 이상 실제로 안 움직이면
+  // 멈춘 것으로 간주한다. hls.js가 내부적으로 복구를 시도하다 조용히
+  // 실패하는 경우 waiting/error 이벤트가 전혀 안 뜰 수 있어서(콘솔 로그도
+  // 없음), 특정 이벤트에 기대는 대신 실제 진행 여부만 본다.
+  useEffect(() => {
+    if (isPaused) return;
+
+    lastProgressRef.current = {
+      time: playerRef.current?.currentTime ?? 0,
+      at: Date.now(),
+    };
+
+    const interval = setInterval(() => {
+      const player = playerRef.current;
+      if (!player) return;
+      const currentTime = player.currentTime;
+      const now = Date.now();
+
+      if (Math.abs(currentTime - lastProgressRef.current.time) > 0.25) {
+        lastProgressRef.current = { time: currentTime, at: now };
+        return;
+      }
+
+      if (now - lastProgressRef.current.at >= STALL_TIMEOUT_MS) {
+        attemptRecovery();
+      }
+    }, STALL_CHECK_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [isPaused, attemptRecovery]);
 
   // mux-player 자신의 하단 컨트롤 바는 자체적으로 탭/호버에 따라 표시·자동
   // 숨김을 관리한다(일시정지 중엔 안 숨는 것까지 포함). 우리 중앙 컨트롤을
@@ -532,22 +630,49 @@ export default function VideoPlayer({
         <div
           onMouseDown={handleMouseDown}
           className={isFullscreen ? "h-full w-full" : undefined}
-          style={{
-            transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
-            transformOrigin: "center center",
-            transition: isGesturing ? "none" : "transform 0.15s ease-out",
-            cursor: scale > 1 ? "grab" : undefined,
-          }}
+          // scale===1일 때도 항등 transform(scale(1) translate(0px,0px))을
+          // 계속 걸어두면 브라우저가 이 레이어를 계속 별도 GPU 합성
+          // 레이어로 승격시켜둔다 - 일부 환경에서 영상 디코딩/오디오는
+          // 정상 진행되는데 화면 합성만 멈추는 것처럼 보이는 렌더링
+          // 문제와 연관될 수 있어서, 확대 중이 아닐 때는 transform 자체를
+          // 아예 안 건다.
+          style={
+            scale === 1
+              ? undefined
+              : {
+                  transform: `scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
+                  transformOrigin: "center center",
+                  transition: isGesturing ? "none" : "transform 0.15s ease-out",
+                  cursor: "grab",
+                }
+          }
         >
           <MuxPlayer
+            // 자동 복구 시(attemptRecovery) key를 바꿔 이 엘리먼트를 통째로
+            // 새로 마운트한다 - hls.js 인스턴스까지 완전히 새로 시작해야
+            // 멈춘 상태에서 벗어날 수 있어서, prop만 바꾸는 걸로는 부족하다.
+            key={playerKey}
             ref={playerRef}
             playbackId={playbackId}
             tokens={{ playback: token }}
             poster={poster}
             streamType="on-demand"
             metadata={{ video_title: title }}
+            _hlsConfig={HLS_CONFIG}
             defaultHiddenCaptions
             disablePictureInPicture
+            onLoadedMetadata={() => {
+              // 자동 복구로 새로 마운트된 인스턴스라면, 멈추기 직전 위치로
+              // 이동한 뒤 이어서 재생한다 - 사용자는 짧은 재로딩만 보고
+              // 넘어가고 새로고침을 직접 할 필요가 없다.
+              const resumeAt = pendingResumeRef.current;
+              if (resumeAt == null) return;
+              pendingResumeRef.current = null;
+              const player = playerRef.current;
+              if (!player) return;
+              player.currentTime = resumeAt;
+              player.play().catch(() => {});
+            }}
             onPlay={() => {
               setIsPaused(false);
               setManuallyHidden(false);
@@ -563,10 +688,12 @@ export default function VideoPlayer({
         </div>
       </div>
 
-      {playbackError && (
+      {(playbackError || stalled) && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/90 px-4 text-center">
           <p className="text-sm text-white">
-            재생 세션이 만료됐습니다. 새로고침 후 다시 시도해주세요.
+            {playbackError
+              ? "재생 세션이 만료됐습니다. 새로고침 후 다시 시도해주세요."
+              : "재생이 멈췄습니다. 새로고침 후 다시 시도해주세요."}
           </p>
           <button
             type="button"
@@ -578,7 +705,7 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {!playbackError && controlsVisible && (
+      {!playbackError && !stalled && controlsVisible && (
         // 이 레이어 전체와 버튼들은 pointer-events: none이다. mux-player 위에
         // 얹힌 형제 엘리먼트가 실제로 마우스 이벤트를 가로채면, 커서가
         // 버튼으로 넘어가는 순간 mux-player 표면 기준 히트테스트 대상이
