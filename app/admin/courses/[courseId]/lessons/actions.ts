@@ -17,7 +17,14 @@ export async function createDirectUpload(
   try {
     const upload = await mux.video.uploads.create({
       cors_origin: "*",
-      new_asset_settings: { playback_policy: ["signed"], passthrough: courseId },
+      new_asset_settings: {
+        playback_policy: ["signed"],
+        passthrough: courseId,
+        // 기본값(basic)은 화질전환 시 일부 기기 디코더가 멈추는 현상이
+        // 관측돼 한 단계 올렸다 - 재생(전송) 비용은 등급과 무관하게
+        // 해상도 기준으로만 매겨지고, 인코딩 시 1회성 비용만 늘어난다.
+        video_quality: "plus",
+      },
     });
     return { uploadUrl: upload.url ?? "", uploadId: upload.id };
   } catch {
