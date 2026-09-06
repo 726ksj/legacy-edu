@@ -18,7 +18,7 @@ import { saveLessonProgress } from "./progress-actions";
 const PROGRESS_REPORT_INTERVAL_MS = 15000;
 // 멈춘 걸 얼마나 빨리 알아채는지가 곧 "얼마나 티가 안 나게 복구되는지"를
 // 정한다 - 짧을수록 사용자는 잠깐의 버벅임 정도로만 느낀다.
-const STALL_TIMEOUT_MS = 5000;
+const STALL_TIMEOUT_MS = 3000;
 const STALL_CHECK_INTERVAL_MS = 1000;
 // 멈춤이 감지되면 우선 플레이어를 새로 붙여서 같은 위치부터 자동으로
 // 이어 재생을 시도한다. 이 시도가 짧은 시간 안에 반복해서 실패하면(즉,
