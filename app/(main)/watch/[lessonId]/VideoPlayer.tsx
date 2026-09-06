@@ -244,10 +244,12 @@ export default function VideoPlayer({
       const player = playerRef.current;
       if (!player) return;
       const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
-      player.currentTime = Math.min(
-        duration,
-        Math.max(0, player.currentTime + deltaSeconds),
-      );
+      const nextTime = Math.min(duration, Math.max(0, player.currentTime + deltaSeconds));
+      player.currentTime = nextTime;
+      // 뒤로 감기(-10초)는 정지 감시 로직 입장에선 "제자리에서 갑자기
+      // 과거로 튄" 것과 구분이 안 된다 - 사용자가 직접 탐색한 것이니 여기서
+      // 바로 기준점을 갱신해서 오탐(멈춘 것으로 오인)하지 않게 한다.
+      lastProgressRef.current = { time: nextTime, at: Date.now() };
       pokeMuxActivity();
     },
     [pokeMuxActivity],
@@ -313,8 +315,12 @@ export default function VideoPlayer({
     recoveryAttemptsRef.current += 1;
     lastRecoveryAtRef.current = now;
 
-    const resumeAt = playerRef.current?.currentTime ?? lastProgressRef.current.time;
-    lastProgressRef.current = { time: resumeAt, at: now };
+    // 멈춘 "그 순간"의 currentTime을 읽는 게 아니라, 감시 로직이 계속
+    // 추적해온 "마지막으로 정상 진행이 확인된 위치"를 쓴다. 멈춤의 원인
+    // 자체가 내부적으로 재생 위치를 0으로 되돌려버리는 경우, 감지 시점에
+    // currentTime을 그대로 읽으면 이미 망가진 0을 복구 위치로 저장하게
+    // 된다.
+    const resumeAt = lastProgressRef.current.time;
     setResumeFrom(resumeAt);
     setPlayerKey((k) => k + 1);
   }, []);
@@ -322,7 +328,12 @@ export default function VideoPlayer({
   // 재생 중인데 currentTime이 STALL_TIMEOUT_MS 이상 실제로 안 움직이면
   // 멈춘 것으로 간주한다. hls.js가 내부적으로 복구를 시도하다 조용히
   // 실패하는 경우 waiting/error 이벤트가 전혀 안 뜰 수 있어서(콘솔 로그도
-  // 없음), 특정 이벤트에 기대는 대신 실제 진행 여부만 본다.
+  // 없음), 특정 이벤트에 기대는 대신 실제 진행 여부만 본다. 뒤로(과거로)
+  // 튀는 움직임은 "진행"으로 치지 않는다 - 멈춤의 원인 자체가 내부적으로
+  // currentTime을 0 등으로 되돌려버리는 경우가 있는데, 이걸 정상 진행으로
+  // 착각하면 정작 복구 위치로 써야 할 "마지막 정상 위치" 기록이 그
+  // 잘못된 값으로 덮어써진다. 사용자가 직접 되감기(seekBy)한 경우는
+  // 그쪽에서 별도로 기준점을 갱신해준다.
   useEffect(() => {
     if (isPaused) return;
 
@@ -337,7 +348,7 @@ export default function VideoPlayer({
       const currentTime = player.currentTime;
       const now = Date.now();
 
-      if (Math.abs(currentTime - lastProgressRef.current.time) > 0.25) {
+      if (currentTime > lastProgressRef.current.time + 0.25) {
         lastProgressRef.current = { time: currentTime, at: now };
         return;
       }
