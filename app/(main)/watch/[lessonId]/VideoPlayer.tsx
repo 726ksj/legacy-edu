@@ -433,15 +433,24 @@ export default function VideoPlayer({
     const container = containerRef.current;
     if (!container) return;
 
+    // 터치 탭을 처리한 직후 iOS 사파리가 mousemove도 합성해서 같이 쏜다 -
+    // 이걸 그대로 반영하면, 탭으로 방금 숨겼어도 뒤이은 합성 mousemove가
+    // 무조건 다시 표시시켜버려서 탭할 때마다 껐다 바로 켜지는 것처럼
+    // 깜빡인다. 방금 터치로 처리한 직후의 mousemove는 무시한다.
+    function handleMouseMove() {
+      if (Date.now() - lastTouchHandledAtRef.current < 500) return;
+      revealControls();
+    }
+
     // setState를 effect 본문에서 곧바로(동기적으로) 호출하지 않도록,
     // 최초 타이머 시작도 매크로태스크로 한 틱 미룬다.
     const initialId = setTimeout(revealControls, 0);
-    container.addEventListener("mousemove", revealControls);
+    container.addEventListener("mousemove", handleMouseMove);
 
     return () => {
       clearTimeout(initialId);
       if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
-      container.removeEventListener("mousemove", revealControls);
+      container.removeEventListener("mousemove", handleMouseMove);
     };
   }, [isPaused, revealControls]);
 
