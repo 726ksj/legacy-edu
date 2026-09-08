@@ -204,6 +204,11 @@ export default function VideoPlayer({
   // 껐다 켰다 토글하기 위함) - 손가락이 일정 거리 이상 움직이면 탭
   // 후보에서 제외한다.
   const tapStartRef = useRef<{ x: number; y: number } | null>(null);
+  // 터치로 탭을 처리한 직후 브라우저가 합성 click 이벤트를 또 쏘는
+  // 경우가 있다 - 그 click이 video의 onClick에서 토글을 한 번 더
+  // 실행해서 껐다가 바로 켜지는(또는 그 반대) 깜빡임이 생긴다. 방금
+  // touchend로 처리한 시각을 기록해뒀다가 짧은 시간 안의 click은 무시한다.
+  const lastTouchHandledAtRef = useRef(0);
 
   const clampTranslate = useCallback(
     (t: { x: number; y: number }, s: number) => {
@@ -507,6 +512,7 @@ export default function VideoPlayer({
       if (e.touches.length === 0) setIsGesturing(false);
 
       if (e.touches.length === 0 && tapStartRef.current && scaleRef.current === 1) {
+        lastTouchHandledAtRef.current = Date.now();
         toggleControls();
       }
       tapStartRef.current = null;
@@ -656,8 +662,11 @@ export default function VideoPlayer({
             disablePictureInPicture
             onClick={() => {
               // 데스크톱 마우스 클릭 버전 - 터치는 위 제스처 effect의 탭
-              // 감지에서 처리한다. 확대 중엔 드래그(팬)와 혼동될 수 있어
-              // 토글하지 않는다.
+              // 감지에서 이미 처리했다(브라우저가 터치 뒤에 합성 click도
+              // 쏘기 때문에, 방금 터치로 처리했다면 여기서 또 토글하지
+              // 않는다). 확대 중엔 드래그(팬)와 혼동될 수 있어 토글하지
+              // 않는다.
+              if (Date.now() - lastTouchHandledAtRef.current < 500) return;
               if (scaleRef.current === 1) toggleControls();
             }}
             onPlay={() => setIsPaused(false)}
