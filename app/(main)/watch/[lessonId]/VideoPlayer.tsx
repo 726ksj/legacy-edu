@@ -614,7 +614,6 @@ export default function VideoPlayer({
             aria-label={title}
             playsInline
             disablePictureInPicture
-            onClick={togglePlayPause}
             onPlay={() => setIsPaused(false)}
             onPlaying={() => {
               // 실제로 재생(디코딩)이 시작됐다는 뜻 - 이 시점부터는 최초
