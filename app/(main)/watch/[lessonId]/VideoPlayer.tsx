@@ -140,7 +140,35 @@ export default function VideoPlayer({
   // 재생 중 일정 시간 조작이 없으면 컨트롤을 숨긴다. 일시정지 중에는
   // 항상 보여준다.
   const [mediaInactive, setMediaInactive] = useState(false);
+  const mediaInactiveRef = useRef(mediaInactive);
+  const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const controlsVisible = isPaused || !mediaInactive;
+
+  useEffect(() => {
+    mediaInactiveRef.current = mediaInactive;
+  }, [mediaInactive]);
+
+  // 컨트롤을 보여주고, 일정 시간 뒤 다시 자동으로 숨기는 타이머를 새로
+  // 건다. 마우스를 움직이는 등 "계속 보고 있다"는 신호에 쓴다.
+  const revealControls = useCallback(() => {
+    setMediaInactive(false);
+    if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
+    inactivityTimeoutRef.current = setTimeout(
+      () => setMediaInactive(true),
+      INACTIVITY_TIMEOUT_MS,
+    );
+  }, []);
+
+  // 유튜브처럼, 재생 중 화면을 탭/클릭하면(줌 상태가 아닐 때) 컨트롤을
+  // 껐다 켰다 토글한다 - 켜질 때는 자동 숨김 타이머도 같이 다시 건다.
+  const toggleControls = useCallback(() => {
+    if (mediaInactiveRef.current) {
+      revealControls();
+    } else {
+      if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
+      setMediaInactive(true);
+    }
+  }, [revealControls]);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -172,6 +200,10 @@ export default function VideoPlayer({
     startY: number;
     startTranslate: { x: number; y: number };
   } | null>(null);
+  // 핀치/팬이 아닌 순수 탭인지 구분한다(유튜브처럼 탭으로 컨트롤을
+  // 껐다 켰다 토글하기 위함) - 손가락이 일정 거리 이상 움직이면 탭
+  // 후보에서 제외한다.
+  const tapStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const clampTranslate = useCallback(
     (t: { x: number; y: number }, s: number) => {
@@ -385,8 +417,10 @@ export default function VideoPlayer({
     };
   }, [src, createAndLoadShakaPlayer]);
 
-  // 재생 중 일정 시간 마우스/터치 조작이 없으면 컨트롤을 숨긴다.
-  // 일시정지 중에는 항상 보여준다.
+  // 재생 중 일정 시간 마우스 조작이 없으면 컨트롤을 숨긴다(데스크톱
+  // 호버). 일시정지 중에는 항상 보여준다. 터치는 여기서 다루지 않는다 -
+  // 아래 제스처 effect의 탭 감지에서 toggleControls로 명시적으로
+  // 켰다/껐다 토글한다(하단 참고, 유튜브 방식).
   useEffect(() => {
     // 일시정지 중엔 controlsVisible이 이미 항상 true라 mediaInactive 값 자체가
     // 안 쓰인다 - 따로 리셋할 필요 없음.
@@ -394,27 +428,17 @@ export default function VideoPlayer({
     const container = containerRef.current;
     if (!container) return;
 
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    function resetTimer() {
-      setMediaInactive(false);
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => setMediaInactive(true), INACTIVITY_TIMEOUT_MS);
-    }
-
     // setState를 effect 본문에서 곧바로(동기적으로) 호출하지 않도록,
     // 최초 타이머 시작도 매크로태스크로 한 틱 미룬다.
-    const initialId = setTimeout(resetTimer, 0);
-    container.addEventListener("mousemove", resetTimer);
-    container.addEventListener("touchstart", resetTimer, { passive: true });
+    const initialId = setTimeout(revealControls, 0);
+    container.addEventListener("mousemove", revealControls);
 
     return () => {
       clearTimeout(initialId);
-      clearTimeout(timeoutId);
-      container.removeEventListener("mousemove", resetTimer);
-      container.removeEventListener("touchstart", resetTimer);
+      if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
+      container.removeEventListener("mousemove", revealControls);
     };
-  }, [isPaused]);
+  }, [isPaused, revealControls]);
 
   // 핀치 줌 / 두 손가락 밖 확대 상태에서 한 손가락 이동 / Ctrl+휠 확대
   useEffect(() => {
@@ -435,12 +459,19 @@ export default function VideoPlayer({
           startScale: scaleRef.current,
         };
         panRef.current = null;
+        tapStartRef.current = null;
       } else if (e.touches.length === 1 && scaleRef.current > 1) {
         setIsGesturing(true);
         panRef.current = {
           startX: e.touches[0].clientX,
           startY: e.touches[0].clientY,
           startTranslate: translateRef.current,
+        };
+        tapStartRef.current = null;
+      } else if (e.touches.length === 1) {
+        tapStartRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
         };
       }
     }
@@ -463,6 +494,10 @@ export default function VideoPlayer({
             scaleRef.current,
           ),
         );
+      } else if (e.touches.length === 1 && tapStartRef.current) {
+        const dx = e.touches[0].clientX - tapStartRef.current.x;
+        const dy = e.touches[0].clientY - tapStartRef.current.y;
+        if (Math.hypot(dx, dy) > 10) tapStartRef.current = null;
       }
     }
 
@@ -470,6 +505,11 @@ export default function VideoPlayer({
       if (e.touches.length < 2) pinchRef.current = null;
       if (e.touches.length < 1) panRef.current = null;
       if (e.touches.length === 0) setIsGesturing(false);
+
+      if (e.touches.length === 0 && tapStartRef.current && scaleRef.current === 1) {
+        toggleControls();
+      }
+      tapStartRef.current = null;
     }
 
     el.addEventListener("wheel", handleWheel, { passive: false });
@@ -485,7 +525,7 @@ export default function VideoPlayer({
       el.removeEventListener("touchend", handleTouchEnd);
       el.removeEventListener("touchcancel", handleTouchEnd);
     };
-  }, [applyScale, clampTranslate]);
+  }, [applyScale, clampTranslate, toggleControls]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -614,6 +654,12 @@ export default function VideoPlayer({
             aria-label={title}
             playsInline
             disablePictureInPicture
+            onClick={() => {
+              // 데스크톱 마우스 클릭 버전 - 터치는 위 제스처 effect의 탭
+              // 감지에서 처리한다. 확대 중엔 드래그(팬)와 혼동될 수 있어
+              // 토글하지 않는다.
+              if (scaleRef.current === 1) toggleControls();
+            }}
             onPlay={() => setIsPaused(false)}
             onPlaying={() => {
               // 실제로 재생(디코딩)이 시작됐다는 뜻 - 이 시점부터는 최초
