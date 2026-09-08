@@ -9,6 +9,8 @@ import {
   RotateCw,
   SkipBack,
   SkipForward,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -63,6 +65,17 @@ function getTouchDistance(touches: TouchList) {
   return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 }
 
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const total = Math.floor(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mm = h > 0 ? String(m).padStart(2, "0") : String(m);
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
 export default function VideoPlayer({
   playbackId,
   token: tokenProp,
@@ -103,6 +116,15 @@ export default function VideoPlayer({
   const [isGesturing, setIsGesturing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
+  // 브라우저 기본(native) 컨트롤 대신 직접 그리는 재생바에 쓴다. iOS
+  // Safari에서 native controls의 전체화면 버튼을 쓰면 영상이 OS 차원의
+  // 별도 전체화면 레이어로 빠져나가 버려서, 우리 중앙 컨트롤·확대(zoom)
+  // 오버레이가 전부 어긋나거나 아예 안 먹히는 문제가 있었다 - 그래서
+  // native controls를 아예 안 쓰고 재생바를 직접 그린다.
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [isSeekDragging, setIsSeekDragging] = useState(false);
   // 재생 토큰은 6시간 후 만료된다(lib/mux.ts) - 그 시점을 넘겨 재생/탐색을
   // 시도하면 Mux가 401/403으로 거절하며 error 이벤트가 뜬다. 원인을 세세히
   // 구분하는 대신, 에러가 나면 새로고침을 안내한다(새로고침하면 서버
@@ -493,6 +515,39 @@ export default function VideoPlayer({
     };
   }, [isFullscreen]);
 
+  const seekBarRef = useRef<HTMLDivElement>(null);
+
+  function seekToClientX(clientX: number) {
+    const bar = seekBarRef.current;
+    const video = videoRef.current;
+    if (!bar || !video) return;
+    const total = Number.isFinite(video.duration) ? video.duration : duration;
+    if (!Number.isFinite(total) || total <= 0) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const target = ratio * total;
+    video.currentTime = target;
+    setCurrentTime(target);
+    lastProgressRef.current = { time: target, at: Date.now() };
+  }
+
+  function handleSeekPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.stopPropagation();
+    setIsSeekDragging(true);
+    seekToClientX(e.clientX);
+
+    function handlePointerMove(moveEvent: PointerEvent) {
+      seekToClientX(moveEvent.clientX);
+    }
+    function handlePointerUp() {
+      setIsSeekDragging(false);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    }
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+  }
+
   function handleMouseDown(e: React.MouseEvent) {
     if (scale <= 1) return;
     e.preventDefault();
@@ -557,7 +612,6 @@ export default function VideoPlayer({
             src={src}
             poster={poster}
             aria-label={title}
-            controls
             playsInline
             disablePictureInPicture
             onClick={togglePlayPause}
@@ -574,6 +628,15 @@ export default function VideoPlayer({
             onPause={() => setIsPaused(true)}
             onEnded={reportProgress}
             onError={() => setPlaybackError(true)}
+            onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+            onTimeUpdate={(e) => {
+              // 드래그로 탐색하는 중엔 우리가 이미 위치를 반영해뒀으니,
+              // 아직 그 위치를 못 따라온 video의 timeupdate로 덮어쓰지
+              // 않는다.
+              if (isSeekDragging) return;
+              setCurrentTime(e.currentTarget.currentTime);
+            }}
             className={
               isFullscreen ? "h-full w-full" : "aspect-video w-full bg-black"
             }
@@ -633,6 +696,56 @@ export default function VideoPlayer({
           >
             <RotateCw className="h-5 w-5" />
           </button>
+        </div>
+      )}
+
+      {!playbackError && !stalled && controlsVisible && (
+        <div
+          className="absolute inset-x-0 bottom-0 z-10 flex items-center gap-2 px-3 pb-2 pt-6"
+          style={{
+            background:
+              "linear-gradient(to top, rgb(0 0 0 / 0.7), transparent)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const video = videoRef.current;
+              if (!video) return;
+              video.muted = !video.muted;
+              setMuted(video.muted);
+            }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/10"
+            aria-label={muted ? "음소거 해제" : "음소거"}
+          >
+            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+          <span className="shrink-0 text-xs tabular-nums text-white">
+            {formatTime(currentTime)}
+          </span>
+          <div
+            ref={seekBarRef}
+            onPointerDown={handleSeekPointerDown}
+            className="relative h-4 flex-1 cursor-pointer touch-none"
+          >
+            <div className="absolute inset-y-0 my-auto h-1 w-full rounded-full bg-white/30" />
+            <div
+              className="absolute inset-y-0 my-auto h-1 rounded-full bg-white"
+              style={{
+                width: `${duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0}%`,
+              }}
+            />
+            <div
+              className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+              style={{
+                left: `${duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0}%`,
+              }}
+            />
+          </div>
+          <span className="shrink-0 text-xs tabular-nums text-white">
+            {formatTime(duration)}
+          </span>
         </div>
       )}
 
