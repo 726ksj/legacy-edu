@@ -572,29 +572,39 @@ export default function VideoPlayer({
 
   const seekBarRef = useRef<HTMLDivElement>(null);
 
-  function seekToClientX(clientX: number) {
+  // 드래그 중인 위치를 클릭 좌표로부터 계산만 하고, 실제 영상
+  // currentTime은 아직 건드리지 않는다 - 손을 뗄 때(pointerup) 딱 한
+  // 번만 실제로 이동시킨다. 드래그하는 동안 매번 실제 탐색을 걸면 계속
+  // 버퍼링을 새로 시도하게 돼서 뚝뚝 끊기는 느낌이 난다.
+  function ratioFromClientX(clientX: number): number | null {
     const bar = seekBarRef.current;
-    const video = videoRef.current;
-    if (!bar || !video) return;
-    const total = Number.isFinite(video.duration) ? video.duration : duration;
-    if (!Number.isFinite(total) || total <= 0) return;
+    if (!bar) return null;
     const rect = bar.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    const target = ratio * total;
-    video.currentTime = target;
-    setCurrentTime(target);
-    lastProgressRef.current = { time: target, at: Date.now() };
+    return Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
   }
 
   function handleSeekPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    const total = Number.isFinite(video.duration) ? video.duration : duration;
+    if (!Number.isFinite(total) || total <= 0) return;
+
     setIsSeekDragging(true);
-    seekToClientX(e.clientX);
+    const ratio = ratioFromClientX(e.clientX);
+    if (ratio != null) setCurrentTime(ratio * total);
 
     function handlePointerMove(moveEvent: PointerEvent) {
-      seekToClientX(moveEvent.clientX);
+      const r = ratioFromClientX(moveEvent.clientX);
+      if (r != null) setCurrentTime(r * total);
     }
-    function handlePointerUp() {
+    function handlePointerUp(upEvent: PointerEvent) {
+      if (!video) return;
+      const r = ratioFromClientX(upEvent.clientX);
+      const target = r != null ? r * total : video.currentTime;
+      video.currentTime = target;
+      setCurrentTime(target);
+      lastProgressRef.current = { time: target, at: Date.now() };
       setIsSeekDragging(false);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
