@@ -26,10 +26,11 @@ export async function resetPasswordSelfService(
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim();
+  const memberCode = String(formData.get("memberCode") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-  if (!name || !phone || !username || !password || !confirmPassword) {
+  if (!name || !phone || !username || !memberCode || !password || !confirmPassword) {
     return { error: "모든 항목을 입력해주세요." };
   }
   if (password !== confirmPassword) {
@@ -68,7 +69,7 @@ export async function resetPasswordSelfService(
   // 있음), 숫자만 비교해야 정확히 매칭된다.
   const { data: candidates } = await supabase
     .from("profiles")
-    .select("id, phone")
+    .select("id, phone, member_code_id")
     .eq("name", name)
     .eq("username", username);
 
@@ -77,6 +78,19 @@ export async function resetPasswordSelfService(
   );
 
   if (!match) {
+    return { error: "일치하는 회원 정보를 찾을 수 없습니다." };
+  }
+
+  // 본인확인 항목에 가입 시 받은 회원코드까지 추가로 요구한다 - 이름/
+  // 전화번호/아이디만으로는 도용 위험이 있어, 본인만 아는 코드로 한 번 더
+  // 확인한다.
+  const { data: memberCodeRow } = await supabase
+    .from("member_codes")
+    .select("code")
+    .eq("id", match.member_code_id)
+    .maybeSingle();
+
+  if (!memberCodeRow || memberCodeRow.code !== memberCode) {
     return { error: "일치하는 회원 정보를 찾을 수 없습니다." };
   }
 

@@ -5,7 +5,16 @@ import { useActionState, useState } from "react";
 import { resetPasswordSelfService, type FindPasswordState } from "./actions";
 import { formatPhoneInput } from "@/lib/phone";
 import { PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
-import { ArrowLeft, CheckCircle2, IdCard, KeyRound, Lock, Phone, User } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  IdCard,
+  KeyRound,
+  Lock,
+  Phone,
+  Ticket,
+  User,
+} from "lucide-react";
 
 const initialState: FindPasswordState = {};
 
@@ -17,6 +26,7 @@ export default function FindPasswordForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [username, setUsername] = useState("");
+  const [memberCode, setMemberCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const passwordMismatch =
@@ -64,7 +74,7 @@ export default function FindPasswordForm() {
                   비밀번호 찾기
                 </h1>
                 <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
-                  가입 시 등록한 이름, 전화번호, 아이디를 확인한 뒤
+                  가입 시 등록한 이름, 전화번호, 아이디, 회원코드를 확인한 뒤
                   <br />
                   새 비밀번호로 바로 변경합니다.
                 </p>
@@ -109,6 +119,22 @@ export default function FindPasswordForm() {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    className="w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-3 text-sm text-zinc-900 outline-none transition-colors focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/15"
+                  />
+                </div>
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+                회원코드
+                <span className="text-xs font-normal text-zinc-400">
+                  가입할 때 입력했던 그 코드입니다.
+                </span>
+                <div className="relative">
+                  <Ticket className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                  <input
+                    name="memberCode"
+                    required
+                    value={memberCode}
+                    onChange={(e) => setMemberCode(e.target.value)}
                     className="w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-3 text-sm text-zinc-900 outline-none transition-colors focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/15"
                   />
                 </div>

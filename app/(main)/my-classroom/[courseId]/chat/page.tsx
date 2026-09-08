@@ -54,9 +54,11 @@ export default async function CourseChatPage({
   const [{ data: staffRows }, { data: messageRows }] = await Promise.all([
     admin
       .from("course_teachers")
-      .select("profiles(id, name)")
+      .select("role, profiles(id, name)")
       .eq("course_id", courseId)
-      .returns<{ profiles: { id: string; name: string } | null }[]>(),
+      .returns<
+        { role: "teacher" | "assistant"; profiles: { id: string; name: string } | null }[]
+      >(),
     admin
       .from("chat_messages")
       .select("id, profile_id, content, created_at, file_url, file_name, file_type")
@@ -70,7 +72,8 @@ export default async function CourseChatPage({
   };
   for (const row of staffRows ?? []) {
     if (row.profiles) {
-      participantNames[row.profiles.id] = row.profiles.name;
+      const suffix = row.role === "teacher" ? "강사님" : "조교님";
+      participantNames[row.profiles.id] = `${row.profiles.name} ${suffix}`;
     }
   }
 

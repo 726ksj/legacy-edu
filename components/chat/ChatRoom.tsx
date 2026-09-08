@@ -45,7 +45,11 @@ export default function ChatRoom({
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  // 이전 대화를 보려고 위로 스크롤해둔 상태에서 새 메시지가 오면, 그걸
+  // 무시하고 다시 맨 아래로 끌고 내려가지 않기 위한 값이다. 채팅 목록을
+  // 스크롤할 때마다 갱신한다.
+  const isNearBottomRef = useRef(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // useState의 lazy initializer로 브라우저 클라이언트를 최초 1회만
   // 만든다 - useRef(createClient())는 렌더마다 인자가 평가돼 매번 새
@@ -101,9 +105,24 @@ export default function ChatRoom({
     };
   }, [roomId, supabase]);
 
+  // scrollIntoView()는 "가장 가까운 스크롤 가능한 조상"을 스크롤해야
+  // 하는데, 레이아웃에 따라 브라우저가 페이지 전체를 스크롤시켜버리는
+  // 경우가 있었다(특히 모바일) - 채팅 목록 컨테이너의 scrollTop만 직접
+  // 옮겨서 항상 그 안에서만 스크롤되게 한다. 또한 사용자가 이전 대화를
+  // 보려고 위로 스크롤해둔 상태라면(맨 아래 근처가 아니라면) 새 메시지가
+  // 와도 강제로 끌고 내려가지 않는다.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesContainerRef.current;
+    if (!el || !isNearBottomRef.current) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages.length]);
+
+  function handleMessagesScroll() {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < 80;
+  }
 
   // 방을 보고 있는 동안(처음 열었을 때 + 새 메시지가 쌓일 때마다)
   // "마지막으로 읽은 시각"을 갱신한다 - 다른 화면의 안읽음 뱃지 계산용.
@@ -154,7 +173,11 @@ export default function ChatRoom({
 
   return (
     <div className="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-zinc-50/60 p-4">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+        className="flex flex-1 flex-col gap-3 overflow-y-auto bg-zinc-50/60 p-4"
+      >
         {messages.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 text-zinc-300">
             <MessageCircleMore className="h-10 w-10" />
@@ -225,7 +248,6 @@ export default function ChatRoom({
             </div>
           );
         })}
-        <div ref={bottomRef} />
       </div>
 
       {readOnly ? (
