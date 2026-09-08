@@ -1,6 +1,5 @@
 "use client";
 
-import MuxPlayer, { type MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import {
   Maximize,
   Minimize,
@@ -12,41 +11,48 @@ import {
   SkipForward,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type ShakaNamespace from "shaka-player/dist/shaka-player.compiled";
 import { saveLessonProgress } from "./progress-actions";
+
+type ShakaPlayer = InstanceType<typeof ShakaNamespace.Player>;
 
 const PROGRESS_REPORT_INTERVAL_MS = 15000;
 // 멈춘 걸 얼마나 빨리 알아채는지가 곧 "얼마나 티가 안 나게 복구되는지"를
-// 정한다 - 짧을수록 사용자는 잠깐의 버벅임 정도로만 느낀다.
+// 정한다 - 짧을수록 사용자는 잠깐의 버벅임 정도로만 느낀다. 단, 이건
+// "한 번이라도 실제로 재생이 시작된 뒤" 기준이고, 로드 직후 최초
+// 버퍼링 구간에는 훨씬 넉넉한 INITIAL_LOAD_GRACE_MS를 대신 적용한다 -
+// 그렇지 않으면 아직 버퍼링 중인 정상 상황을 "멈췄다"고 오판해서
+// 재시작 → 다시 버퍼링 → 또 오판을 반복하며 계속 처음으로 돌아가 버린다.
 const STALL_TIMEOUT_MS = 3000;
+const INITIAL_LOAD_GRACE_MS = 15000;
 const STALL_CHECK_INTERVAL_MS = 1000;
-// 멈춤이 감지되면 우선 플레이어를 새로 붙여서 같은 위치부터 자동으로
+// 멈춤이 감지되면 우선 플레이어를 다시 붙여서 같은 위치부터 자동으로
 // 이어 재생을 시도한다. 이 시도가 짧은 시간 안에 반복해서 실패하면(즉,
 // 재시작해도 곧바로 다시 멈추면) 재시작으로 해결되는 문제가 아니라고
 // 보고 그때 가서야 새로고침 안내를 띄운다.
 const MAX_AUTO_RECOVERY_ATTEMPTS = 3;
 const RECOVERY_ATTEMPT_RESET_MS = 60000;
 
-// hls.js 기본값은 버퍼를 짧게 잡고 재시도도 적게 하고 포기한다 - 그래서
-// 일시적인 네트워크 지연/CDN 응답 지연 정도에도 복구를 포기하고 멈춰버리는
-// 것으로 보인다. 버퍼를 더 넉넉히 들고, 매니페스트/세그먼트 재시도 횟수와
-// 버퍼링 시 재생위치를 살짝 밀어보는(nudge) 재시도 횟수를 늘려서 애초에
-// "포기하는" 상황 자체가 덜 생기게 한다.
-const HLS_CONFIG = {
-  maxBufferLength: 60,
-  maxMaxBufferLength: 900,
-  manifestLoadingMaxRetry: 4,
-  manifestLoadingRetryDelay: 1000,
-  levelLoadingMaxRetry: 8,
-  levelLoadingRetryDelay: 1000,
-  fragLoadingMaxRetry: 10,
-  fragLoadingRetryDelay: 1000,
-  nudgeMaxRetry: 6,
+// Shaka 기본값보다 버퍼를 더 넉넉히 들고, 매니페스트/세그먼트 재시도
+// 횟수를 늘려서 일시적인 네트워크 지연 정도로는 재생을 포기하는 상황
+// 자체가 덜 생기게 한다.
+const SHAKA_CONFIG = {
+  streaming: {
+    bufferingGoal: 60,
+    rebufferingGoal: 2,
+    retryParameters: { maxAttempts: 10, baseDelay: 1000 },
+  },
+  manifest: {
+    retryParameters: { maxAttempts: 5, baseDelay: 1000 },
+  },
 };
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
 const SEEK_SECONDS = 10;
+// 재생 중 이 시간(ms) 동안 마우스/터치 움직임이 없으면 컨트롤을 숨긴다.
+const INACTIVITY_TIMEOUT_MS = 2000;
 
 function clampScale(value: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
@@ -57,23 +63,10 @@ function getTouchDistance(touches: TouchList) {
   return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 }
 
-// mux-player는 데스크톱에서 영상을 클릭하면(터치는 해당 없음) 자체적으로
-// 재생/일시정지를 토글한다. 우리 중앙 컨트롤을 열어보려는 클릭 한 번에도
-// 이게 같이 발동해서, 컨트롤을 펼치기만 해도 영상이 멈춰버린다. 순수 영상
-// 영역 클릭일 때만 이 토글이 먹지 않도록 막고, 자막/볼륨 등 mux 자체
-// 버튼 클릭은 그대로 mux-player가 처리하게 둔다. composedPath()의 가장
-// 안쪽 요소로 확인하는 이유는 shadow DOM 밖에서는 target이 항상
-// <mux-player>로 재타겟팅돼 버튼 클릭과 구분이 안 되기 때문이다.
-function isPlainVideoSurfaceTarget(e: Event): boolean {
-  const innermost = e.composedPath()[0];
-  if (!(innermost instanceof Element)) return false;
-  return innermost.localName === "video" || innermost.localName === "media-controller";
-}
-
 export default function VideoPlayer({
   playbackId,
-  token,
-  src,
+  token: tokenProp,
+  src: srcProp,
   title,
   poster,
   lessonId,
@@ -83,9 +76,9 @@ export default function VideoPlayer({
   playbackId: string;
   token: string;
   // 최고화질 mp4(static rendition)가 준비돼 있으면 서버 컴포넌트가 이걸
-  // 채워준다 - HLS(hls.js) 자체를 안 거치게 돼서, hls.js가 내부 복구를
-  // 시도하다 조용히 완전히 멈춰버리는 문제를 구조적으로 피할 수 있다.
-  // 없으면 기존처럼 playbackId+token으로 HLS 재생한다.
+  // 채워준다 - 적응형 스트리밍(HLS) 자체를 안 거치게 돼서, 재생 라이브러리
+  // 내부 복구 로직이 조용히 실패하는 문제를 구조적으로 피할 수 있다.
+  // 없으면 Shaka Player로 HLS(playbackId+token) 재생한다.
   src?: string;
   title: string;
   poster?: string;
@@ -93,14 +86,18 @@ export default function VideoPlayer({
   prevLessonHref?: string;
   nextLessonHref?: string;
 }) {
+  // 시청 진도 저장(saveLessonProgress) 같은 Server Action이 끝날 때마다
+  // Next.js가 이 페이지의 서버 컴포넌트를 다시 그리면서 재생 토큰을 매번
+  // 새로 발급해준다 - 토큰 자체는 6시간 유효해서 다시 받을 필요가 없는데,
+  // 이 값(과 이걸 담은 src)이 prop으로 바뀔 때마다 그대로 반응해서
+  // 플레이어/영상 엘리먼트를 다시 로드하면, 일시정지하거나 탐색할 때마다
+  // (둘 다 진도 저장을 유발한다) 재생 중이던 영상이 처음으로 리셋돼버린다.
+  // 마운트 시점의 값만 고정해서 쓰고, 이후 prop이 바뀌어도 무시한다.
+  const [token] = useState(tokenProp);
+  const [src] = useState(srcProp);
   const containerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<MuxPlayerRefAttributes>(null);
-  const backButtonRef = useRef<HTMLButtonElement>(null);
-  const playPauseButtonRef = useRef<HTMLButtonElement>(null);
-  const forwardButtonRef = useRef<HTMLButtonElement>(null);
-  const [hoveredCenterControl, setHoveredCenterControl] = useState<
-    "back" | "playPause" | "forward" | null
-  >(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const shakaPlayerRef = useRef<ShakaPlayer | null>(null);
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isGesturing, setIsGesturing] = useState(false);
@@ -111,59 +108,39 @@ export default function VideoPlayer({
   // 구분하는 대신, 에러가 나면 새로고침을 안내한다(새로고침하면 서버
   // 컴포넌트가 새 토큰을 발급한다).
   const [playbackError, setPlaybackError] = useState(false);
-  // 간헐적인 네트워크 문제나 hls.js 내부 복구 실패로 mux-player가 그대로
-  // 멈춰버리는 경우가 있다 - 이때는 error/waiting 이벤트가 전혀 안 뜨고
-  // (내부적으로 재시도하다 조용히 포기하는 경우도 있음) 콘솔에도 아무
-  // 로그가 안 남아서, 겉보기엔 그냥 "영상이 멈춘" 것처럼 보인다. 특정
-  // 이벤트에 의존하는 대신, 재생 중인데 currentTime 자체가 일정 시간
-  // 안 움직이면 원인과 무관하게 멈춘 것으로 간주한다. 이때 바로 사용자에게
-  // 새로고침을 요구하는 대신, playerKey를 바꿔 플레이어를 통째로 새로
-  // 붙이고(=hls.js도 새로 시작) 같은 위치로 이동시켜 자동 복구를 먼저
-  // 시도한다 - 아래 MAX_AUTO_RECOVERY_ATTEMPTS 참고.
+  // 간헐적인 네트워크 문제나 재생 라이브러리 내부 복구 실패로 완전히
+  // 멈춰버리는 경우가 있다 - 이때는 error/waiting 이벤트가 전혀 안 뜨는
+  // 경우도 있어서, 특정 이벤트에 기대는 대신 재생 중인데 currentTime
+  // 자체가 일정 시간 안 움직이면 원인과 무관하게 멈춘 것으로 간주한다.
+  // 이때 바로 사용자에게 새로고침을 요구하는 대신, 같은 위치로 이동해서
+  // 자동 복구를 먼저 시도한다 - 아래 MAX_AUTO_RECOVERY_ATTEMPTS 참고.
   const [stalled, setStalled] = useState(false);
-  const [playerKey, setPlayerKey] = useState(0);
-  // 복구 시 이동할 위치. 새 플레이어 인스턴스가 마운트된 직후 currentTime을
-  // 수동으로 옮기면 hls.js가 아직 준비되기 전이라 무시되고 0초부터
-  // 시작해버리는 경우가 있었다 - hls.js가 정식으로 지원하는 startPosition
-  // 설정으로 "처음부터 이 위치에서 시작"하도록 넘기면 이 경합이 없어진다.
-  const [resumeFrom, setResumeFrom] = useState<number | null>(null);
-  const lastProgressRef = useRef({ time: 0, at: 0 });
-  const recoveryAttemptsRef = useRef(0);
-  const lastRecoveryAtRef = useRef(0);
-  const hlsConfig = useMemo(
-    () => (resumeFrom != null ? { ...HLS_CONFIG, startPosition: resumeFrom } : HLS_CONFIG),
-    [resumeFrom],
-  );
-  // mux-player가 "사용자 비활성"으로 판단했는지 여부. mux-player 자신의
-  // 하단 컨트롤 바와 같은 타이밍에 나타났다 사라지게 하기 위해, 우리가
-  // 따로 탭을 감지해서 토글하지 않고 mux-player가 쏘는 userinactivechange
-  // 이벤트를 그대로 반영한다(아래 useEffect 참고) - 둘 다 같은 신호를
-  // 보는 셈이라 항상 같이 움직인다.
+  // 재생 중 일정 시간 조작이 없으면 컨트롤을 숨긴다. 일시정지 중에는
+  // 항상 보여준다.
   const [mediaInactive, setMediaInactive] = useState(false);
-  // 일시정지 중에 여백(버튼이 아닌 영상 부분)을 탭하면 이 값이 토글된다.
-  // 재생이 시작되거나 다시 일시정지되면 항상 false로 리셋해서, 매번
-  // 일시정지할 때는 기본적으로 컨트롤이 보이는 상태로 시작한다.
-  const [manuallyHidden, setManuallyHidden] = useState(false);
-  // mux-player는 일시정지 중엔 userinactive여도 자기 컨트롤을 CSS로 계속
-  // 보여준다(재생 중에만 자동 숨김). 우리 넷플릭스식 컨트롤도 재생 중엔
-  // 똑같은 규칙을 따라야 진짜로 같이 움직인다. 일시정지 중엔 mux 자신의
-  // userinactive 신호 대신 사용자가 직접 여백을 탭해 껐다 켰다 하는
-  // manuallyHidden을 따른다.
-  const controlsVisible = isPaused ? !manuallyHidden : !mediaInactive;
+  const controlsVisible = isPaused || !mediaInactive;
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
-  const isPausedRef = useRef(isPaused);
 
   useEffect(() => {
     scaleRef.current = scale;
   }, [scale]);
   useEffect(() => {
-    isPausedRef.current = isPaused;
-  }, [isPaused]);
-  useEffect(() => {
     translateRef.current = translate;
   }, [translate]);
+
+  // 마지막으로 재생이 실제로 진행되고 있었던 위치 - 정지 감시와 자동 복구
+  // 둘 다 이 값을 기준으로 삼는다.
+  const lastProgressRef = useRef({ time: 0, at: 0 });
+  const recoveryAttemptsRef = useRef(0);
+  const lastRecoveryAtRef = useRef(0);
+  // 로드(혹은 복구)한 뒤 실제로 재생이 한 번이라도 시작된 적이 있는지.
+  // 새로 로드를 걸 때마다 false로 리셋하고, 브라우저의 playing 이벤트가
+  // 뜨면 true로 바꾼다 - 아직 false인 동안은(=최초 버퍼링 중) 빡빡한
+  // STALL_TIMEOUT_MS 대신 훨씬 넉넉한 INITIAL_LOAD_GRACE_MS를 적용해서,
+  // 정상적인 버퍼링을 멈춤으로 오판하지 않게 한다.
+  const playingConfirmedRef = useRef(false);
 
   const pinchRef = useRef<{ startDistance: number; startScale: number } | null>(
     null,
@@ -173,12 +150,6 @@ export default function VideoPlayer({
     startY: number;
     startTranslate: { x: number; y: number };
   } | null>(null);
-  const tapStartRef = useRef<{ x: number; y: number } | null>(null);
-  // touchend에서 preventDefault를 걸어도 일부 브라우저는 그 뒤에 합성
-  // click을 또 쏘는 경우가 있다 - 그 click이 같은 버튼을 두 번(예: 재생 →
-  // 다시 일시정지) 누르지 않도록, 방금 touchend로 처리한 시각을 기록해뒀다가
-  // click 핸들러에서 짧은 시간 안이면 무시한다.
-  const lastTouchHandledAtRef = useRef(0);
 
   const clampTranslate = useCallback(
     (t: { x: number; y: number }, s: number) => {
@@ -212,82 +183,37 @@ export default function VideoPlayer({
     setTranslate({ x: 0, y: 0 });
   }, []);
 
-  // 두 가지 용도로 쓰인다.
-  // (1) 확대 컨트롤(우측 하단)만 mux-player 대응 슬롯이 없어 여전히
-  // mux-player 바깥의 형제 엘리먼트로 떠 있다. 그 상태에서 마우스가
-  // mux-player 표면에서 이 버튼으로 넘어가면 mux-player 쪽에 mouseleave가
-  // 발생해 컨트롤이 숨겨지므로, 활동을 흉내내 계속 활성 상태로 붙잡아둔다.
-  // (2) 중앙 -10/재생-일시정지/+10 버튼은 pointer-events: none이라 클릭·탭이
-  // mux-player 자신에게는 아예 안 보인다 - mux는 자기 화면에서 실제로
-  // 뭔가 눌렸다는 걸 전혀 모르는 채 독립적으로 2초 비활성 타이머를 돌리고
-  // 있다가, 하필 우리 버튼을 누른 직후에 그 타이머가 만료되면 방금 조작한
-  // 컨트롤 전체가 눈앞에서 사라져 버린다. seekBy/togglePlayPause 안에서도
-  // 이 함수를 호출해 "우리 쪽에서 방금 조작이 있었다"를 mux에게 알려줘야
-  // 타이머가 그 시점부터 다시 시작된다.
-  const pokeMuxActivity = useCallback(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    try {
-      const mediaController = player.shadowRoot
-        ?.querySelector("media-theme")
-        ?.shadowRoot?.querySelector("media-controller");
-      mediaController?.dispatchEvent(
-        new PointerEvent("pointermove", {
-          bubbles: true,
-          composed: true,
-          pointerType: "mouse",
-        }),
-      );
-    } catch {
-      // mux-player 내부 구조가 바뀌어 위 경로를 못 찾아도 조용히 무시한다 -
-      // 이건 "컨트롤을 계속 보여주는" 부가 동작일 뿐, 탐색/재생 자체는
-      // 영향받지 않는다.
-    }
+  const seekBy = useCallback((deltaSeconds: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const duration = Number.isFinite(video.duration) ? video.duration : Infinity;
+    const nextTime = Math.min(duration, Math.max(0, video.currentTime + deltaSeconds));
+    video.currentTime = nextTime;
+    // 뒤로 감기(-10초)는 정지 감시 로직 입장에선 "제자리에서 갑자기
+    // 과거로 튄" 것과 구분이 안 된다 - 사용자가 직접 탐색한 것이니 여기서
+    // 바로 기준점을 갱신해서 오탐(멈춘 것으로 오인)하지 않게 한다.
+    lastProgressRef.current = { time: nextTime, at: Date.now() };
   }, []);
 
-  const seekBy = useCallback(
-    (deltaSeconds: number) => {
-      const player = playerRef.current;
-      if (!player) return;
-      const duration = Number.isFinite(player.duration) ? player.duration : Infinity;
-      const nextTime = Math.min(duration, Math.max(0, player.currentTime + deltaSeconds));
-      player.currentTime = nextTime;
-      // 뒤로 감기(-10초)는 정지 감시 로직 입장에선 "제자리에서 갑자기
-      // 과거로 튄" 것과 구분이 안 된다 - 사용자가 직접 탐색한 것이니 여기서
-      // 바로 기준점을 갱신해서 오탐(멈춘 것으로 오인)하지 않게 한다.
-      lastProgressRef.current = { time: nextTime, at: Date.now() };
-      pokeMuxActivity();
-    },
-    [pokeMuxActivity],
-  );
-
   const togglePlayPause = useCallback(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (player.paused) {
-      player.play();
-    } else {
-      player.pause();
-    }
-    pokeMuxActivity();
-  }, [pokeMuxActivity]);
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+  }, []);
 
   // 시청 진도를 서버에 저장한다. 되감기로 진도가 줄어드는 건 서버(action)
   // 쪽에서 막아준다 - 여기서는 그냥 현재 위치만 보고한다.
   const reportProgress = useCallback(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    const duration = player.duration;
-    const currentTime = player.currentTime;
+    const video = videoRef.current;
+    if (!video) return;
+    const duration = video.duration;
+    const currentTime = video.currentTime;
     if (!Number.isFinite(duration) || duration <= 0) return;
     if (!Number.isFinite(currentTime) || currentTime <= 0) return;
     saveLessonProgress(lessonId, currentTime, duration);
   }, [lessonId]);
 
-  // 재생 중에는 주기적으로, 일시정지/차시 이탈 시점에는 즉시 진도를
-  // 저장한다. 탭을 그냥 닫는 경우까지는 못 잡지만(beforeunload로
-  // Server Action을 안정적으로 보낼 방법이 마땅치 않음), 15초 간격이면
-  // 실질적으로 큰 손실은 없다.
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(reportProgress, PROGRESS_REPORT_INTERVAL_MS);
@@ -302,11 +228,48 @@ export default function VideoPlayer({
     return () => reportProgress();
   }, [reportProgress]);
 
+  const manifestUri = `https://stream.mux.com/${playbackId}.m3u8?token=${token}`;
+
+  // Shaka Player 인스턴스를 새로 만들어 video 엘리먼트에 붙이고 로드한다.
+  // resumeAt이 있으면 그 위치부터 시작(Shaka가 공식 지원하는 load()의
+  // startTime 인자) 한 뒤 자동으로 이어서 재생한다.
+  const createAndLoadShakaPlayer = useCallback(
+    async (resumeAt?: number) => {
+      const video = videoRef.current;
+      if (!video || src) return; // mp4(src) 모드에서는 Shaka를 쓰지 않는다
+
+      playingConfirmedRef.current = false;
+
+      const { default: shaka } = await import(
+        "shaka-player/dist/shaka-player.compiled"
+      );
+      shaka.polyfill.installAll();
+      if (!shaka.Player.isBrowserSupported()) {
+        throw new Error("Browser not supported by Shaka Player");
+      }
+
+      await shakaPlayerRef.current?.destroy().catch(() => {});
+
+      const player = new shaka.Player();
+      shakaPlayerRef.current = player;
+      player.configure(SHAKA_CONFIG);
+      player.addEventListener("error", () => setPlaybackError(true));
+
+      await player.attach(video);
+      await player.load(manifestUri, resumeAt);
+      if (resumeAt != null) {
+        await video.play().catch(() => {});
+      }
+    },
+    [src, manifestUri],
+  );
+
   // 멈춤이 감지됐을 때 바로 사용자에게 새로고침을 요구하지 않고, 먼저
-  // 플레이어를 통째로 새로 붙여서(playerKey 변경 → hls.js도 새로 시작)
-  // 같은 위치로 이동 후 자동 재생을 시도한다. 최근 RECOVERY_ATTEMPT_RESET_MS
-  // 안에 이미 여러 번 시도했는데도 계속 멈춘다면(재시작으로 안 고쳐지는
-  // 문제라는 뜻) 그때는 포기하고 새로고침 안내를 띄운다.
+  // 같은 위치로 재생을 다시 붙여서(mp4는 reload+seek, HLS는 Shaka
+  // Player를 새로 만들어 load) 자동 재생을 시도한다. 최근
+  // RECOVERY_ATTEMPT_RESET_MS 안에 이미 여러 번 시도했는데도 계속
+  // 멈춘다면(재시작으로 안 고쳐지는 문제라는 뜻) 그때는 포기하고
+  // 새로고침 안내를 띄운다.
   const attemptRecovery = useCallback(() => {
     const now = Date.now();
     if (now - lastRecoveryAtRef.current > RECOVERY_ATTEMPT_RESET_MS) {
@@ -323,35 +286,47 @@ export default function VideoPlayer({
 
     // 멈춘 "그 순간"의 currentTime을 읽는 게 아니라, 감시 로직이 계속
     // 추적해온 "마지막으로 정상 진행이 확인된 위치"를 쓴다. 멈춤의 원인
-    // 자체가 내부적으로 재생 위치를 0으로 되돌려버리는 경우, 감지 시점에
-    // currentTime을 그대로 읽으면 이미 망가진 0을 복구 위치로 저장하게
-    // 된다.
+    // 자체가 내부적으로 재생 위치를 0 등으로 되돌려버릴 수 있어서, 감지
+    // 시점의 currentTime을 그대로 믿으면 안 된다.
     const resumeAt = lastProgressRef.current.time;
-    setResumeFrom(resumeAt);
-    setPlayerKey((k) => k + 1);
-  }, []);
+    lastProgressRef.current = { time: resumeAt, at: now };
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (src) {
+      playingConfirmedRef.current = false;
+      const onLoaded = () => {
+        video.currentTime = resumeAt;
+        video.play().catch(() => {});
+        video.removeEventListener("loadedmetadata", onLoaded);
+      };
+      video.addEventListener("loadedmetadata", onLoaded);
+      video.load();
+    } else {
+      createAndLoadShakaPlayer(resumeAt).catch(() => setStalled(true));
+    }
+  }, [src, createAndLoadShakaPlayer]);
 
   // 재생 중인데 currentTime이 STALL_TIMEOUT_MS 이상 실제로 안 움직이면
-  // 멈춘 것으로 간주한다. hls.js가 내부적으로 복구를 시도하다 조용히
-  // 실패하는 경우 waiting/error 이벤트가 전혀 안 뜰 수 있어서(콘솔 로그도
-  // 없음), 특정 이벤트에 기대는 대신 실제 진행 여부만 본다. 뒤로(과거로)
-  // 튀는 움직임은 "진행"으로 치지 않는다 - 멈춤의 원인 자체가 내부적으로
-  // currentTime을 0 등으로 되돌려버리는 경우가 있는데, 이걸 정상 진행으로
-  // 착각하면 정작 복구 위치로 써야 할 "마지막 정상 위치" 기록이 그
-  // 잘못된 값으로 덮어써진다. 사용자가 직접 되감기(seekBy)한 경우는
-  // 그쪽에서 별도로 기준점을 갱신해준다.
+  // 멈춘 것으로 간주한다. 특정 이벤트에 기대는 대신 실제 진행 여부만
+  // 본다. 뒤로(과거로) 튀는 움직임은 "진행"으로 치지 않는다 - 멈춤의
+  // 원인 자체가 내부적으로 currentTime을 0 등으로 되돌려버리는 경우가
+  // 있는데, 이걸 정상 진행으로 착각하면 정작 복구 위치로 써야 할 "마지막
+  // 정상 위치" 기록이 그 잘못된 값으로 덮어써진다. 사용자가 직접
+  // 되감기(seekBy)한 경우는 그쪽에서 별도로 기준점을 갱신해준다.
   useEffect(() => {
     if (isPaused) return;
 
     lastProgressRef.current = {
-      time: playerRef.current?.currentTime ?? 0,
+      time: videoRef.current?.currentTime ?? 0,
       at: Date.now(),
     };
 
     const interval = setInterval(() => {
-      const player = playerRef.current;
-      if (!player) return;
-      const currentTime = player.currentTime;
+      const video = videoRef.current;
+      if (!video) return;
+      const currentTime = video.currentTime;
       const now = Date.now();
 
       if (currentTime > lastProgressRef.current.time + 0.25) {
@@ -359,7 +334,10 @@ export default function VideoPlayer({
         return;
       }
 
-      if (now - lastProgressRef.current.at >= STALL_TIMEOUT_MS) {
+      const timeout = playingConfirmedRef.current
+        ? STALL_TIMEOUT_MS
+        : INITIAL_LOAD_GRACE_MS;
+      if (now - lastProgressRef.current.at >= timeout) {
         attemptRecovery();
       }
     }, STALL_CHECK_INTERVAL_MS);
@@ -367,27 +345,56 @@ export default function VideoPlayer({
     return () => clearInterval(interval);
   }, [isPaused, attemptRecovery]);
 
-  // mux-player 자신의 하단 컨트롤 바는 자체적으로 탭/호버에 따라 표시·자동
-  // 숨김을 관리한다(일시정지 중엔 안 숨는 것까지 포함). 우리 중앙 컨트롤을
-  // 별도 타이머로 독립적으로 열고 닫으면 서로 다른 타이밍에 나타났다
-  // 사라져 따로 노는 것처럼 보이므로, mux-player가 상태를 바꿀 때마다
-  // 쏘는 userinactivechange 이벤트를 그대로 반영해 항상 같이 움직이게 한다.
-  // 중앙 컨트롤이 이제 pointer-events: none이라 mux 쪽 히트테스트에
-  // 전혀 관여하지 않으므로, 더 이상 디바운스 없이 그대로 반영해도 안전하다.
+  // mp4(src)가 있으면 hls 재생 라이브러리를 아예 안 거치므로 그쪽은
+  // native <video src>로 바로 재생한다. 없으면 Shaka Player로 HLS
+  // 재생을 초기화한다.
   useEffect(() => {
-    const player = playerRef.current;
-    if (!player) return;
+    if (src) return;
+    let cancelled = false;
 
-    function handleUserInactiveChange(e: Event) {
-      setMediaInactive(Boolean((e as CustomEvent<boolean>).detail));
+    createAndLoadShakaPlayer().catch(() => {
+      if (!cancelled) setPlaybackError(true);
+    });
+
+    return () => {
+      cancelled = true;
+      shakaPlayerRef.current?.destroy().catch(() => {});
+      shakaPlayerRef.current = null;
+    };
+  }, [src, createAndLoadShakaPlayer]);
+
+  // 재생 중 일정 시간 마우스/터치 조작이 없으면 컨트롤을 숨긴다.
+  // 일시정지 중에는 항상 보여준다.
+  useEffect(() => {
+    // 일시정지 중엔 controlsVisible이 이미 항상 true라 mediaInactive 값 자체가
+    // 안 쓰인다 - 따로 리셋할 필요 없음.
+    if (isPaused) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    function resetTimer() {
+      setMediaInactive(false);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => setMediaInactive(true), INACTIVITY_TIMEOUT_MS);
     }
 
-    player.addEventListener("userinactivechange", handleUserInactiveChange);
-    return () => {
-      player.removeEventListener("userinactivechange", handleUserInactiveChange);
-    };
-  }, []);
+    // setState를 effect 본문에서 곧바로(동기적으로) 호출하지 않도록,
+    // 최초 타이머 시작도 매크로태스크로 한 틱 미룬다.
+    const initialId = setTimeout(resetTimer, 0);
+    container.addEventListener("mousemove", resetTimer);
+    container.addEventListener("touchstart", resetTimer, { passive: true });
 
+    return () => {
+      clearTimeout(initialId);
+      clearTimeout(timeoutId);
+      container.removeEventListener("mousemove", resetTimer);
+      container.removeEventListener("touchstart", resetTimer);
+    };
+  }, [isPaused]);
+
+  // 핀치 줌 / 두 손가락 밖 확대 상태에서 한 손가락 이동 / Ctrl+휠 확대
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -406,19 +413,12 @@ export default function VideoPlayer({
           startScale: scaleRef.current,
         };
         panRef.current = null;
-        tapStartRef.current = null;
       } else if (e.touches.length === 1 && scaleRef.current > 1) {
         setIsGesturing(true);
         panRef.current = {
           startX: e.touches[0].clientX,
           startY: e.touches[0].clientY,
           startTranslate: translateRef.current,
-        };
-        tapStartRef.current = null;
-      } else if (e.touches.length === 1) {
-        tapStartRef.current = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
         };
       }
     }
@@ -441,13 +441,6 @@ export default function VideoPlayer({
             scaleRef.current,
           ),
         );
-      } else if (e.touches.length === 1 && tapStartRef.current) {
-        // 스크롤/스와이프처럼 손가락이 실제로 움직인 경우까지 탭으로
-        // 오인해 버튼을 누르면 안 되므로, 일정 거리 이상 움직이면 탭
-        // 후보에서 제외한다.
-        const dx = e.touches[0].clientX - tapStartRef.current.x;
-        const dy = e.touches[0].clientY - tapStartRef.current.y;
-        if (Math.hypot(dx, dy) > 10) tapStartRef.current = null;
       }
     }
 
@@ -455,113 +448,6 @@ export default function VideoPlayer({
       if (e.touches.length < 2) pinchRef.current = null;
       if (e.touches.length < 1) panRef.current = null;
       if (e.touches.length === 0) setIsGesturing(false);
-
-      // iOS Safari는 pointer-events: none을 통과해 그 아래(mux-player)에
-      // 떨어진 탭에 대해 합성 click 이벤트를 안정적으로 만들어주지 않는다
-      // (버튼/링크처럼 원래 클릭 가능한 요소가 아니면 특히 그렇다). click에
-      // 기대는 대신 touchend에서 직접 탭 여부(스크롤/스와이프가 아니었는지)를
-      // 판정해 버튼 좌표와 겹치면 처리하고, 뒤이어 합성될 수도 있는 click이
-      // 같은 동작을 중복 실행하지 않도록 preventDefault로 막는다.
-      if (
-        e.touches.length === 0 &&
-        tapStartRef.current &&
-        scaleRef.current === 1 &&
-        e.changedTouches.length > 0
-      ) {
-        const touch = e.changedTouches[0];
-        const centerControl = getCenterControlAt(touch.clientX, touch.clientY);
-        if (centerControl) {
-          e.preventDefault();
-          lastTouchHandledAtRef.current = Date.now();
-          if (centerControl === "back") seekBy(-SEEK_SECONDS);
-          else if (centerControl === "forward") seekBy(SEEK_SECONDS);
-          else togglePlayPause();
-        } else if (
-          isPausedRef.current &&
-          isPlainVideoSurfacePoint(touch.clientX, touch.clientY)
-        ) {
-          // 일시정지 중 여백(버튼도 아니고 우측 상단 이전/다음·전체화면
-          // 버튼도 아닌 순수 영상 부분)을 탭하면 중앙 컨트롤을 껐다 켰다
-          // 토글한다.
-          e.preventDefault();
-          lastTouchHandledAtRef.current = Date.now();
-          setManuallyHidden((prev) => !prev);
-        }
-      }
-      tapStartRef.current = null;
-    }
-
-    // 중앙 -10/재생-일시정지/+10 버튼은 pointer-events: none이라 실제 마우스
-    // 클릭은 이 버튼들을 그냥 통과해 mux-player 표면에 떨어진다(왜 그렇게
-    // 만들었는지는 위 pokeMuxActivity 주석 참고). 그래서 클릭 좌표가 버튼의
-    // 현재 위치와 겹치는지 직접 계산해서 대신 처리해준다.
-    function getCenterControlAt(
-      x: number,
-      y: number,
-    ): "back" | "playPause" | "forward" | null {
-      const entries: [
-        "back" | "playPause" | "forward",
-        React.RefObject<HTMLButtonElement | null>,
-      ][] = [
-        ["back", backButtonRef],
-        ["playPause", playPauseButtonRef],
-        ["forward", forwardButtonRef],
-      ];
-      for (const [name, ref] of entries) {
-        const btn = ref.current;
-        if (!btn) continue;
-        const r = btn.getBoundingClientRect();
-        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-          return name;
-        }
-      }
-      return null;
-    }
-
-    // 우측 상단 이전/다음 강의·전체화면 버튼처럼 여전히 pointer-events: auto인
-    // 실제 엘리먼트를 탭한 게 아니라, 순수 영상(mux-player) 자체가 그 좌표의
-    // 대상인지 확인한다. 중앙 -10/재생-일시정지/+10 버튼도 pointer-events:
-    // none이라 이 판정에서는 걸리지 않는다(그래서 그 버튼들은 getCenterControlAt로
-    // 먼저 따로 걸러낸다).
-    function isPlainVideoSurfacePoint(x: number, y: number): boolean {
-      const el = document.elementFromPoint(x, y);
-      return el?.tagName === "MUX-PLAYER";
-    }
-
-    // capture 단계에서 가로채 stopPropagation하지 않으면 mux-player 자체의
-    // click 리스너(media-gesture-receiver)까지 이벤트가 전달돼 재생/일시정지가
-    // 같이 토글된다. pointerup 기반 컨트롤 표시/숨김 동기화와는 별개의
-    // 이벤트라 여기서 막아도 그쪽엔 영향이 없다.
-    function handleClick(e: MouseEvent) {
-      if (scaleRef.current > 1) return;
-      if (Date.now() - lastTouchHandledAtRef.current < 500) return;
-
-      const centerControl = getCenterControlAt(e.clientX, e.clientY);
-      if (centerControl) {
-        e.stopPropagation();
-        e.preventDefault();
-        if (centerControl === "back") seekBy(-SEEK_SECONDS);
-        else if (centerControl === "forward") seekBy(SEEK_SECONDS);
-        else togglePlayPause();
-        return;
-      }
-
-      if (!isPlainVideoSurfaceTarget(e)) return;
-      e.stopPropagation();
-      // 일시정지 중 여백을 클릭하면(데스크톱) 마찬가지로 중앙 컨트롤을
-      // 껐다 켰다 토글한다. 터치는 위 handleTouchEnd에서 이미 처리하고
-      // lastTouchHandledAtRef로 막아뒀으니 여기서는 마우스 클릭만 해당된다.
-      if (isPausedRef.current) {
-        setManuallyHidden((prev) => !prev);
-      }
-    }
-
-    function handleMouseMove(e: MouseEvent) {
-      setHoveredCenterControl(getCenterControlAt(e.clientX, e.clientY));
-    }
-
-    function handleMouseLeave() {
-      setHoveredCenterControl(null);
     }
 
     el.addEventListener("wheel", handleWheel, { passive: false });
@@ -569,9 +455,6 @@ export default function VideoPlayer({
     el.addEventListener("touchmove", handleTouchMove, { passive: false });
     el.addEventListener("touchend", handleTouchEnd);
     el.addEventListener("touchcancel", handleTouchEnd);
-    el.addEventListener("click", handleClick, { capture: true });
-    el.addEventListener("mousemove", handleMouseMove);
-    el.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
       el.removeEventListener("wheel", handleWheel);
@@ -579,11 +462,8 @@ export default function VideoPlayer({
       el.removeEventListener("touchmove", handleTouchMove);
       el.removeEventListener("touchend", handleTouchEnd);
       el.removeEventListener("touchcancel", handleTouchEnd);
-      el.removeEventListener("click", handleClick, { capture: true });
-      el.removeEventListener("mousemove", handleMouseMove);
-      el.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, [applyScale, clampTranslate, seekBy, togglePlayPause]);
+  }, [applyScale, clampTranslate]);
 
   // 확대 상태에서 전체화면으로 들어가면 어색해 보이므로 초기화
   useEffect(() => {
@@ -672,40 +552,31 @@ export default function VideoPlayer({
                 }
           }
         >
-          <MuxPlayer
-            // 자동 복구 시(attemptRecovery) key를 바꿔 이 엘리먼트를 통째로
-            // 새로 마운트한다 - hls.js 인스턴스까지 완전히 새로 시작해야
-            // 멈춘 상태에서 벗어날 수 있어서, prop만 바꾸는 걸로는 부족하다.
-            key={playerKey}
-            ref={playerRef}
-            // mp4(src)가 있으면 hls.js를 아예 안 거치도록 그쪽을 쓰고,
-            // 없으면 기존 HLS(playbackId+tokens) 방식으로 재생한다.
-            {...(src ? { src } : { playbackId, tokens: { playback: token } })}
-            streamType="on-demand"
+          <video
+            ref={videoRef}
+            src={src}
             poster={poster}
-            metadata={{ video_title: title }}
-            _hlsConfig={hlsConfig}
-            defaultHiddenCaptions
+            aria-label={title}
+            controls
+            playsInline
             disablePictureInPicture
-            onLoadedMetadata={() => {
-              // 자동 복구로 새로 마운트된 인스턴스라면(hlsConfig의
-              // startPosition이 이미 멈추기 직전 위치로 이동을 처리해준다)
-              // 이어서 재생만 해준다 - 사용자는 짧은 재로딩만 보고 넘어가고
-              // 새로고침을 직접 할 필요가 없다.
-              if (resumeFrom == null) return;
-              playerRef.current?.play().catch(() => {});
+            onClick={togglePlayPause}
+            onPlay={() => setIsPaused(false)}
+            onPlaying={() => {
+              // 실제로 재생(디코딩)이 시작됐다는 뜻 - 이 시점부터는 최초
+              // 버퍼링 유예 대신 빡빡한 STALL_TIMEOUT_MS를 적용한다.
+              playingConfirmedRef.current = true;
+              lastProgressRef.current = {
+                time: videoRef.current?.currentTime ?? 0,
+                at: Date.now(),
+              };
             }}
-            onPlay={() => {
-              setIsPaused(false);
-              setManuallyHidden(false);
-            }}
-            onPause={() => {
-              setIsPaused(true);
-              setManuallyHidden(false);
-            }}
+            onPause={() => setIsPaused(true)}
             onEnded={reportProgress}
             onError={() => setPlaybackError(true)}
-            className={isFullscreen ? "h-full w-full" : "aspect-video w-full"}
+            className={
+              isFullscreen ? "h-full w-full" : "aspect-video w-full bg-black"
+            }
           />
         </div>
       </div>
@@ -728,53 +599,36 @@ export default function VideoPlayer({
       )}
 
       {!playbackError && !stalled && controlsVisible && (
-        // 이 레이어 전체와 버튼들은 pointer-events: none이다. mux-player 위에
-        // 얹힌 형제 엘리먼트가 실제로 마우스 이벤트를 가로채면, 커서가
-        // 버튼으로 넘어가는 순간 mux-player 표면 기준 히트테스트 대상이
-        // 바뀌어 mux 쪽에 mouseleave가 발생하고, mux가 컨트롤을 숨기면 이
-        // 버튼도 같이 사라져 그 자리에 mux 표면이 다시 드러나 pointermove로
-        // 오인되어 재활성화되기를 반복한다 - 실측 결과 이 진동이 15~100ms
-        // 간격으로 10초 넘게 끊임없이 이어질 수 있었다(느슨한 poke/디바운스
-        // 로는 못 따라잡는 속도). 아예 버튼을 히트테스트에서 완전히 빼서
-        // (pointer-events: none) mux 표면이 항상 그대로 클릭 대상으로
-        // 남게 하고, 실제 클릭/호버 판정은 아래 컨테이너의 클릭 핸들러가
-        // 버튼의 현재 위치와 좌표를 직접 비교해서 처리한다 - 키보드
-        // 접근성을 위해 onClick은 남겨둔다(포커스 후 Enter/Space는
-        // pointer-events와 무관하게 동작한다).
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-6">
           <button
-            ref={backButtonRef}
             type="button"
-            onClick={() => seekBy(-SEEK_SECONDS)}
-            className={`pointer-events-none flex h-11 w-11 items-center justify-center rounded-full text-white ${
-              hoveredCenterControl === "back" ? "bg-black/80" : "bg-black/60"
-            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              seekBy(-SEEK_SECONDS);
+            }}
+            className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={`${SEEK_SECONDS}초 뒤로`}
           >
             <RotateCcw className="h-5 w-5" />
           </button>
           <button
-            ref={playPauseButtonRef}
             type="button"
-            onClick={togglePlayPause}
-            className={`pointer-events-none flex h-14 w-14 items-center justify-center rounded-full text-white ${
-              hoveredCenterControl === "playPause" ? "bg-black/80" : "bg-black/60"
-            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlayPause();
+            }}
+            className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={isPaused ? "재생" : "일시정지"}
           >
-            {isPaused ? (
-              <Play className="h-7 w-7" />
-            ) : (
-              <Pause className="h-7 w-7" />
-            )}
+            {isPaused ? <Play className="h-7 w-7" /> : <Pause className="h-7 w-7" />}
           </button>
           <button
-            ref={forwardButtonRef}
             type="button"
-            onClick={() => seekBy(SEEK_SECONDS)}
-            className={`pointer-events-none flex h-11 w-11 items-center justify-center rounded-full text-white ${
-              hoveredCenterControl === "forward" ? "bg-black/80" : "bg-black/60"
-            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              seekBy(SEEK_SECONDS);
+            }}
+            className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
             aria-label={`${SEEK_SECONDS}초 앞으로`}
           >
             <RotateCw className="h-5 w-5" />
@@ -782,10 +636,7 @@ export default function VideoPlayer({
         </div>
       )}
 
-      <div
-        className="absolute right-3 top-3 z-10 flex items-center gap-2"
-        onMouseEnter={pokeMuxActivity}
-      >
+      <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
         {prevLessonHref && (
           <Link
             href={prevLessonHref}
@@ -819,10 +670,7 @@ export default function VideoPlayer({
       </div>
 
       {scale > 1 && (
-        <div
-          className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-1 text-white"
-          onMouseEnter={pokeMuxActivity}
-        >
+        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-1 text-white">
           <button
             type="button"
             onClick={() => applyScale(scale - 0.5)}
