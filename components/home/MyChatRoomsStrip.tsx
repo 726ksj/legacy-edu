@@ -39,14 +39,12 @@ export default function MyChatRoomsStrip({ rooms }: { rooms: ChatRoomStripItem[]
                 {room.title}
               </p>
               <p className="truncate text-xs text-zinc-500">
-                {room.subject} · {room.teacherName} 강사
+                <span className="font-semibold text-brand-dark">
+                  {room.subject}
+                </span>{" "}
+                {room.teacherName} 강사
               </p>
             </div>
-            {room.hasUnread && (
-              <span className="shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                NEW
-              </span>
-            )}
           </Link>
         ))}
       </div>
