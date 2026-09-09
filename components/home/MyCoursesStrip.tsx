@@ -23,7 +23,7 @@ export default function MyCoursesStrip({ courses }: { courses: CourseItem[] }) {
             <p className="text-xs font-semibold text-brand-dark lg:text-sm">
               {course.subject}
             </p>
-            <p className="mt-1 line-clamp-2 text-sm font-bold text-zinc-900 lg:text-lg">
+            <p className="mt-1 line-clamp-1 text-sm font-bold text-zinc-900 lg:text-base">
               {course.title}
             </p>
             <p className="mt-1 text-xs text-zinc-500 lg:text-sm">
