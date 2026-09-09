@@ -166,8 +166,8 @@ export default async function HomePage() {
           <p className="max-w-xl whitespace-pre-line text-zinc-500">
             {content.hero_subtitle}
           </p>
-          {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
           {chatRooms.length > 0 && <MyChatRoomsStrip rooms={chatRooms} />}
+          {myCourses.length > 0 && <MyCoursesStrip courses={myCourses} />}
           {staffRole && teachingCourses.length > 0 && (
             <MyTeachingCoursesStrip role={staffRole} courses={teachingCourses} />
           )}
