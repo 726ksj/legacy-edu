@@ -198,7 +198,7 @@ export default function CourseTable({
                       href={`/admin/courses/${row.id}/lessons`}
                       className="text-xs font-semibold text-brand-dark hover:underline"
                     >
-                      차시 관리
+                      영상 관리
                     </Link>
                     <Link
                       href={`/admin/courses?edit=${row.id}`}

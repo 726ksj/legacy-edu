@@ -55,7 +55,7 @@ export default async function Page({
           href={`/admin/courses/${course.id}/lessons`}
           className="text-sm font-semibold text-brand-dark hover:underline"
         >
-          차시 관리로 이동 →
+          영상 관리로 이동 →
         </Link>
         <Link
           href={`/admin/courses/${course.id}/materials`}

@@ -126,7 +126,7 @@ export default function FindPasswordForm() {
               <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
                 회원코드
                 <span className="text-xs font-normal text-zinc-400">
-                  가입할 때 입력했던 그 코드입니다.
+                  가입 시 부여받은 코드를 입력해주세요(레가시 카카오톡 채팅방에서 확인 가능합니다)
                 </span>
                 <div className="relative">
                   <Ticket className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Gauge,
   Maximize,
   Minimize,
   Pause,
@@ -53,6 +54,7 @@ const SHAKA_CONFIG = {
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
 const SEEK_SECONDS = 10;
+const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 // 재생 중 이 시간(ms) 동안 마우스/터치 움직임이 없으면 컨트롤을 숨긴다.
 const INACTIVITY_TIMEOUT_MS = 2000;
 
@@ -125,6 +127,8 @@ export default function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
   const [isSeekDragging, setIsSeekDragging] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   // 재생 토큰은 6시간 후 만료된다(lib/mux.ts) - 그 시점을 넘겨 재생/탐색을
   // 시도하면 Mux가 401/403으로 거절하며 error 이벤트가 뜬다. 원인을 세세히
   // 구분하는 대신, 에러가 나면 새로고침을 안내한다(새로고침하면 서버
@@ -148,16 +152,21 @@ export default function VideoPlayer({
     mediaInactiveRef.current = mediaInactive;
   }, [mediaInactive]);
 
+  // 컨트롤이 숨겨질 때는(자동 숨김 타이머 만료든, 탭으로 직접 끄든) 열려
+  // 있던 배속 메뉴도 같이 닫는다 - 안 그러면 나중에 컨트롤이 다시 나타날
+  // 때 배속 메뉴만 뜬금없이 같이 튀어나온다.
+  const hideControls = useCallback(() => {
+    setMediaInactive(true);
+    setShowSpeedMenu(false);
+  }, []);
+
   // 컨트롤을 보여주고, 일정 시간 뒤 다시 자동으로 숨기는 타이머를 새로
   // 건다. 마우스를 움직이는 등 "계속 보고 있다"는 신호에 쓴다.
   const revealControls = useCallback(() => {
     setMediaInactive(false);
     if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
-    inactivityTimeoutRef.current = setTimeout(
-      () => setMediaInactive(true),
-      INACTIVITY_TIMEOUT_MS,
-    );
-  }, []);
+    inactivityTimeoutRef.current = setTimeout(hideControls, INACTIVITY_TIMEOUT_MS);
+  }, [hideControls]);
 
   // 유튜브처럼, 재생 중 화면을 탭/클릭하면(줌 상태가 아닐 때) 컨트롤을
   // 껐다 켰다 토글한다 - 켜질 때는 자동 숨김 타이머도 같이 다시 건다.
@@ -166,9 +175,9 @@ export default function VideoPlayer({
       revealControls();
     } else {
       if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
-      setMediaInactive(true);
+      hideControls();
     }
-  }, [revealControls]);
+  }, [revealControls, hideControls]);
 
   const scaleRef = useRef(scale);
   const translateRef = useRef(translate);
@@ -179,6 +188,13 @@ export default function VideoPlayer({
   useEffect(() => {
     translateRef.current = translate;
   }, [translate]);
+  // video 엘리먼트 자체는 자동복구 중에도(Shaka 재로드든 mp4 reload든)
+  // 절대 다시 마운트되지 않으므로, 배속은 한 번만 반영해두면 계속
+  // 유지된다.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.playbackRate = playbackRate;
+  }, [playbackRate]);
 
   // 마지막으로 재생이 실제로 진행되고 있었던 위치 - 정지 감시와 자동 복구
   // 둘 다 이 값을 기준으로 삼는다.
@@ -819,6 +835,42 @@ export default function VideoPlayer({
           <span className="shrink-0 text-xs tabular-nums text-white">
             {formatTime(duration)}
           </span>
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSpeedMenu((prev) => !prev);
+              }}
+              className="flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-white hover:bg-white/10"
+              aria-label="재생 속도"
+            >
+              <Gauge className="h-4 w-4" />
+              {playbackRate}x
+            </button>
+            {showSpeedMenu && (
+              <div className="absolute bottom-full right-0 mb-1 flex flex-col overflow-hidden rounded-md bg-black/90 py-1 shadow-lg">
+                {PLAYBACK_RATES.map((rate) => (
+                  <button
+                    key={rate}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPlaybackRate(rate);
+                      setShowSpeedMenu(false);
+                    }}
+                    className={`px-4 py-1.5 text-left text-xs whitespace-nowrap hover:bg-white/10 ${
+                      rate === playbackRate
+                        ? "font-semibold text-brand"
+                        : "text-white"
+                    }`}
+                  >
+                    {rate}x
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

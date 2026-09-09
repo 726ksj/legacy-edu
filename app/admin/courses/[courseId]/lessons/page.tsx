@@ -90,7 +90,7 @@ export default async function Page({
   return (
     <div className="flex flex-1 flex-col p-8">
       <h1 className="text-2xl font-bold text-zinc-900">
-        [{course.subject}] {course.title} — 차시 관리
+        [{course.subject}] {course.title} — 영상 관리
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         {course.teacher_name} 강사 강좌의 영상을 업로드하고 관리합니다.
