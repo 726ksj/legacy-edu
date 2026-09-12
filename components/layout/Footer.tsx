@@ -29,6 +29,7 @@ export default async function Footer() {
                 {content.business_name} · 대표 {content.representative_name}
               </p>
               <p>사업자등록번호 {content.business_registration_number}</p>
+              <p>통신판매업신고번호 {content.mail_order_business_number}</p>
               <p>{content.business_address}</p>
               <p>{content.business_phone}</p>
             </div>
@@ -48,6 +49,9 @@ export default async function Footer() {
               <span className="font-semibold text-zinc-700">고객지원</span>
               <Link href="/customer-center" className="text-zinc-500 hover:text-brand-dark">
                 고객센터 / FAQ
+              </Link>
+              <Link href="/refund-policy" className="text-zinc-500 hover:text-brand-dark">
+                환불/교환 안내
               </Link>
               <Link href="/signup" className="text-zinc-500 hover:text-brand-dark">
                 회원가입

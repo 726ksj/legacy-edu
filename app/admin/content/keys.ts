@@ -24,8 +24,10 @@ export const CONTENT_KEYS = [
   "business_name",
   "representative_name",
   "business_registration_number",
+  "mail_order_business_number",
   "business_address",
   "business_phone",
+  "refund_policy_body",
 ] as const;
 
 export type ContentKey = (typeof CONTENT_KEYS)[number];
@@ -66,6 +68,20 @@ export const CONTENT_DEFAULTS: SiteContentMap = {
   business_name: "LEGACY EDU",
   representative_name: "(대표자명 입력 필요)",
   business_registration_number: "(사업자등록번호 입력 필요)",
+  mail_order_business_number: "(통신판매업신고번호 입력 필요)",
   business_address: "(사업장 주소 입력 필요)",
   business_phone: "(연락처 입력 필요)",
+  refund_policy_body: `제1조 (환불 기준)
+① 회원은 강좌 결제 후 아래 기준에 따라 환불을 요청할 수 있습니다.
+② 강의를 전혀 수강하지 않은 경우: 결제일로부터 7일 이내 요청 시 전액 환불됩니다.
+③ 강의를 일부 수강한 경우: 결제 금액에서 실제 이용한 강의 분량에 해당하는 금액과 할인 혜택을 제외한 나머지 금액을 환불합니다.
+④ 수강 기간의 2분의 1이 경과했거나 전체 강의의 2분의 1 이상을 수강한 경우, 환불이 제한될 수 있습니다.
+
+제2조 (환불 절차)
+환불을 원하시는 회원은 고객센터 또는 담당 강사/조교를 통해 환불을 요청해주세요. 요청일로부터 영업일 기준 3~5일 이내에 결제하신 수단으로 환불됩니다.
+
+제3조 (환불 제한)
+이벤트·프로모션으로 무료 제공된 혜택은 환불 대상에서 제외됩니다.
+
+본 환불 규정은 전자상거래 등에서의 소비자보호에 관한 법률 등 관련 법령 및 회사 정책에 따라 변경될 수 있습니다.`,
 };

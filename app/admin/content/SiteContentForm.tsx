@@ -153,6 +153,16 @@ export default function SiteContentForm({
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            통신판매업신고번호
+            <input
+              name="mail_order_business_number"
+              defaultValue={content.mail_order_business_number}
+              required
+              placeholder="제0000-서울00000-0000호"
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
             유선/휴대폰 번호
             <input
               name="business_phone"
@@ -171,6 +181,20 @@ export default function SiteContentForm({
             />
           </label>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5 border-t border-zinc-100 pt-6 text-sm font-medium text-zinc-700">
+        <p className="text-sm font-semibold text-zinc-900">환불/교환 규정</p>
+        <textarea
+          name="refund_policy_body"
+          defaultValue={content.refund_policy_body}
+          required
+          rows={14}
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+        />
+        <p className="text-xs font-normal text-zinc-400">
+          /refund-policy 페이지에 그대로 노출됩니다. 빈 줄로 조항을 구분해주세요.
+        </p>
       </div>
 
       {state.error && (
