@@ -14,6 +14,26 @@ function revalidateCourseNoticePaths(courseId: string) {
   revalidatePath(`/my-classroom/${courseId}`);
 }
 
+// requireCourseManager는 "이 강좌를 관리할 권한"만 확인하므로, courseId와
+// 무관한 id를 넘겨 다른 강좌의 공지를 건드리는 걸 막지 못한다 - id가
+// 실제로 이 courseId 소속인지 별도로 확인한다.
+async function assertNoticeInCourse(
+  supabase: ReturnType<typeof createAdminClient>,
+  id: string,
+  courseId: string,
+) {
+  const { data } = await supabase
+    .from("course_notices")
+    .select("id")
+    .eq("id", id)
+    .eq("course_id", courseId)
+    .maybeSingle();
+
+  if (!data) {
+    throw new Error("이 강좌의 공지가 아닙니다.");
+  }
+}
+
 export async function createCourseNotice(
   courseId: string,
   _prevState: CourseNoticeActionState,
@@ -46,6 +66,8 @@ export async function updateCourseNotice(
   formData: FormData,
 ): Promise<CourseNoticeActionState> {
   await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+  await assertNoticeInCourse(supabase, id, courseId);
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
 
@@ -53,7 +75,6 @@ export async function updateCourseNotice(
     return { error: "제목과 내용을 입력해주세요." };
   }
 
-  const supabase = createAdminClient();
   const { error } = await supabase
     .from("course_notices")
     .update({ title, content })
@@ -70,6 +91,7 @@ export async function updateCourseNotice(
 export async function deleteCourseNotice(id: string, courseId: string) {
   await requireCourseManager(courseId);
   const supabase = createAdminClient();
+  await assertNoticeInCourse(supabase, id, courseId);
   await supabase.from("course_notices").delete().eq("id", id);
   revalidateCourseNoticePaths(courseId);
 }

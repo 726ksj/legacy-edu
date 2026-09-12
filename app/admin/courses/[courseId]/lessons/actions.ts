@@ -128,6 +128,26 @@ export interface UpdateLessonInfoState {
   success?: boolean;
 }
 
+// requireCourseManager는 "이 강좌를 관리할 권한"만 확인하므로, courseId와
+// 무관한 lessonId를 넘겨 다른 강좌의 영상을 건드리는 걸 막지 못한다 -
+// lessonId가 실제로 이 courseId 소속인지 별도로 확인한다.
+async function assertLessonInCourse(
+  supabase: ReturnType<typeof createAdminClient>,
+  lessonId: string,
+  courseId: string,
+) {
+  const { data } = await supabase
+    .from("lessons")
+    .select("id")
+    .eq("id", lessonId)
+    .eq("course_id", courseId)
+    .maybeSingle();
+
+  if (!data) {
+    throw new Error("이 강좌의 영상이 아닙니다.");
+  }
+}
+
 export async function updateLessonInfo(
   lessonId: string,
   courseId: string,
@@ -135,6 +155,8 @@ export async function updateLessonInfo(
   formData: FormData,
 ): Promise<UpdateLessonInfoState> {
   await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+  await assertLessonInCourse(supabase, lessonId, courseId);
   const title = String(formData.get("title") ?? "").trim();
   const orderNoRaw = String(formData.get("orderNo") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -148,7 +170,6 @@ export async function updateLessonInfo(
     return { error: "차시 제목과 차시 번호를 입력해주세요." };
   }
 
-  const supabase = createAdminClient();
   const { error } = await supabase
     .from("lessons")
     .update({
@@ -184,6 +205,7 @@ export async function updateLessonInfo(
 export async function deleteLesson(lessonId: string, courseId: string) {
   await requireCourseManager(courseId);
   const supabase = createAdminClient();
+  await assertLessonInCourse(supabase, lessonId, courseId);
   const { data: lesson } = await supabase
     .from("lessons")
     .select("mux_asset_id")
