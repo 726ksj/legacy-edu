@@ -25,3 +25,15 @@ export function formatDate(value: string | Date): string {
     timeZone: "Asia/Seoul",
   }).format(date);
 }
+
+// 날짜 없이 시:분만 보여주면 되는 채팅 등에서 쓴다. hour12를 명시적으로
+// 끄는 이유는 formatDateTime과 동일(서버/브라우저 간 오전·오후 표기 불일치).
+export function formatTime(value: string | Date): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}

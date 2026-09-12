@@ -5,6 +5,7 @@ import Image from "next/image";
 import { MessageCircleMore, Paperclip, Send } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { sendChatFile } from "@/lib/chatMessages";
+import { formatTime } from "@/lib/formatDateTime";
 
 export interface ChatMessageView {
   id: string;
@@ -14,13 +15,6 @@ export interface ChatMessageView {
   fileUrl?: string | null;
   fileName?: string | null;
   fileType?: string | null;
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("ko-KR", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 function isImageFile(fileType?: string | null) {

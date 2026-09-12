@@ -179,7 +179,7 @@ export default async function Page() {
       </Link>
       <h1 className="mt-1 text-2xl font-bold text-zinc-900">성적 대시보드</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        숫자로 입력된 점수만 집계합니다. "A+"처럼 등급으로 입력된 성적은
+        숫자로 입력된 점수만 집계합니다. &quot;A+&quot;처럼 등급으로 입력된 성적은
         게이지·추이·막대 그래프에서는 제외되고, 아래 전체 목록 표에서만
         원문 그대로 확인할 수 있습니다.
       </p>

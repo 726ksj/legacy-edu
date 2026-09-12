@@ -28,11 +28,15 @@ export default function UploadForm({
     : requiredHeaders.join(", ");
 
   useEffect(() => {
-    if (state.successCount !== undefined) {
+    if (state.successCount === undefined) return;
+    // setState를 effect 본문에서 곧바로(동기적으로) 호출하지 않도록
+    // 매크로태스크로 한 틱 미룬다.
+    const id = setTimeout(() => {
       formRef.current?.reset();
       setCategoryId("");
       setFileName("");
-    }
+    }, 0);
+    return () => clearTimeout(id);
   }, [state.successCount]);
 
   return (

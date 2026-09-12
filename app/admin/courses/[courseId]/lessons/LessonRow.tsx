@@ -57,9 +57,11 @@ export default function LessonRow({
   // 저장 성공 시 편집 폼을 닫아 최신 값이 반영된 일반 행으로 돌아간다 -
   // 이게 곧 저장 성공 피드백이다 (다른 관리자 인라인 편집 행들과 동일한 방식).
   useEffect(() => {
-    if (state.success) {
-      setEditing(false);
-    }
+    if (!state.success) return;
+    // setState를 effect 본문에서 곧바로(동기적으로) 호출하지 않도록
+    // 매크로태스크로 한 틱 미룬다.
+    const id = setTimeout(() => setEditing(false), 0);
+    return () => clearTimeout(id);
     // useActionState는 값이 같아도(연속 저장 성공 등) 매번 새 state
     // 객체를 반환하니, state.success가 아니라 state 전체를 의존성으로
     // 둬야 반복 성공에도 매번 닫힌다.
