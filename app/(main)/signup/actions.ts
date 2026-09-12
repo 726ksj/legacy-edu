@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidPassword, PASSWORD_REQUIREMENT_TEXT } from "@/lib/password";
 import { isValidEmail } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export interface SignupState {
   error?: string;
@@ -10,6 +11,11 @@ export interface SignupState {
 }
 
 const EMAIL_DOMAIN = "legacyedu.local";
+
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_MAX_PER_IP = 10;
+const RATE_LIMIT_MESSAGE =
+  "너무 많이 시도하셨습니다. 15분 후 다시 시도해주세요.";
 
 async function releaseMemberCode(
   supabase: ReturnType<typeof createAdminClient>,
@@ -33,11 +39,25 @@ const ROLE_LABEL: Record<"student" | StaffRole, string> = {
 // 지금 시도하는 가입 화면이 일치하는지 먼저 확인한다. 동시 가입 요청에
 // 대비해 계정을 만들기 전에 코드를 원자적으로 선점한다(is_used=false일
 // 때만 반영되는 조건부 UPDATE) - 실패하면 releaseMemberCode로 되돌린다.
+//
+// 코드는 관리자가 직접 입력하는 임의 문자열이라 무제한으로 찍어볼 경우
+// 아직 안 쓴 남의 코드를 선점하거나(자동입력되는 이름까지 그 사람 것으로
+// 세팅됨) 강사/조교 코드를 알아낼 수 있어, 회원가입 세 화면(학생/강사/
+// 조교) 전체에서 IP 기준으로 시도 횟수를 공유해서 제한한다.
 async function claimMemberCode(
   supabase: ReturnType<typeof createAdminClient>,
   code: string,
   expectedRole: "student" | StaffRole,
 ): Promise<{ error: string } | { id: string; memberName: string }> {
+  const ip = await getClientIp();
+  const ipOk = await checkRateLimit(`member-code-claim:ip:${ip}`, {
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX_PER_IP,
+  });
+  if (!ipOk) {
+    return { error: RATE_LIMIT_MESSAGE };
+  }
+
   const { data: codeRow, error: codeError } = await supabase
     .from("member_codes")
     .select("id, is_used, role, member_name")
