@@ -4,6 +4,7 @@ import { logout } from "@/lib/supabase/auth-actions";
 import { getMemberRole } from "@/lib/teachers";
 import MobileNav from "./MobileNav";
 import NoticeNewBadge from "./NoticeNewBadge";
+import { getSuneungDday } from "@/lib/suneung";
 
 // 최근(7일 이내)에 올라온 공지사항이 있으면 상단 메뉴에 NEW 뱃지 후보로
 // 띄운다. 실제로 뱃지를 보여줄지는 NoticeNewBadge가 브라우저에 저장된
@@ -73,6 +74,7 @@ export default async function Header() {
     getAuthUser(),
     getRecentNoticeId(supabase),
   ]);
+  const suneungDday = getSuneungDday();
 
   const admin = isAdmin(user);
   // 강사/조교 여부는 profiles.role 조회가 필요해서(JWT만으로는 알 수
@@ -130,6 +132,14 @@ export default async function Header() {
         </Link>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
+          {suneungDday >= 0 && (
+            <span className="whitespace-nowrap text-sm font-bold tracking-tight text-zinc-900 sm:text-base md:text-lg">
+              수능{" "}
+              <span className="text-brand-dark">
+                {suneungDday === 0 ? "D-DAY" : `D-${suneungDday}`}
+              </span>
+            </span>
+          )}
           {user ? (
             <>
               {teacher ? (
