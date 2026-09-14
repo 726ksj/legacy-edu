@@ -2,7 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
-import { createClient, getAuthUser } from "@/lib/supabase/server";
+import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
+import { isAssignedStaff } from "@/lib/teachers";
 import {
   buildMp4Url,
   ensureMp4Ready,
@@ -68,10 +69,13 @@ export default async function WatchPage({
     notFound();
   }
 
-  // 둘 다 lesson.course_id/user.id만 있으면 되고 서로 의존하지 않으니
-  // 병렬로 요청한다.
-  const [enrolled, { data: allSiblings }] = await Promise.all([
-    canWatchLesson(supabase, user.id, lesson),
+  // 서로 의존하지 않는 조회라 병렬로 요청한다. isCourseStaff는 이 강좌를
+  // 관리하는 강사/조교/관리자인지 - 맞다면 수강 등록이나 차시 공개 대상
+  // 제한과 무관하게 학생이 보는 것과 동일한 화면으로 미리보기가 가능하다.
+  const [isCourseStaff, { data: allSiblings }] = await Promise.all([
+    isAdmin(user)
+      ? Promise.resolve(true)
+      : isAssignedStaff(lesson.course_id, user.id),
     supabase
       .from("lessons")
       .select(
@@ -81,6 +85,10 @@ export default async function WatchPage({
       .order("order_no", { ascending: true })
       .returns<SiblingLesson[]>(),
   ]);
+
+  const enrolled = await canWatchLesson(supabase, user.id, lesson, {
+    isCourseStaff,
+  });
 
   if (!enrolled) {
     notFound();
@@ -100,11 +108,9 @@ export default async function WatchPage({
   const readySiblings = (allSiblings ?? []).filter(
     (sibling) => sibling.status === "ready",
   );
-  const siblingLessons = await filterWatchableLessons(
-    supabase,
-    user.id,
-    readySiblings,
-  );
+  const siblingLessons = isCourseStaff
+    ? readySiblings
+    : await filterWatchableLessons(supabase, user.id, readySiblings);
 
   const upNext = await Promise.all(
     siblingLessons.map(async (sibling) => ({
@@ -191,13 +197,19 @@ export default async function WatchPage({
           <ProcessingNotice />
         )}
 
-        <Link
-          href={`/my-classroom/${lesson.course_id}/chat`}
-          className="flex items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-brand-dark hover:border-brand"
-        >
-          <MessageCircle className="h-4 w-4" />
-          채팅방에서 질문하기
-        </Link>
+        {isCourseStaff ? (
+          <p className="rounded-md border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3 text-center text-sm text-zinc-400">
+            강좌 관리자 미리보기 화면입니다.
+          </p>
+        ) : (
+          <Link
+            href={`/my-classroom/${lesson.course_id}/chat`}
+            className="flex items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-brand-dark hover:border-brand"
+          >
+            <MessageCircle className="h-4 w-4" />
+            채팅방에서 질문하기
+          </Link>
+        )}
       </div>
 
       <aside className="flex w-full flex-col gap-3 lg:w-80 lg:shrink-0">

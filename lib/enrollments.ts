@@ -58,7 +58,12 @@ export async function canWatchLesson(
     course_id: string;
     visibility: LessonVisibility;
   },
+  options?: { isCourseStaff?: boolean },
 ) {
+  // 이 강좌를 관리하는 강사/조교/관리자는 수강 등록이나 공개 대상
+  // 제한과 무관하게 자기 강좌의 모든 영상을 볼 수 있어야 한다.
+  if (options?.isCourseStaff) return true;
+
   const enrolled = await isEnrolled(supabase, profileId, lesson.course_id);
   if (!enrolled) return false;
   if (lesson.visibility === "all") return true;

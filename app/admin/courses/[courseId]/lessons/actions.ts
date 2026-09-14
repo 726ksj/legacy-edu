@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireCourseManager } from "@/lib/teachers";
-import { createMuxClient, pollUploadForAssetId } from "@/lib/mux";
+import {
+  buildMp4Url,
+  createMuxClient,
+  ensureMp4Ready,
+  pollUploadForAssetId,
+  signPlaybackToken,
+} from "@/lib/mux";
 import { compareLessonTitles } from "@/lib/lessonOrdering";
 import type { LessonVisibility } from "@/lib/enrollments";
 
@@ -47,6 +53,7 @@ export async function saveLesson(
   description: string,
   visibility: LessonVisibility,
   profileIds: string[],
+  videoFilename: string,
 ): Promise<{ error?: string }> {
   await requireCourseManager(courseId);
   const mux = createMuxClient();
@@ -82,6 +89,7 @@ export async function saveLesson(
       status: "preparing",
       description: description || null,
       visibility,
+      video_filename: videoFilename,
     })
     .select("id")
     .single();
@@ -224,4 +232,106 @@ export async function deleteLesson(lessonId: string, courseId: string) {
   await supabase.from("lessons").delete().eq("id", lessonId);
   revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath(`/mypage/teaching/${courseId}`);
+}
+
+// 관리자 화면에서 이 강좌를 관리하는 강사/조교가, 학생이 보는 것과 같은
+// 화면으로 영상을 미리 볼 수 있도록 재생 토큰을 발급한다. 관리자 모드를
+// 벗어나지 않고 화면 안에서 바로 재생하기 위한 용도라 /watch 페이지로
+// 이동시키지 않는다.
+export async function getLessonPreview(
+  lessonId: string,
+  courseId: string,
+): Promise<
+  | { error: string }
+  | { playbackId: string; token: string; src?: string; title: string }
+> {
+  await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+  const { data: lesson } = await supabase
+    .from("lessons")
+    .select(
+      "id, title, status, mux_asset_id, mux_playback_id, mp4_ready, created_at, course_id",
+    )
+    .eq("id", lessonId)
+    .eq("course_id", courseId)
+    .maybeSingle();
+
+  if (!lesson) {
+    return { error: "이 강좌의 영상이 아닙니다." };
+  }
+  if (lesson.status !== "ready" || !lesson.mux_playback_id) {
+    return { error: "아직 재생할 수 없는 영상입니다." };
+  }
+
+  const [token, mp4Ready] = await Promise.all([
+    signPlaybackToken(lesson.mux_playback_id),
+    ensureMp4Ready(supabase, lesson),
+  ]);
+
+  return {
+    playbackId: lesson.mux_playback_id,
+    token,
+    src: mp4Ready ? buildMp4Url(lesson.mux_playback_id, token) : undefined,
+    title: lesson.title,
+  };
+}
+
+// 잘못된 영상을 올렸을 때 차시(제목/공개 대상/학생별 접근 권한)를 그대로
+// 둔 채 영상 파일만 바꿀 수 있게 한다 - 통째로 지웠다 다시 올리면 그
+// 설정을 다 잃는다.
+export async function replaceLessonVideo(
+  lessonId: string,
+  courseId: string,
+  uploadId: string,
+  videoFilename: string,
+): Promise<{ error?: string }> {
+  await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+  await assertLessonInCourse(supabase, lessonId, courseId);
+
+  const { data: lesson } = await supabase
+    .from("lessons")
+    .select("mux_asset_id")
+    .eq("id", lessonId)
+    .maybeSingle();
+
+  const mux = createMuxClient();
+  let upload;
+  try {
+    upload = await mux.video.uploads.retrieve(uploadId);
+  } catch {
+    return {
+      error: "영상 업로드 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.",
+    };
+  }
+
+  const assetId = upload.asset_id ?? (await pollUploadForAssetId(uploadId));
+
+  if (lesson?.mux_asset_id) {
+    try {
+      await mux.video.assets.delete(lesson.mux_asset_id);
+    } catch {
+      // 이전 영상이 Mux에 이미 없거나 삭제 실패해도 교체는 계속 진행한다.
+    }
+  }
+
+  const { error } = await supabase
+    .from("lessons")
+    .update({
+      mux_asset_id: assetId,
+      mux_upload_id: assetId ? null : uploadId,
+      mux_playback_id: null,
+      status: "preparing",
+      mp4_ready: false,
+      video_filename: videoFilename,
+    })
+    .eq("id", lessonId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/mypage/teaching/${courseId}`);
+  return {};
 }

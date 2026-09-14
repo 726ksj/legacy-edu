@@ -160,4 +160,15 @@ describe("canWatchLesson", () => {
     });
     expect(canWatch).toBe(false);
   });
+
+  it("isCourseStaff면 등록/공개 대상과 무관하게 볼 수 있다", async () => {
+    const supabase = fakeSupabase({});
+    const canWatch = await canWatchLesson(
+      supabase,
+      "p1",
+      { id: "l1", course_id: "c1", visibility: "include" },
+      { isCourseStaff: true },
+    );
+    expect(canWatch).toBe(true);
+  });
 });

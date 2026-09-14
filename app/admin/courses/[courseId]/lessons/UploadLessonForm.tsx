@@ -86,6 +86,7 @@ export default function UploadLessonForm({
         description.trim(),
         visibility,
         Array.from(selectedIds),
+        file.name,
       );
       if (saveResult.error) {
         setError(saveResult.error);

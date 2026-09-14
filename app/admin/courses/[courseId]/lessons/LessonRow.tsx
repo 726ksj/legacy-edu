@@ -7,6 +7,8 @@ import DeleteLessonButton from "./DeleteLessonButton";
 import LessonAudiencePicker, {
   type AudienceStudent,
 } from "./LessonAudiencePicker";
+import LessonPreviewPanel from "./LessonPreviewPanel";
+import ReplaceLessonVideoForm from "./ReplaceLessonVideoForm";
 import type { LessonVisibility } from "@/lib/enrollments";
 
 const initialState: UpdateLessonInfoState = {};
@@ -24,6 +26,7 @@ interface Lesson {
   description: string | null;
   created_at: string;
   visibility: LessonVisibility;
+  video_filename: string | null;
 }
 
 export default function LessonRow({
@@ -118,6 +121,11 @@ export default function LessonRow({
                   className="min-w-[16rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
                 />
               </label>
+              <ReplaceLessonVideoForm
+                lessonId={lesson.id}
+                courseId={courseId}
+                currentFileName={lesson.video_filename}
+              />
               <button
                 type="submit"
                 disabled={isPending}
@@ -150,6 +158,15 @@ export default function LessonRow({
               <p className="text-xs font-medium text-red-500">
                 {state.error}
               </p>
+            )}
+
+            {lesson.status === "ready" && (
+              <div className="border-t border-zinc-100 pt-3">
+                <p className="mb-2 text-xs font-semibold text-zinc-700">
+                  미리보기
+                </p>
+                <LessonPreviewPanel lessonId={lesson.id} courseId={courseId} />
+              </div>
             )}
           </form>
         </td>
