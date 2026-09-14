@@ -3,7 +3,6 @@ import { createClient, getAuthUser, isAdmin } from "@/lib/supabase/server";
 import { logout } from "@/lib/supabase/auth-actions";
 import { getMemberRole } from "@/lib/teachers";
 import MobileNav from "./MobileNav";
-import EnrollmentButton from "./EnrollmentButton";
 import NoticeNewBadge from "./NoticeNewBadge";
 
 // 최근(7일 이내)에 올라온 공지사항이 있으면 상단 메뉴에 NEW 뱃지 후보로
@@ -141,7 +140,12 @@ export default async function Header() {
                   강좌 관리
                 </Link>
               ) : assistant ? null : (
-                <EnrollmentButton />
+                <Link
+                  href="/courses/high"
+                  className="min-w-16 whitespace-nowrap rounded-md bg-accent px-2.5 py-1.5 text-center text-xs font-semibold text-white transition-colors hover:bg-accent-dark sm:min-w-[84px] sm:px-4 sm:py-2 sm:text-sm md:min-w-[108px] md:px-6 md:py-2.5 md:text-base"
+                >
+                  수강신청
+                </Link>
               )}
               <form action={logout}>
                 <button
