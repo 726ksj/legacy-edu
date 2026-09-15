@@ -111,7 +111,11 @@ export default async function Page({
       <div>
         <h2 className="text-lg font-bold text-zinc-900">영상 관리</h2>
         <div className="mt-3">
-          <UploadLessonForm courseId={courseId} students={students} />
+          <UploadLessonForm
+            courseId={courseId}
+            students={students}
+            nextOrderNo={(lessons?.length ?? 0) + 1}
+          />
         </div>
 
         <div className="mt-4 overflow-visible rounded-lg border border-zinc-200 bg-white">
@@ -138,6 +142,7 @@ export default async function Page({
                     students={students}
                     initialSelectedIds={accessByLesson.get(lesson.id) ?? []}
                     deleteAction={deleteLesson.bind(null, lesson.id, courseId)}
+                    maxOrderNo={lessons?.length ?? 1}
                   />
                 );
               })}

@@ -23,7 +23,6 @@ interface Lesson {
   order_no: number;
   title: string;
   status: string;
-  description: string | null;
   created_at: string;
   visibility: LessonVisibility;
   video_filename: string | null;
@@ -36,6 +35,7 @@ export default function LessonRow({
   students,
   initialSelectedIds,
   deleteAction,
+  maxOrderNo,
 }: {
   lesson: Lesson;
   courseId: string;
@@ -43,6 +43,7 @@ export default function LessonRow({
   students: AudienceStudent[];
   initialSelectedIds: string[];
   deleteAction: () => Promise<void>;
+  maxOrderNo: number;
 }) {
   const [editing, setEditing] = useState(false);
   const [visibility, setVisibility] = useState<LessonVisibility>(
@@ -95,10 +96,12 @@ export default function LessonRow({
           <form action={formAction} className="flex flex-col gap-3">
             <div className="flex flex-wrap items-end gap-3">
               <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
-                차시 번호
+                순서
                 <input
                   name="orderNo"
                   type="number"
+                  min={1}
+                  max={maxOrderNo}
                   defaultValue={lesson.order_no}
                   required
                   className="w-20 rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
@@ -111,14 +114,6 @@ export default function LessonRow({
                   defaultValue={lesson.title}
                   required
                   className="min-w-[12rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
-                차시 소개
-                <input
-                  name="description"
-                  defaultValue={lesson.description ?? ""}
-                  className="min-w-[16rem] rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
                 />
               </label>
               <ReplaceLessonVideoForm
@@ -177,14 +172,7 @@ export default function LessonRow({
   return (
     <tr>
       <td className="px-4 py-3 text-zinc-700">{lesson.order_no}</td>
-      <td className="px-4 py-3 font-medium text-zinc-900">
-        {lesson.title}
-        {lesson.description && (
-          <p className="mt-0.5 max-w-xs truncate text-xs font-normal text-zinc-400">
-            {lesson.description}
-          </p>
-        )}
-      </td>
+      <td className="px-4 py-3 font-medium text-zinc-900">{lesson.title}</td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
           <span

@@ -10,12 +10,14 @@ import type { LessonVisibility } from "@/lib/enrollments";
 export default function UploadLessonForm({
   courseId,
   students,
+  nextOrderNo,
 }: {
   courseId: string;
   students: AudienceStudent[];
+  nextOrderNo: number;
 }) {
+  const [orderNo, setOrderNo] = useState("");
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [visibility, setVisibility] = useState<LessonVisibility>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -46,8 +48,17 @@ export default function UploadLessonForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    const orderNoValue = Number(orderNo);
+    if (!orderNo.trim() || Number.isNaN(orderNoValue)) {
+      setError("순서를 입력해주세요.");
+      return;
+    }
+    if (orderNoValue < 1 || orderNoValue > nextOrderNo) {
+      setError(`순서는 1~${nextOrderNo} 사이로 입력해주세요.`);
+      return;
+    }
     if (!title.trim() || !file) {
-      setError("차시 제목과 영상 파일을 선택해주세요.");
+      setError("제목과 영상 파일을 선택해주세요.");
       return;
     }
 
@@ -83,7 +94,7 @@ export default function UploadLessonForm({
         courseId,
         title.trim(),
         uploadId,
-        description.trim(),
+        orderNoValue,
         visibility,
         Array.from(selectedIds),
         file.name,
@@ -94,8 +105,8 @@ export default function UploadLessonForm({
         return;
       }
 
+      setOrderNo("");
       setTitle("");
-      setDescription("");
       setFile(null);
       setVisibility("all");
       setSelectedIds(new Set());
@@ -119,22 +130,22 @@ export default function UploadLessonForm({
     >
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          차시 제목
+          순서
           <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="예: 1강 - 문법 정리"
+            type="number"
+            min={1}
+            max={nextOrderNo}
+            value={orderNo}
+            onChange={(e) => setOrderNo(e.target.value)}
             disabled={isBusy}
-            className="min-w-[14rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
+            className="w-20 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          차시 소개 (선택)
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="이 차시에서 다루는 내용을 입력하세요."
-            rows={1}
+          제목
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             disabled={isBusy}
             className="min-w-[16rem] rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
           />

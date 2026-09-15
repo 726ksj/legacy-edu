@@ -10,7 +10,6 @@ import {
   pollUploadForAssetId,
   signPlaybackToken,
 } from "@/lib/mux";
-import { compareLessonTitles } from "@/lib/lessonOrdering";
 import type { LessonVisibility } from "@/lib/enrollments";
 
 export async function createDirectUpload(
@@ -50,12 +49,23 @@ export async function saveLesson(
   courseId: string,
   title: string,
   uploadId: string,
-  description: string,
+  orderNo: number,
   visibility: LessonVisibility,
   profileIds: string[],
   videoFilename: string,
 ): Promise<{ error?: string }> {
   await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+
+  const { count } = await supabase
+    .from("lessons")
+    .select("id", { count: "exact", head: true })
+    .eq("course_id", courseId);
+  const maxOrderNo = (count ?? 0) + 1;
+  if (orderNo < 1 || orderNo > maxOrderNo) {
+    return { error: `순서는 1~${maxOrderNo} 사이로 입력해주세요.` };
+  }
+
   const mux = createMuxClient();
   let upload;
   try {
@@ -72,22 +82,15 @@ export async function saveLesson(
   // 마저 채울 수 있게 한다 (그냥 null로 저장하면 영영 복구 불가능해짐).
   const assetId = upload.asset_id ?? (await pollUploadForAssetId(uploadId));
 
-  const supabase = createAdminClient();
-  const { data: existingLessons } = await supabase
-    .from("lessons")
-    .select("id, title")
-    .eq("course_id", courseId);
-
   const { data: inserted, error: insertError } = await supabase
     .from("lessons")
     .insert({
       course_id: courseId,
       title,
-      order_no: (existingLessons?.length ?? 0) + 1,
+      order_no: orderNo,
       mux_asset_id: assetId,
       mux_upload_id: assetId ? null : uploadId,
       status: "preparing",
-      description: description || null,
       visibility,
       video_filename: videoFilename,
     })
@@ -108,22 +111,6 @@ export async function saveLesson(
       })),
     );
   }
-
-  // 업로드할 때마다 강좌의 모든 차시를 제목 기준 오름차순으로 다시 매겨서,
-  // 어떤 순서로 업로드하든 항상 제목 순서대로 나열되게 한다.
-  const allLessons = [
-    ...(existingLessons ?? []),
-    { id: inserted.id, title },
-  ].sort((a, b) => compareLessonTitles(a.title, b.title));
-
-  await Promise.all(
-    allLessons.map((lesson, index) =>
-      supabase
-        .from("lessons")
-        .update({ order_no: index + 1 })
-        .eq("id", lesson.id),
-    ),
-  );
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath(`/mypage/teaching/${courseId}`);
@@ -167,7 +154,6 @@ export async function updateLessonInfo(
   await assertLessonInCourse(supabase, lessonId, courseId);
   const title = String(formData.get("title") ?? "").trim();
   const orderNoRaw = String(formData.get("orderNo") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
   const orderNo = Number(orderNoRaw);
   const visibility = String(
     formData.get("visibility") ?? "all",
@@ -175,7 +161,16 @@ export async function updateLessonInfo(
   const profileIds = formData.getAll("profileIds").map(String);
 
   if (!title || !orderNoRaw || Number.isNaN(orderNo)) {
-    return { error: "차시 제목과 차시 번호를 입력해주세요." };
+    return { error: "제목과 순서를 입력해주세요." };
+  }
+
+  const { count } = await supabase
+    .from("lessons")
+    .select("id", { count: "exact", head: true })
+    .eq("course_id", courseId);
+  const maxOrderNo = count ?? 1;
+  if (orderNo < 1 || orderNo > maxOrderNo) {
+    return { error: `순서는 1~${maxOrderNo} 사이로 입력해주세요.` };
   }
 
   const { error } = await supabase
@@ -183,7 +178,6 @@ export async function updateLessonInfo(
     .update({
       title,
       order_no: orderNo,
-      description: description || null,
       visibility,
     })
     .eq("id", lessonId);
