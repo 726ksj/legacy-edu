@@ -28,7 +28,9 @@ export default async function ScoreReportList({
   const user = await getAuthUser();
 
   if (!user) {
-    redirect("/login");
+    redirect(
+      `/login?redirect=${encodeURIComponent(`/mypage/score-report/${reportType}`)}`,
+    );
   }
 
   const { data: entries } = await supabase

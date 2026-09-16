@@ -1,10 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+import { getAuthUser } from "@/lib/supabase/server";
 import { getScoreReportCategories } from "@/lib/scoreReports";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
+  const user = await getAuthUser();
+  if (!user) {
+    redirect(`/login?redirect=${encodeURIComponent("/mypage/score-report")}`);
+  }
+
   const categories = await getScoreReportCategories();
 
   return (
