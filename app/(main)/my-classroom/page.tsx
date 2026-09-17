@@ -5,6 +5,7 @@ import { createClient, getAuthUser } from "@/lib/supabase/server";
 
 interface Enrollment {
   course_id: string;
+  enrolled_at: string;
   courses: {
     id: string;
     subject: string;
@@ -23,9 +24,41 @@ export default async function MyClassroomPage() {
 
   const { data: enrollments } = await supabase
     .from("enrollments")
-    .select("course_id, courses(id, subject, title, teacher_name)")
+    .select("course_id, enrolled_at, courses(id, subject, title, teacher_name)")
     .eq("profile_id", user.id)
     .returns<Enrollment[]>();
+
+  const courseIds = (enrollments ?? [])
+    .map((enrollment) => enrollment.courses?.id)
+    .filter((id): id is string => Boolean(id));
+
+  // 새 영상 표시. 강좌를 아직 한 번도 열어본 적 없다면 수강 등록 시점
+  // 이후 올라온 영상만 "새 영상"으로 친다.
+  const [{ data: lessonRows }, { data: readRows }] = courseIds.length
+    ? await Promise.all([
+        supabase
+          .from("lessons")
+          .select("course_id, created_at")
+          .eq("status", "ready")
+          .in("course_id", courseIds),
+        supabase
+          .from("course_lesson_reads")
+          .select("course_id, last_read_at")
+          .eq("profile_id", user.id)
+          .in("course_id", courseIds),
+      ])
+    : [{ data: [] }, { data: [] }];
+
+  const latestLessonByCourse = new Map<string, string>();
+  for (const row of lessonRows ?? []) {
+    const prev = latestLessonByCourse.get(row.course_id);
+    if (!prev || row.created_at > prev) {
+      latestLessonByCourse.set(row.course_id, row.created_at);
+    }
+  }
+  const lastReadByCourse = new Map(
+    (readRows ?? []).map((row) => [row.course_id, row.last_read_at as string]),
+  );
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-6 sm:px-6 sm:py-16">
@@ -50,6 +83,11 @@ export default async function MyClassroomPage() {
           const course = enrollment.courses;
           if (!course) return null;
 
+          const latest = latestLessonByCourse.get(course.id);
+          const lastRead =
+            lastReadByCourse.get(course.id) ?? enrollment.enrolled_at;
+          const hasNewLesson = Boolean(latest && latest > lastRead);
+
           return (
             <div
               key={course.id}
@@ -59,8 +97,13 @@ export default async function MyClassroomPage() {
                 <p className="text-xs font-semibold text-brand-dark">
                   {course.subject}
                 </p>
-                <h2 className="mt-1 text-base font-bold text-zinc-900 sm:text-lg">
+                <h2 className="mt-1 flex items-center gap-1.5 text-base font-bold text-zinc-900 sm:text-lg">
                   {course.title}
+                  {hasNewLesson && (
+                    <span className="shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                      NEW
+                    </span>
+                  )}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
                   {course.teacher_name} 강사

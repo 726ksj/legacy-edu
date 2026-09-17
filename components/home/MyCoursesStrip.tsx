@@ -5,6 +5,7 @@ interface CourseItem {
   subject: string;
   title: string;
   teacher_name: string;
+  hasNewLesson?: boolean;
 }
 
 export default function MyCoursesStrip({ courses }: { courses: CourseItem[] }) {
@@ -18,8 +19,14 @@ export default function MyCoursesStrip({ courses }: { courses: CourseItem[] }) {
           <Link
             key={course.id}
             href={`/my-classroom/${course.id}`}
-            className="w-56 shrink-0 snap-start rounded-lg border border-zinc-200 bg-white p-4 hover:border-brand lg:w-[21rem] lg:p-6"
+            className="relative w-56 shrink-0 snap-start rounded-lg border border-zinc-200 bg-white p-4 hover:border-brand lg:w-[21rem] lg:p-6"
           >
+            {course.hasNewLesson && (
+              <span className="absolute right-3 top-3 flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+              </span>
+            )}
             <p className="text-xs font-semibold text-brand-dark lg:text-sm">
               {course.subject}
             </p>

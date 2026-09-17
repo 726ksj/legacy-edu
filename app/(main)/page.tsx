@@ -17,12 +17,21 @@ import {
 import { CONTENT_DEFAULTS, type SiteContentMap } from "@/app/admin/content/keys";
 
 interface Enrollment {
+  enrolled_at: string;
   courses: {
     id: string;
     subject: string;
     title: string;
     teacher_name: string;
   } | null;
+}
+
+interface MyCourseItem {
+  id: string;
+  subject: string;
+  title: string;
+  teacher_name: string;
+  hasNewLesson: boolean;
 }
 
 export default async function HomePage() {
@@ -45,7 +54,7 @@ export default async function HomePage() {
         .limit(5),
     ]);
 
-  let myCourses: NonNullable<Enrollment["courses"]>[] = [];
+  let myCourses: MyCourseItem[] = [];
   let teachingCourses: NonNullable<Enrollment["courses"]>[] = [];
   let staffRole: "teacher" | "assistant" | null = null;
   let chatRooms: ChatRoomStripItem[] = [];
@@ -68,22 +77,28 @@ export default async function HomePage() {
     } else {
       const { data: enrollments } = await supabase
         .from("enrollments")
-        .select("courses(id, subject, title, teacher_name)")
+        .select("enrolled_at, courses(id, subject, title, teacher_name)")
         .eq("profile_id", user.id)
         .returns<Enrollment[]>();
-      myCourses = (enrollments ?? [])
-        .map((enrollment) => enrollment.courses)
-        .filter((course): course is NonNullable<typeof course> => Boolean(course));
+      const enrolledCourses = (enrollments ?? [])
+        .filter((enrollment): enrollment is Enrollment & {
+          courses: NonNullable<Enrollment["courses"]>;
+        } => Boolean(enrollment.courses))
+        .map((enrollment) => ({
+          ...enrollment.courses,
+          enrolled_at: enrollment.enrolled_at,
+        }));
 
       // 원터치 채팅방 바로가기 + 안읽음 표시. 아직 채팅방을 연 적 없는
       // 강좌(방이 아직 없음)도 카드는 보여준다 - 처음 눌렀을 때 그
       // 채팅방 화면(/my-classroom/[courseId]/chat)이 알아서 만들어준다.
-      if (myCourses.length > 0) {
+      if (enrolledCourses.length > 0) {
+        const courseIds = enrolledCourses.map((course) => course.id);
         const { data: roomRows } = await supabase
           .from("chat_rooms")
           .select("id, course_id")
           .eq("student_profile_id", user.id)
-          .in("course_id", myCourses.map((course) => course.id));
+          .in("course_id", courseIds);
 
         const roomByCourseId = new Map(
           (roomRows ?? []).map((room) => [room.course_id, room.id as string]),
@@ -123,7 +138,7 @@ export default async function HomePage() {
           );
         }
 
-        chatRooms = myCourses.map((course) => {
+        chatRooms = enrolledCourses.map((course) => {
           const roomId = roomByCourseId.get(course.id);
           const latest = roomId ? latestByRoom.get(roomId) : undefined;
           const lastRead = roomId ? lastReadByRoom.get(roomId) : undefined;
@@ -133,6 +148,45 @@ export default async function HomePage() {
             title: course.title,
             teacherName: course.teacher_name,
             hasUnread: Boolean(latest && (!lastRead || latest > lastRead)),
+          };
+        });
+
+        // 새 영상 표시. 강좌를 아직 한 번도 열어본 적 없다면(읽음 기록이
+        // 없다면) 수강 등록 시점 이후 올라온 영상만 "새 영상"으로 친다 -
+        // 등록 전부터 있던 기존 영상들까지 전부 새 것으로 뜨면 안 되니까.
+        const [{ data: lessonRows }, { data: readRows }] = await Promise.all([
+          supabase
+            .from("lessons")
+            .select("course_id, created_at")
+            .eq("status", "ready")
+            .in("course_id", courseIds),
+          supabase
+            .from("course_lesson_reads")
+            .select("course_id, last_read_at")
+            .eq("profile_id", user.id)
+            .in("course_id", courseIds),
+        ]);
+
+        const latestLessonByCourse = new Map<string, string>();
+        for (const row of lessonRows ?? []) {
+          const prev = latestLessonByCourse.get(row.course_id);
+          if (!prev || row.created_at > prev) {
+            latestLessonByCourse.set(row.course_id, row.created_at);
+          }
+        }
+        const lastReadByCourse = new Map(
+          (readRows ?? []).map((row) => [row.course_id, row.last_read_at as string]),
+        );
+
+        myCourses = enrolledCourses.map((course) => {
+          const latest = latestLessonByCourse.get(course.id);
+          const lastRead = lastReadByCourse.get(course.id) ?? course.enrolled_at;
+          return {
+            id: course.id,
+            subject: course.subject,
+            title: course.title,
+            teacher_name: course.teacher_name,
+            hasNewLesson: Boolean(latest && latest > lastRead),
           };
         });
       }

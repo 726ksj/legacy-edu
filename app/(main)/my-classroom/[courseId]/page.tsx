@@ -91,6 +91,13 @@ export default async function CourseClassroomPage({
     notFound();
   }
 
+  // 이 강좌의 차시 목록을 확인했다는 뜻이므로, 홈 화면/나의 강의실 목록의
+  // "새 영상" 표시가 이번 방문부터는 사라지도록 읽음 시각을 갱신한다.
+  await supabase.from("course_lesson_reads").upsert(
+    { profile_id: user.id, course_id: courseId, last_read_at: new Date().toISOString() },
+    { onConflict: "profile_id,course_id" },
+  );
+
   if (allLessons?.length) {
     await syncLessonStatuses(supabase, allLessons);
   }
