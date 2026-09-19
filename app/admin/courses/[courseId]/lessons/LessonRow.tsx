@@ -225,9 +225,9 @@ export default function LessonRow({
           >
             <button
               type="submit"
-              className="w-12 text-center text-xs font-semibold text-blue-600 hover:underline"
+              className="w-24 whitespace-nowrap text-center text-xs font-semibold text-blue-600 hover:underline"
             >
-              {lesson.is_hidden ? "공개" : "비공개"}
+              {lesson.is_hidden ? "공개 전환" : "비공개 전환"}
             </button>
           </form>
           <DeleteLessonButton action={deleteAction} />

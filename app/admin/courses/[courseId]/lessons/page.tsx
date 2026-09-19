@@ -125,7 +125,7 @@ export default async function Page({
               <th className="px-4 py-3">제목</th>
               <th className="w-52 px-4 py-3">상태</th>
               <th className="w-40 px-4 py-3">업로드일</th>
-              <th className="w-48 px-4 py-3" />
+              <th className="w-60 px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
