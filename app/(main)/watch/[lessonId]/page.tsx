@@ -28,6 +28,7 @@ interface LessonRow {
   mux_playback_id: string | null;
   course_id: string;
   visibility: LessonVisibility;
+  is_hidden: boolean;
   mp4_ready: boolean;
   created_at: string;
   courses: { subject: string; title: string; teacher_name: string } | null;
@@ -41,6 +42,7 @@ interface SiblingLesson {
   mux_asset_id: string | null;
   mux_playback_id: string | null;
   visibility: LessonVisibility;
+  is_hidden: boolean;
 }
 
 export default async function WatchPage({
@@ -59,7 +61,7 @@ export default async function WatchPage({
   const { data: lesson } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, visibility, mp4_ready, created_at, courses(subject, title, teacher_name)",
+      "id, order_no, title, status, mux_asset_id, mux_playback_id, course_id, visibility, is_hidden, mp4_ready, created_at, courses(subject, title, teacher_name)",
     )
     .eq("id", lessonId)
     .maybeSingle()
@@ -79,7 +81,7 @@ export default async function WatchPage({
     supabase
       .from("lessons")
       .select(
-        "id, order_no, title, status, mux_asset_id, mux_playback_id, visibility",
+        "id, order_no, title, status, mux_asset_id, mux_playback_id, visibility, is_hidden",
       )
       .eq("course_id", lesson.course_id)
       .order("order_no", { ascending: true })

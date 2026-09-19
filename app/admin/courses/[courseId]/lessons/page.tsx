@@ -52,7 +52,7 @@ export default async function Page({
   const { data: lessons } = await supabase
     .from("lessons")
     .select(
-      "id, order_no, title, mux_asset_id, status, created_at, description, visibility, video_filename",
+      "id, order_no, title, mux_asset_id, status, created_at, description, visibility, video_filename, is_hidden",
     )
     .eq("course_id", courseId)
     .order("order_no", { ascending: true });
@@ -118,14 +118,14 @@ export default async function Page({
       </div>
 
       <div className="mt-6 overflow-visible rounded-lg border border-zinc-200 bg-white">
-        <table className="w-full text-left text-sm">
+        <table className="w-full table-fixed text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
-              <th className="px-4 py-3">순서</th>
+              <th className="w-16 px-4 py-3">순서</th>
               <th className="px-4 py-3">제목</th>
-              <th className="px-4 py-3">상태</th>
-              <th className="px-4 py-3">업로드일</th>
-              <th className="px-4 py-3" />
+              <th className="w-52 px-4 py-3">상태</th>
+              <th className="w-40 px-4 py-3">업로드일</th>
+              <th className="w-48 px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">

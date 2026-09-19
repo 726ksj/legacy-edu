@@ -159,6 +159,7 @@ export default async function HomePage() {
             .from("lessons")
             .select("course_id, created_at")
             .eq("status", "ready")
+            .eq("is_hidden", false)
             .in("course_id", courseIds),
           supabase
             .from("course_lesson_reads")

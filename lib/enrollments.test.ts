@@ -78,9 +78,9 @@ describe("isEnrolled", () => {
 
 describe("filterWatchableLessons", () => {
   const lessons = [
-    { id: "l-all", visibility: "all" as const },
-    { id: "l-include", visibility: "include" as const },
-    { id: "l-exclude", visibility: "exclude" as const },
+    { id: "l-all", visibility: "all" as const, is_hidden: false },
+    { id: "l-include", visibility: "include" as const, is_hidden: false },
+    { id: "l-exclude", visibility: "exclude" as const, is_hidden: false },
   ];
 
   it("visibility가 all인 차시는 항상 통과시킨다", async () => {
@@ -112,6 +112,15 @@ describe("filterWatchableLessons", () => {
     const result = await filterWatchableLessons(supabase, "p1", lessons);
     expect(result.map((l) => l.id)).not.toContain("l-exclude");
   });
+
+  it("숨김 처리된 차시는 visibility와 무관하게 제외한다", async () => {
+    const supabase = fakeSupabase({ lessonAccessList: [] });
+    const result = await filterWatchableLessons(supabase, "p1", [
+      ...lessons,
+      { id: "l-hidden", visibility: "all" as const, is_hidden: true },
+    ]);
+    expect(result.map((l) => l.id)).not.toContain("l-hidden");
+  });
 });
 
 describe("canWatchLesson", () => {
@@ -121,6 +130,7 @@ describe("canWatchLesson", () => {
       id: "l1",
       course_id: "c1",
       visibility: "all",
+      is_hidden: false,
     });
     expect(canWatch).toBe(false);
   });
@@ -131,6 +141,7 @@ describe("canWatchLesson", () => {
       id: "l1",
       course_id: "c1",
       visibility: "all",
+      is_hidden: false,
     });
     expect(canWatch).toBe(true);
   });
@@ -144,6 +155,7 @@ describe("canWatchLesson", () => {
       id: "l1",
       course_id: "c1",
       visibility: "include",
+      is_hidden: false,
     });
     expect(canWatch).toBe(false);
   });
@@ -157,16 +169,28 @@ describe("canWatchLesson", () => {
       id: "l1",
       course_id: "c1",
       visibility: "exclude",
+      is_hidden: false,
     });
     expect(canWatch).toBe(false);
   });
 
-  it("isCourseStaff면 등록/공개 대상과 무관하게 볼 수 있다", async () => {
+  it("숨김 처리된 차시는 등록/visibility와 무관하게 못 본다", async () => {
+    const supabase = fakeSupabase({ enrollments: [{ course_id: "c1" }] });
+    const canWatch = await canWatchLesson(supabase, "p1", {
+      id: "l1",
+      course_id: "c1",
+      visibility: "all",
+      is_hidden: true,
+    });
+    expect(canWatch).toBe(false);
+  });
+
+  it("isCourseStaff면 등록/공개 대상/숨김과 무관하게 볼 수 있다", async () => {
     const supabase = fakeSupabase({});
     const canWatch = await canWatchLesson(
       supabase,
       "p1",
-      { id: "l1", course_id: "c1", visibility: "include" },
+      { id: "l1", course_id: "c1", visibility: "include", is_hidden: true },
       { isCourseStaff: true },
     );
     expect(canWatch).toBe(true);

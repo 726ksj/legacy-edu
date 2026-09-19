@@ -29,9 +29,14 @@ export async function saveLessonProgress(
 
   const { data: lesson } = await supabase
     .from("lessons")
-    .select("id, course_id, visibility")
+    .select("id, course_id, visibility, is_hidden")
     .eq("id", lessonId)
-    .maybeSingle<{ id: string; course_id: string; visibility: LessonVisibility }>();
+    .maybeSingle<{
+      id: string;
+      course_id: string;
+      visibility: LessonVisibility;
+      is_hidden: boolean;
+    }>();
 
   if (!lesson) return;
   if (!(await canWatchLesson(supabase, user.id, lesson))) return;

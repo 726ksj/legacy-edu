@@ -1,8 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { formatDateTime } from "@/lib/formatDateTime";
-import { updateLessonInfo, type UpdateLessonInfoState } from "./actions";
+import { formatDate } from "@/lib/formatDateTime";
+import {
+  setLessonHidden,
+  updateLessonInfo,
+  type UpdateLessonInfoState,
+} from "./actions";
 import DeleteLessonButton from "./DeleteLessonButton";
 import LessonAudiencePicker, {
   type AudienceStudent,
@@ -26,6 +30,7 @@ interface Lesson {
   created_at: string;
   visibility: LessonVisibility;
   video_filename: string | null;
+  is_hidden: boolean;
 }
 
 export default function LessonRow({
@@ -180,6 +185,11 @@ export default function LessonRow({
           >
             {statusInfo.label}
           </span>
+          {lesson.is_hidden && (
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+              비공개
+            </span>
+          )}
           {lesson.visibility === "include" && (
             <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
               일부 공개 ({selectedIds.size}명)
@@ -193,10 +203,10 @@ export default function LessonRow({
         </div>
       </td>
       <td className="px-4 py-3 text-zinc-500">
-        {formatDateTime(lesson.created_at)}
+        {formatDate(lesson.created_at)}
       </td>
-      <td className="px-4 py-3 text-right">
-        <div className="flex items-center justify-end gap-3">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setEditing(true)}
@@ -204,6 +214,22 @@ export default function LessonRow({
           >
             수정
           </button>
+          <form
+            action={setLessonHidden.bind(
+              null,
+              lesson.id,
+              courseId,
+              !lesson.is_hidden,
+            )}
+            className="shrink-0"
+          >
+            <button
+              type="submit"
+              className="w-12 text-center text-xs font-semibold text-blue-600 hover:underline"
+            >
+              {lesson.is_hidden ? "공개" : "비공개"}
+            </button>
+          </form>
           <DeleteLessonButton action={deleteAction} />
         </div>
       </td>

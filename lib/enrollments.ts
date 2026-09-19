@@ -23,17 +23,20 @@ export async function isEnrolled(
 // 화면(커리큘럼, 차시 사이드바 등)에서 접근 불가능한 차시가 통째로 다
 // 보이는 걸 막는 용도.
 export async function filterWatchableLessons<
-  T extends { id: string; visibility: LessonVisibility },
+  T extends { id: string; visibility: LessonVisibility; is_hidden: boolean },
 >(
   supabase: SupabaseClient,
   profileId: string,
   lessons: T[],
 ): Promise<T[]> {
-  const relevantIds = lessons
+  // 숨김 처리된 차시는 공개 대상 설정과 무관하게 학생에게는 항상 안 보여야 한다.
+  const visibleLessons = lessons.filter((lesson) => !lesson.is_hidden);
+
+  const relevantIds = visibleLessons
     .filter((lesson) => lesson.visibility !== "all")
     .map((lesson) => lesson.id);
 
-  if (relevantIds.length === 0) return lessons;
+  if (relevantIds.length === 0) return visibleLessons;
 
   const { data } = await supabase
     .from("lesson_access")
@@ -43,7 +46,7 @@ export async function filterWatchableLessons<
 
   const listedIds = new Set((data ?? []).map((row) => row.lesson_id));
 
-  return lessons.filter((lesson) => {
+  return visibleLessons.filter((lesson) => {
     if (lesson.visibility === "include") return listedIds.has(lesson.id);
     if (lesson.visibility === "exclude") return !listedIds.has(lesson.id);
     return true;
@@ -57,12 +60,16 @@ export async function canWatchLesson(
     id: string;
     course_id: string;
     visibility: LessonVisibility;
+    is_hidden: boolean;
   },
   options?: { isCourseStaff?: boolean },
 ) {
   // 이 강좌를 관리하는 강사/조교/관리자는 수강 등록이나 공개 대상
   // 제한과 무관하게 자기 강좌의 모든 영상을 볼 수 있어야 한다.
   if (options?.isCourseStaff) return true;
+
+  // 숨김 처리된 차시는 공개 대상 설정과 무관하게 학생에게는 항상 안 보여야 한다.
+  if (lesson.is_hidden) return false;
 
   const enrolled = await isEnrolled(supabase, profileId, lesson.course_id);
   if (!enrolled) return false;

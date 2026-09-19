@@ -228,6 +228,28 @@ export async function deleteLesson(lessonId: string, courseId: string) {
   revalidatePath(`/mypage/teaching/${courseId}`);
 }
 
+// 공개 대상(visibility)과는 별개로, 학생 전원에게 임시로 숨기거나 다시
+// 공개하는 스위치. 접근 권한 목록(lesson_access)은 그대로 두고
+// is_hidden만 바꾸므로, 다시 공개하면 이전 공개 대상 설정 그대로 돌아온다.
+export async function setLessonHidden(
+  lessonId: string,
+  courseId: string,
+  hidden: boolean,
+) {
+  await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+  await assertLessonInCourse(supabase, lessonId, courseId);
+
+  await supabase
+    .from("lessons")
+    .update({ is_hidden: hidden })
+    .eq("id", lessonId);
+
+  revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/mypage/teaching/${courseId}`);
+  revalidatePath(`/my-classroom/${courseId}`);
+}
+
 // 관리자 화면에서 이 강좌를 관리하는 강사/조교가, 학생이 보는 것과 같은
 // 화면으로 영상을 미리 볼 수 있도록 재생 토큰을 발급한다. 관리자 모드를
 // 벗어나지 않고 화면 안에서 바로 재생하기 위한 용도라 /watch 페이지로

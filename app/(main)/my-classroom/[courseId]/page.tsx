@@ -33,6 +33,7 @@ interface Lesson {
   status: string;
   mux_asset_id: string | null;
   visibility: LessonVisibility;
+  is_hidden: boolean;
 }
 
 interface CourseNotice {
@@ -70,7 +71,7 @@ export default async function CourseClassroomPage({
       supabase
         .from("lessons")
         .select(
-          "id, order_no, title, description, status, mux_asset_id, visibility",
+          "id, order_no, title, description, status, mux_asset_id, visibility, is_hidden",
         )
         .eq("course_id", courseId)
         .order("order_no", { ascending: true })
