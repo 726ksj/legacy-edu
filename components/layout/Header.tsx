@@ -48,7 +48,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "커리큘럼",
-    href: "/curriculum/legacy",
+    href: "/curriculum",
   },
   {
     label: "수강생 Review",

@@ -11,6 +11,7 @@ const ADMIN_NAV_GROUPS = [
     title: "콘텐츠/홈 화면",
     items: [
       { label: "홈/소개 문구 관리", href: "/admin/content" },
+      { label: "커리큘럼 관리", href: "/admin/curriculum" },
       { label: "팝업 관리", href: "/admin/popups" },
       { label: "FAQ 관리", href: "/admin/faqs" },
       { label: "수강생 Review 관리", href: "/admin/reviews" },
