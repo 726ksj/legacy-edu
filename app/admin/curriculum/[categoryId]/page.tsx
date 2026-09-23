@@ -9,6 +9,19 @@ import StepRow from "./StepRow";
 
 export const dynamic = "force-dynamic";
 
+interface CategoryTrackRow {
+  slug: string;
+  title: string;
+  curriculum_school_levels: { slug: string; title: string } | null;
+}
+
+interface TrackOptionRow {
+  id: string;
+  slug: string;
+  title: string;
+  curriculum_school_levels: { slug: string; title: string } | null;
+}
+
 export default async function Page({
   params,
 }: {
@@ -20,10 +33,21 @@ export default async function Page({
   const { data: category } = await supabase
     .from("curriculum_categories")
     .select(
-      "id, slug, title, subtitle, intro, closing_title, closing_description",
+      "id, slug, title, subtitle, intro, closing_title, closing_description, track_id, curriculum_tracks(slug, title, curriculum_school_levels(slug, title))",
     )
     .eq("id", categoryId)
-    .maybeSingle();
+    .maybeSingle<
+      {
+        id: string;
+        slug: string;
+        title: string;
+        subtitle: string | null;
+        intro: string | null;
+        closing_title: string | null;
+        closing_description: string | null;
+        track_id: string | null;
+      } & { curriculum_tracks: CategoryTrackRow | null }
+    >();
 
   if (!category) {
     notFound();
@@ -34,6 +58,16 @@ export default async function Page({
     .select("id, icon, title, description")
     .eq("category_id", categoryId)
     .order("sort_order", { ascending: true });
+
+  const { data: tracks } = await supabase
+    .from("curriculum_tracks")
+    .select("id, slug, title, curriculum_school_levels(slug, title)")
+    .order("sort_order", { ascending: true })
+    .returns<TrackOptionRow[]>();
+
+  const publicPath = category.curriculum_tracks
+    ? `/curriculum/${category.curriculum_tracks.curriculum_school_levels?.slug}/${category.curriculum_tracks.slug}/${category.slug}`
+    : null;
 
   return (
     <div className="flex flex-1 flex-col p-8">
@@ -50,16 +84,16 @@ export default async function Page({
         {category.title}
       </h1>
       <p className="mt-1 font-mono text-xs text-zinc-400">
-        /curriculum/{category.slug}
+        {publicPath ?? "미배정 (공개 URL 없음 — 홈 화면 노출 예정)"}
       </p>
 
       <div className="mt-6">
-        <EditCategoryForm category={category} />
+        <EditCategoryForm category={category} tracks={tracks ?? []} />
       </div>
 
       <h2 className="mt-8 text-lg font-bold text-zinc-900">단계 관리</h2>
       <div className="mt-3">
-        <AddStepForm categoryId={categoryId} slug={category.slug} />
+        <AddStepForm categoryId={categoryId} />
       </div>
 
       <ul className="mt-4 flex flex-col gap-3">
@@ -67,8 +101,8 @@ export default async function Page({
           <StepRow
             key={step.id}
             step={step}
-            onUpdate={updateStep.bind(null, step.id, categoryId, category.slug)}
-            onDelete={deleteStep.bind(null, step.id, categoryId, category.slug)}
+            onUpdate={updateStep.bind(null, step.id, categoryId)}
+            onDelete={deleteStep.bind(null, step.id, categoryId)}
           />
         ))}
         {steps?.length === 0 && (

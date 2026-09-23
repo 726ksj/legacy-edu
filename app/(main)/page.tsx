@@ -2,6 +2,9 @@ import ReviewSection from "@/components/home/ReviewSection";
 import VideoSection from "@/components/home/VideoSection";
 import CurriculumSection from "@/components/home/CurriculumSection";
 import CurriculumStickyNav from "@/components/home/CurriculumStickyNav";
+import LegacyCurriculumSection, {
+  type LegacyCurriculumEntry,
+} from "@/components/home/LegacyCurriculumSection";
 import MyCoursesStrip from "@/components/home/MyCoursesStrip";
 import MyTeachingCoursesStrip from "@/components/home/MyTeachingCoursesStrip";
 import MyChatRoomsStrip, {
@@ -208,6 +211,35 @@ export default async function HomePage() {
     description: content[`curriculum_step${n}_desc` as keyof SiteContentMap],
   }));
 
+  // 학교급/트랙에 배정되지 않은 커리큘럼 카테고리는 홈 화면 "레가시
+  // 커리큘럼" 섹션에 노출된다 (예: 개인별 난이도 맞춤 시스템, 매 수업
+  // 진행 시스템).
+  const { data: homeCurriculumCategories } = await supabase
+    .from("curriculum_categories")
+    .select(
+      "id, slug, title, subtitle, intro, closing_title, closing_description",
+    )
+    .is("track_id", null)
+    .order("sort_order", { ascending: true });
+
+  const homeCategoryIds = (homeCurriculumCategories ?? []).map((c) => c.id);
+  const { data: homeCurriculumSteps } = homeCategoryIds.length
+    ? await supabase
+        .from("curriculum_steps")
+        .select("id, category_id, icon, title, description")
+        .in("category_id", homeCategoryIds)
+        .order("sort_order", { ascending: true })
+    : { data: [] };
+
+  const legacyCurriculumEntries: LegacyCurriculumEntry[] = (
+    homeCurriculumCategories ?? []
+  ).map((category) => ({
+    category,
+    steps: (homeCurriculumSteps ?? []).filter(
+      (step) => step.category_id === category.id,
+    ),
+  }));
+
   return (
     <div className="flex flex-1 flex-col">
       <HomePopups popups={popups ?? []} />
@@ -230,6 +262,7 @@ export default async function HomePage() {
       </section>
 
       <VideoSection />
+      <LegacyCurriculumSection entries={legacyCurriculumEntries} />
       <CurriculumStickyNav steps={curriculumSteps} />
       <CurriculumSection
         intro={content.curriculum_intro}

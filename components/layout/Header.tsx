@@ -12,6 +12,44 @@ import { getSuneungDday } from "@/lib/suneung";
 // 읽고 나면(= /notice를 방문하면) 7일이 지나기 전에도 뱃지가 사라진다.
 const NEW_NOTICE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
+async function getCurriculumNavChildren(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<NavChild[]> {
+  const [{ data: levels }, { data: tracks }, { data: categories }] =
+    await Promise.all([
+      supabase
+        .from("curriculum_school_levels")
+        .select("id, slug, title")
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("curriculum_tracks")
+        .select("id, slug, title, school_level_id")
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("curriculum_categories")
+        .select("slug, title, track_id")
+        .not("track_id", "is", null)
+        .order("sort_order", { ascending: true }),
+    ]);
+
+  return (levels ?? []).map((level) => ({
+    label: level.title,
+    href: `/curriculum/${level.slug}`,
+    children: (tracks ?? [])
+      .filter((track) => track.school_level_id === level.id)
+      .map((track) => ({
+        label: track.title,
+        href: `/curriculum/${level.slug}/${track.slug}`,
+        children: (categories ?? [])
+          .filter((category) => category.track_id === track.id)
+          .map((category) => ({
+            label: category.title,
+            href: `/curriculum/${level.slug}/${track.slug}/${category.slug}`,
+          })),
+      })),
+  }));
+}
+
 async function getRecentNoticeId(
   supabase: Awaited<ReturnType<typeof createClient>>,
 ): Promise<string | null> {
@@ -32,6 +70,7 @@ interface NavChild {
   label: string;
   href: string;
   badge?: boolean;
+  children?: NavChild[];
 }
 
 interface NavItem {
@@ -70,9 +109,10 @@ const NAV_ITEMS: NavItem[] = [
 
 export default async function Header() {
   const supabase = await createClient();
-  const [user, recentNoticeId] = await Promise.all([
+  const [user, recentNoticeId, curriculumChildren] = await Promise.all([
     getAuthUser(),
     getRecentNoticeId(supabase),
+    getCurriculumNavChildren(supabase),
   ]);
   const suneungDday = getSuneungDday();
 
@@ -84,9 +124,15 @@ export default async function Header() {
   const assistant = role === "assistant";
 
   const navItems: NavItem[] = [
-    ...NAV_ITEMS.map((item) =>
-      item.href === "/notice" ? { ...item, badge: Boolean(recentNoticeId) } : item,
-    ),
+    ...NAV_ITEMS.map((item) => {
+      if (item.href === "/notice") {
+        return { ...item, badge: Boolean(recentNoticeId) };
+      }
+      if (item.href === "/curriculum" && curriculumChildren.length > 0) {
+        return { ...item, children: curriculumChildren };
+      }
+      return item;
+    }),
     ...(admin
       ? [
           // 관리자 계정은 마이페이지 하위 메뉴(나의 강의실 등)가 의미 없으니

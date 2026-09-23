@@ -1,4 +1,4 @@
-import { getCurriculumIcon } from "./icons";
+import { CurriculumIcon } from "./icons";
 
 export interface CurriculumStepData {
   id: string;
@@ -18,17 +18,16 @@ export interface CurriculumCategoryData {
 }
 
 function StepRow({ step, index }: { step: CurriculumStepData; index: number }) {
-  const Icon = getCurriculumIcon(step.icon);
   const no = String(index + 1).padStart(2, "0");
 
   return (
-    <div className="flex min-h-32 items-center gap-4 rounded-2xl border border-brand/20 bg-white px-5 py-4 shadow-sm sm:min-h-36 sm:gap-6 sm:px-6 sm:py-5">
+    <div className="flex min-h-20 items-center gap-4 rounded-2xl border border-brand/20 bg-white px-5 py-3.5 shadow-sm sm:min-h-24 sm:gap-6 sm:px-6 sm:py-4">
       <span className="shrink-0 text-xl font-extrabold text-brand-dark sm:text-2xl">
         {no}
       </span>
       <span className="h-px shrink-0 self-stretch bg-brand/20" />
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-light text-brand-dark sm:h-12 sm:w-12">
-        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+        <CurriculumIcon iconKey={step.icon} className="h-5 w-5 sm:h-6 sm:w-6" />
       </span>
       <div className="min-w-0">
         <p className="text-base font-bold text-zinc-900 sm:text-lg">
@@ -40,6 +39,41 @@ function StepRow({ step, index }: { step: CurriculumStepData; index: number }) {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+export function CurriculumStepsList({ steps }: { steps: CurriculumStepData[] }) {
+  return (
+    <div className="flex flex-col gap-4 sm:gap-5">
+      {steps.map((step, index) => (
+        <StepRow key={step.id} step={step} index={index} />
+      ))}
+    </div>
+  );
+}
+
+export function CurriculumClosingBadge({
+  title,
+  description,
+}: {
+  title: string | null;
+  description: string | null;
+}) {
+  if (!title && !description) return null;
+
+  return (
+    <div className="rounded-2xl border-2 border-brand/25 bg-brand-light/40 px-6 py-8 text-center sm:px-10 sm:py-10">
+      {title && (
+        <p className="text-sm font-bold uppercase tracking-wide text-brand-dark sm:text-base">
+          {title}
+        </p>
+      )}
+      {description && (
+        <p className="mx-auto mt-3 max-w-xl text-base font-semibold text-zinc-900 sm:text-lg">
+          {description}
+        </p>
+      )}
     </div>
   );
 }
@@ -73,26 +107,12 @@ export default function CurriculumCategoryView({
         )}
       </div>
 
-      <div className="flex flex-col gap-4 sm:gap-5">
-        {steps.map((step, index) => (
-          <StepRow key={step.id} step={step} index={index} />
-        ))}
-      </div>
+      <CurriculumStepsList steps={steps} />
 
-      {(category.closing_title || category.closing_description) && (
-        <div className="rounded-2xl border-2 border-brand/25 bg-brand-light/40 px-6 py-8 text-center sm:px-10 sm:py-10">
-          {category.closing_title && (
-            <p className="text-sm font-bold uppercase tracking-wide text-brand-dark sm:text-base">
-              {category.closing_title}
-            </p>
-          )}
-          {category.closing_description && (
-            <p className="mx-auto mt-3 max-w-xl text-base font-semibold text-zinc-900 sm:text-lg">
-              {category.closing_description}
-            </p>
-          )}
-        </div>
-      )}
+      <CurriculumClosingBadge
+        title={category.closing_title}
+        description={category.closing_description}
+      />
     </section>
   );
 }

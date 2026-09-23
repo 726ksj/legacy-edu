@@ -1,3 +1,4 @@
+import { createElement, type ComponentProps } from "react";
 import {
   FileSearch,
   BarChart3,
@@ -51,4 +52,15 @@ export const CURRICULUM_ICON_OPTIONS = Object.keys(CURRICULUM_ICONS) as Array<
 
 export function getCurriculumIcon(key: string): LucideIcon {
   return CURRICULUM_ICONS[key] ?? Target;
+}
+
+// 문자열 키로 고른 아이콘을 JSX 태그(<Icon />)로 직접 렌더링하면
+// react-hooks/static-components 규칙이 "렌더 중 컴포넌트 생성"으로
+// 오탐한다(사실은 고정된 맵에서 참조를 꺼내올 뿐 매번 새로 만들지
+// 않음). createElement로 렌더링해 그 패턴을 피한다.
+export function CurriculumIcon({
+  iconKey,
+  ...props
+}: { iconKey: string } & ComponentProps<LucideIcon>) {
+  return createElement(getCurriculumIcon(iconKey), props);
 }

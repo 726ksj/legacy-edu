@@ -9,6 +9,7 @@ interface NavChild {
   label: string;
   href: string;
   badge?: boolean;
+  children?: NavChild[];
 }
 
 interface NavItem {
@@ -16,6 +17,86 @@ interface NavItem {
   href: string;
   badge?: boolean;
   children?: NavChild[];
+}
+
+function NavAccordionItems({
+  items,
+  expanded,
+  toggleExpanded,
+  onNavigate,
+  recentNoticeId,
+  depth = 0,
+}: {
+  items: NavChild[];
+  expanded: Set<string>;
+  toggleExpanded: (href: string) => void;
+  onNavigate: () => void;
+  recentNoticeId: string | null;
+  depth?: number;
+}) {
+  // 최상위 항목(depth 0)은 자식 유무와 관계없이 굵게 표시하고, 하위
+  // 항목은 그 항목이 또 자식을 가질 때만(예: "고등" > 트랙) 굵게 표시해
+  // 그룹 제목처럼 보이게 한다.
+  return (
+    <div className="flex flex-col gap-0.5">
+      {items.map((item) => {
+        const hasChildren = Boolean(item.children?.length);
+        const isExpanded = expanded.has(item.href);
+        const isBold = depth === 0 || hasChildren;
+        const textClassName = isBold
+          ? "text-sm font-bold text-zinc-800"
+          : "text-sm font-normal text-zinc-600";
+        const paddingClassName = depth === 0 ? "py-2.5" : "py-2";
+
+        return (
+          <div key={item.href}>
+            {hasChildren ? (
+              <button
+                type="button"
+                onClick={() => toggleExpanded(item.href)}
+                aria-expanded={isExpanded}
+                className={`flex w-full items-center justify-between gap-1.5 rounded-md px-3 ${paddingClassName} ${textClassName} hover:bg-zinc-100 hover:text-brand-dark`}
+              >
+                <span className="flex items-center gap-1.5">
+                  {item.label}
+                  {item.badge && <NoticeNewBadge noticeId={recentNoticeId} />}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                />
+              </button>
+            ) : (
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className={`flex items-center gap-1.5 rounded-md px-3 ${paddingClassName} ${textClassName} hover:bg-zinc-100 hover:text-brand-dark`}
+              >
+                {item.label}
+                {item.badge && (
+                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    NEW
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {hasChildren && isExpanded && (
+              <div className="ml-3 flex flex-col gap-0.5 border-l border-zinc-100 pl-3">
+                <NavAccordionItems
+                  items={item.children!}
+                  expanded={expanded}
+                  toggleExpanded={toggleExpanded}
+                  onNavigate={onNavigate}
+                  recentNoticeId={recentNoticeId}
+                  depth={depth + 1}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function MobileNav({
@@ -40,6 +121,8 @@ export default function MobileNav({
     });
   };
 
+  const closeMenu = () => setOpen(false);
+
   return (
     <div className="md:hidden">
       <button
@@ -54,64 +137,13 @@ export default function MobileNav({
       {open && (
         <div className="absolute inset-x-0 top-16 z-30 max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-zinc-200 bg-white px-4 py-3 shadow-sm">
           <nav className="flex flex-col gap-1">
-            {navItems.map((item) => {
-              const hasChildren = Boolean(item.children?.length);
-              const isExpanded = expanded.has(item.href);
-
-              return (
-                <div key={item.href}>
-                  {hasChildren ? (
-                    <button
-                      type="button"
-                      onClick={() => toggleExpanded(item.href)}
-                      aria-expanded={isExpanded}
-                      className="flex w-full items-center justify-between gap-1.5 rounded-md px-3 py-2.5 text-sm font-bold text-zinc-800 hover:bg-zinc-100 hover:text-brand-dark"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {item.label}
-                        {item.badge && (
-                          <NoticeNewBadge noticeId={recentNoticeId} />
-                        )}
-                      </span>
-                      <ChevronDown
-                        className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-bold text-zinc-800 hover:bg-zinc-100 hover:text-brand-dark"
-                    >
-                      {item.label}
-                      {item.badge && (
-                        <NoticeNewBadge noticeId={recentNoticeId} />
-                      )}
-                    </Link>
-                  )}
-
-                  {hasChildren && isExpanded && (
-                    <div className="ml-3 flex flex-col gap-0.5 border-l border-zinc-100 pl-3">
-                      {item.children!.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setOpen(false)}
-                          className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-normal text-zinc-600 hover:bg-zinc-100 hover:text-brand-dark"
-                        >
-                          {child.label}
-                          {child.badge && (
-                            <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                              NEW
-                            </span>
-                          )}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            <NavAccordionItems
+              items={navItems}
+              expanded={expanded}
+              toggleExpanded={toggleExpanded}
+              onNavigate={closeMenu}
+              recentNoticeId={recentNoticeId}
+            />
           </nav>
         </div>
       )}

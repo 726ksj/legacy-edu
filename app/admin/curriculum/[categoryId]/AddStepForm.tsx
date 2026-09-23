@@ -6,14 +6,8 @@ import IconSelect from "./IconSelect";
 
 const initialState: StepActionState = {};
 
-export default function AddStepForm({
-  categoryId,
-  slug,
-}: {
-  categoryId: string;
-  slug: string;
-}) {
-  const createWithIds = createStep.bind(null, categoryId, slug);
+export default function AddStepForm({ categoryId }: { categoryId: string }) {
+  const createWithIds = createStep.bind(null, categoryId);
   const [state, formAction, isPending] = useActionState(
     createWithIds,
     initialState,
@@ -49,7 +43,7 @@ export default function AddStepForm({
         </label>
       </div>
       <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
-        설명 (선택, 여러 줄 가능)
+        설명 (선택, 화면에는 한 줄로 표시됩니다)
         <textarea
           name="description"
           rows={2}

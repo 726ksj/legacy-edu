@@ -7,17 +7,29 @@ export const dynamic = "force-dynamic";
 export default async function Page({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ levelSlug: string; trackSlug: string; categorySlug: string }>;
 }) {
-  const { slug } = await params;
+  const { levelSlug, trackSlug, categorySlug } = await params;
   const supabase = await createClient();
+
+  const { data: track } = await supabase
+    .from("curriculum_tracks")
+    .select("id, curriculum_school_levels!inner(slug)")
+    .eq("slug", trackSlug)
+    .eq("curriculum_school_levels.slug", levelSlug)
+    .maybeSingle();
+
+  if (!track) {
+    notFound();
+  }
 
   const { data: category } = await supabase
     .from("curriculum_categories")
     .select(
       "id, slug, title, subtitle, intro, closing_title, closing_description",
     )
-    .eq("slug", slug)
+    .eq("slug", categorySlug)
+    .eq("track_id", track.id)
     .maybeSingle();
 
   if (!category) {
@@ -30,7 +42,5 @@ export default async function Page({
     .eq("category_id", category.id)
     .order("sort_order", { ascending: true });
 
-  return (
-    <CurriculumCategoryView category={category} steps={steps ?? []} />
-  );
+  return <CurriculumCategoryView category={category} steps={steps ?? []} />;
 }

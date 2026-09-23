@@ -1,13 +1,31 @@
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ levelSlug: string }>;
+}) {
+  const { levelSlug } = await params;
   const supabase = await createClient();
-  const { data: levels } = await supabase
+
+  const { data: level } = await supabase
     .from("curriculum_school_levels")
+    .select("id, slug, title")
+    .eq("slug", levelSlug)
+    .maybeSingle();
+
+  if (!level) {
+    notFound();
+  }
+
+  const { data: tracks } = await supabase
+    .from("curriculum_tracks")
     .select("slug, title")
+    .eq("school_level_id", level.id)
     .order("sort_order", { ascending: true });
 
   return (
@@ -17,26 +35,25 @@ export default async function Page() {
           Curriculum
         </span>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
-          커리큘럼
+          {level.title}
         </h1>
         <div className="h-[3px] w-12 rounded-full bg-brand" />
-        <p className="text-sm text-zinc-500">
-          학교급을 선택하면 세부 커리큘럼을 확인할 수 있습니다.
-        </p>
       </div>
 
       <div className="flex flex-col gap-3">
-        {levels?.map((level) => (
+        {tracks?.map((track) => (
           <Link
-            key={level.slug}
-            href={`/curriculum/${level.slug}`}
+            key={track.slug}
+            href={`/curriculum/${level.slug}/${track.slug}`}
             className="flex min-h-20 flex-col justify-center gap-1 rounded-lg border border-zinc-200 bg-white px-6 py-4 transition-colors hover:border-brand/50"
           >
-            <p className="text-base font-bold text-zinc-900">{level.title}</p>
+            <p className="text-base font-bold text-zinc-900">{track.title}</p>
           </Link>
         ))}
-        {levels?.length === 0 && (
-          <p className="text-sm text-zinc-400">등록된 학교급이 없습니다.</p>
+        {tracks?.length === 0 && (
+          <p className="text-sm text-zinc-400">
+            아직 준비 중인 커리큘럼입니다.
+          </p>
         )}
       </div>
     </section>

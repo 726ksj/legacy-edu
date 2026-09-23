@@ -11,13 +11,30 @@ export interface EditableCategory {
   intro: string | null;
   closing_title: string | null;
   closing_description: string | null;
+  track_id: string | null;
+}
+
+export interface TrackOption {
+  id: string;
+  slug: string;
+  title: string;
+  curriculum_school_levels: { slug: string; title: string } | null;
 }
 
 export default function EditCategoryForm({
   category,
+  tracks,
 }: {
   category: EditableCategory;
+  tracks: TrackOption[];
 }) {
+  const tracksByLevel = new Map<string, TrackOption[]>();
+  for (const track of tracks) {
+    const levelTitle = track.curriculum_school_levels?.title ?? "미분류";
+    const list = tracksByLevel.get(levelTitle) ?? [];
+    list.push(track);
+    tracksByLevel.set(levelTitle, list);
+  }
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -60,6 +77,25 @@ export default function EditCategoryForm({
           />
         </label>
       </div>
+      <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
+        소속 트랙
+        <select
+          name="trackId"
+          defaultValue={category.track_id ?? ""}
+          className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+        >
+          <option value="">미배정 (홈 화면 노출 예정)</option>
+          {[...tracksByLevel.entries()].map(([levelTitle, levelTracks]) => (
+            <optgroup key={levelTitle} label={levelTitle}>
+              {levelTracks.map((track) => (
+                <option key={track.id} value={track.id}>
+                  {track.title}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </label>
       <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
         부제 (선택, 강조 배지로 표시)
         <input

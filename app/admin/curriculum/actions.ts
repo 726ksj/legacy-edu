@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 
-function revalidateCurriculumPaths(slug?: string) {
+function revalidateCurriculumPaths() {
   revalidatePath("/admin/curriculum");
-  revalidatePath("/curriculum");
-  if (slug) {
-    revalidatePath(`/admin/curriculum/[categoryId]`, "page");
-    revalidatePath(`/curriculum/${slug}`);
-  }
+  revalidatePath(`/admin/curriculum/[categoryId]`, "page");
+  // 카테고리가 어느 학교급/트랙에 속하는지에 따라 공개 URL이 달라지고
+  // 트랙 재배정도 가능하므로, 개별 경로 대신 /curriculum 하위 전체를
+  // 무효화한다.
+  revalidatePath("/curriculum", "layout");
 }
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -35,6 +35,7 @@ export async function createCategory(
   const intro = readTrimmed(formData, "intro");
   const closingTitle = readTrimmed(formData, "closingTitle");
   const closingDescription = readTrimmed(formData, "closingDescription");
+  const trackId = readTrimmed(formData, "trackId");
 
   if (!title || !slug) {
     return { error: "제목과 슬러그를 입력해주세요." };
@@ -61,6 +62,7 @@ export async function createCategory(
     intro: intro || null,
     closing_title: closingTitle || null,
     closing_description: closingDescription || null,
+    track_id: trackId || null,
     sort_order: (last?.sort_order ?? 0) + 1,
   });
 
@@ -70,7 +72,7 @@ export async function createCategory(
     };
   }
 
-  revalidateCurriculumPaths(slug);
+  revalidateCurriculumPaths();
   return { success: true };
 }
 
@@ -85,6 +87,7 @@ export async function updateCategory(
   const intro = readTrimmed(formData, "intro");
   const closingTitle = readTrimmed(formData, "closingTitle");
   const closingDescription = readTrimmed(formData, "closingDescription");
+  const trackId = readTrimmed(formData, "trackId");
 
   if (!title || !slug) {
     return { error: "제목과 슬러그를 입력해주세요." };
@@ -105,6 +108,7 @@ export async function updateCategory(
       intro: intro || null,
       closing_title: closingTitle || null,
       closing_description: closingDescription || null,
+      track_id: trackId || null,
     })
     .eq("id", id);
 
@@ -114,7 +118,7 @@ export async function updateCategory(
     };
   }
 
-  revalidateCurriculumPaths(slug);
+  revalidateCurriculumPaths();
   return { success: true };
 }
 
@@ -149,7 +153,6 @@ export interface StepActionState {
 
 export async function createStep(
   categoryId: string,
-  slug: string,
   _prevState: StepActionState,
   formData: FormData,
 ): Promise<StepActionState> {
@@ -184,14 +187,13 @@ export async function createStep(
     return { error: error.message };
   }
 
-  revalidateCurriculumPaths(slug);
+  revalidateCurriculumPaths();
   return { success: true };
 }
 
 export async function updateStep(
   stepId: string,
   categoryId: string,
-  slug: string,
   formData: FormData,
 ): Promise<StepActionState> {
   await requireAdmin();
@@ -215,18 +217,14 @@ export async function updateStep(
     return { error: error.message };
   }
 
-  revalidateCurriculumPaths(slug);
+  revalidateCurriculumPaths();
   return { success: true };
 }
 
-export async function deleteStep(
-  stepId: string,
-  categoryId: string,
-  slug: string,
-) {
+export async function deleteStep(stepId: string, categoryId: string) {
   await requireAdmin();
   const supabase = createAdminClient();
   await assertStepInCategory(supabase, stepId, categoryId);
   await supabase.from("curriculum_steps").delete().eq("id", stepId);
-  revalidateCurriculumPaths(slug);
+  revalidateCurriculumPaths();
 }

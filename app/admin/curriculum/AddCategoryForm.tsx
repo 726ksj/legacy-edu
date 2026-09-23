@@ -5,12 +5,29 @@ import { createCategory, type CategoryActionState } from "./actions";
 
 const initialState: CategoryActionState = {};
 
-export default function AddCategoryForm() {
+export interface TrackOption {
+  id: string;
+  title: string;
+  curriculum_school_levels: { title: string } | null;
+}
+
+export default function AddCategoryForm({
+  tracks,
+}: {
+  tracks: TrackOption[];
+}) {
   const [state, formAction, isPending] = useActionState(
     createCategory,
     initialState,
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const tracksByLevel = new Map<string, TrackOption[]>();
+  for (const track of tracks) {
+    const levelTitle = track.curriculum_school_levels?.title ?? "미분류";
+    const list = tracksByLevel.get(levelTitle) ?? [];
+    list.push(track);
+    tracksByLevel.set(levelTitle, list);
+  }
 
   useEffect(() => {
     if (state.success) {
@@ -45,6 +62,25 @@ export default function AddCategoryForm() {
           />
         </label>
       </div>
+      <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
+        소속 트랙
+        <select
+          name="trackId"
+          defaultValue=""
+          className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
+        >
+          <option value="">미배정 (홈 화면 노출 예정)</option>
+          {[...tracksByLevel.entries()].map(([levelTitle, levelTracks]) => (
+            <optgroup key={levelTitle} label={levelTitle}>
+              {levelTracks.map((track) => (
+                <option key={track.id} value={track.id}>
+                  {track.title}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </label>
       <label className="flex flex-col gap-1 text-xs font-medium text-zinc-600">
         부제 (선택, 강조 배지로 표시)
         <input
