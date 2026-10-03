@@ -24,6 +24,9 @@ interface CourseData {
   is_best: boolean;
   duration_days: number | null;
   price: number;
+  course_scope: string | null;
+  content_features: string | null;
+  target_audience: string | null;
 }
 
 export default function EditCourseForm({
@@ -151,6 +154,42 @@ export default function EditCourseForm({
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         />
       </label>
+
+      <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 p-4">
+        <p className="text-sm font-semibold text-zinc-800">
+          강좌 정보{" "}
+          <span className="font-normal text-zinc-400">
+            (선택, 상세 페이지의 강좌 정보 표에 표시됩니다)
+          </span>
+        </p>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          강좌 범위
+          <textarea
+            name="courseScope"
+            defaultValue={course.course_scope ?? ""}
+            rows={3}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          내용 및 특징
+          <textarea
+            name="contentFeatures"
+            defaultValue={course.content_features ?? ""}
+            rows={5}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          수강 대상
+          <textarea
+            name="targetAudience"
+            defaultValue={course.target_audience ?? ""}
+            rows={2}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+      </div>
 
       {state.error && (
         <p className="text-sm font-medium text-red-500">{state.error}</p>

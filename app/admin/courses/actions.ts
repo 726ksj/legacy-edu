@@ -50,6 +50,11 @@ async function syncCourseStaff(
   }
 }
 
+function readCourseInfoField(formData: FormData, name: string) {
+  const text = String(formData.get(name) ?? "").trim();
+  return text || null;
+}
+
 function readListingFields(formData: FormData) {
   const level = String(formData.get("level") ?? "").trim();
   const tagline = String(formData.get("tagline") ?? "").trim();
@@ -65,6 +70,9 @@ function readListingFields(formData: FormData) {
     is_best: isBest,
     duration_days: durationWeeksRaw ? Number(durationWeeksRaw) * 7 : null,
     price: priceRaw ? Number(priceRaw) : 0,
+    course_scope: readCourseInfoField(formData, "courseScope"),
+    content_features: readCourseInfoField(formData, "contentFeatures"),
+    target_audience: readCourseInfoField(formData, "targetAudience"),
   };
 }
 
@@ -120,6 +128,7 @@ export async function createCourse(
   revalidatePath("/admin/courses");
   revalidatePath("/courses/high");
   revalidatePath("/courses/middle");
+  revalidatePath(`/courses/${inserted.id}`);
   return { success: true };
 }
 
@@ -176,6 +185,7 @@ export async function updateCourse(
   revalidatePath(`/admin/courses/${courseId}`);
   revalidatePath("/courses/high");
   revalidatePath("/courses/middle");
+  revalidatePath(`/courses/${courseId}`);
   revalidatePath(`/my-classroom/${courseId}`);
   return { success: true };
 }
