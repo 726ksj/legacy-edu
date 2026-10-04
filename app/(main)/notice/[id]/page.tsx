@@ -109,14 +109,9 @@ export default async function NoticeDetailPage({
           </div>
 
           <div className="flex flex-col gap-6 border-t border-zinc-200 py-8">
-            <div
-              className="notice-content text-sm leading-relaxed text-zinc-700"
-              // 저장 시점(app/(main)/notice/actions.ts)에 DOMPurify로 이미
-              // 정화된 HTML만 들어있다 - 허용 태그/속성이 아주 제한적이라
-              // (서식 관련 태그만, 링크/이미지 불가) 여기서 다시 정화할
-              // 필요는 없다.
-              dangerouslySetInnerHTML={{ __html: notice.content }}
-            />
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700">
+              {notice.content}
+            </p>
 
             {imageAttachments.length > 0 && (
               <div className="flex flex-col gap-3">
