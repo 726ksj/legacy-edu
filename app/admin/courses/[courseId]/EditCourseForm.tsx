@@ -18,7 +18,6 @@ interface CourseData {
   title: string;
   instructor_id: string | null;
   school: string | null;
-  overview: string | null;
   level: string | null;
   is_best: boolean;
   duration_days: number | null;
@@ -132,16 +131,6 @@ export default function EditCourseForm({
           BEST 뱃지
         </label>
       </div>
-
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        강좌 개요 (선택)
-        <textarea
-          name="overview"
-          defaultValue={course.overview ?? ""}
-          rows={3}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
-      </label>
 
       <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 p-4">
         <p className="text-sm font-semibold text-zinc-800">

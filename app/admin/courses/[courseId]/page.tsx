@@ -18,7 +18,7 @@ export default async function Page({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, subject, title, instructor_id, school, overview, level, is_best, duration_days, price, course_scope, content_features, target_audience",
+      "id, subject, title, instructor_id, school, level, is_best, duration_days, price, course_scope, content_features, target_audience",
     )
     .eq("id", courseId)
     .maybeSingle();
@@ -43,7 +43,7 @@ export default async function Page({
       <h1 className="text-2xl font-bold text-zinc-900">{course.title} 수정</h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-500">
         학생에게 보여줄 강좌 소개 페이지(/courses/강좌ID)와 나의 강의실에
-        표시되는 개요·강사를 관리합니다.
+        표시되는 강좌 정보·강사를 관리합니다.
       </p>
 
       <div className="mt-6 max-w-2xl">

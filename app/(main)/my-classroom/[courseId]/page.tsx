@@ -21,7 +21,9 @@ interface Course {
   id: string;
   subject: string;
   title: string;
-  overview: string | null;
+  course_scope: string | null;
+  content_features: string | null;
+  target_audience: string | null;
   instructors: Instructor | null;
 }
 
@@ -63,7 +65,7 @@ export default async function CourseClassroomPage({
       supabase
         .from("courses")
         .select(
-          "id, subject, title, overview, instructors(name, photo_url, bio)",
+          "id, subject, title, course_scope, content_features, target_audience, instructors(name, photo_url, bio)",
         )
         .eq("id", courseId)
         .maybeSingle()
@@ -134,6 +136,12 @@ export default async function CourseClassroomPage({
 
   const instructor = course.instructors;
 
+  const courseInfoRows = [
+    { label: "강좌 범위", content: course.course_scope },
+    { label: "내용 및 특징", content: course.content_features },
+    { label: "수강 대상", content: course.target_audience },
+  ];
+
   return (
     <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-16">
       <div>
@@ -162,18 +170,30 @@ export default async function CourseClassroomPage({
 
       <div>
         <h2 className="border-b-2 border-brand pb-2 text-lg font-bold text-zinc-900">
-          강좌 개요
+          강좌 정보
         </h2>
-        <div className="rounded-b-lg border border-t-0 border-zinc-200 bg-white p-6">
-          {course.overview ? (
-            <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-700">
-              {course.overview}
-            </p>
-          ) : (
-            <p className="text-sm text-zinc-400">
-              아직 등록된 내용이 없습니다.
-            </p>
-          )}
+        <div className="overflow-hidden rounded-b-lg border border-t-0 border-zinc-200 bg-white">
+          <dl className="divide-y divide-zinc-100">
+            {courseInfoRows.map((row) => (
+              <div
+                key={row.label}
+                className="flex flex-col gap-2 px-6 py-5 sm:flex-row sm:gap-6"
+              >
+                <dt className="w-28 shrink-0 text-sm font-semibold text-zinc-500">
+                  {row.label}
+                </dt>
+                {row.content ? (
+                  <dd className="min-w-0 flex-1 whitespace-pre-line text-sm leading-relaxed text-zinc-700">
+                    {row.content}
+                  </dd>
+                ) : (
+                  <dd className="min-w-0 flex-1 text-sm text-zinc-400">
+                    아직 등록된 내용이 없습니다.
+                  </dd>
+                )}
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
 

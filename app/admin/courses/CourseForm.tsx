@@ -26,7 +26,6 @@ export interface EditingCourse {
   title: string;
   instructor_id: string | null;
   school: string | null;
-  overview: string | null;
   level: string | null;
   is_best: boolean;
   duration_days: number | null;
@@ -215,17 +214,6 @@ export default function CourseForm({
         <span className="text-xs text-zinc-400">
           이 강좌 수강생의 성적 관리 권한을 가질 로그인 계정입니다.
         </span>
-      </label>
-
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        강좌 개요 (선택)
-        <textarea
-          name="overview"
-          defaultValue={editingCourse?.overview ?? ""}
-          rows={3}
-          placeholder="학생에게 보여줄 강좌 소개 문구를 입력하세요."
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
       </label>
 
       <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 p-4">

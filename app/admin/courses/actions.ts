@@ -86,7 +86,6 @@ export async function createCourse(
     formData.get("assistantProfileId") ?? "",
   ).trim();
   const school = String(formData.get("school") ?? "").trim();
-  const overview = String(formData.get("overview") ?? "").trim();
   const listingFields = readListingFields(formData);
 
   if (!title || !instructorId) {
@@ -110,7 +109,6 @@ export async function createCourse(
       teacher_name: instructor.name,
       instructor_id: instructorId,
       school: school || null,
-      overview: overview || null,
       ...listingFields,
     })
     .select("id")
@@ -143,7 +141,6 @@ export async function updateCourse(
     formData.get("assistantProfileId") ?? "",
   ).trim();
   const school = String(formData.get("school") ?? "").trim();
-  const overview = String(formData.get("overview") ?? "").trim();
   const listingFields = readListingFields(formData);
 
   if (!title || !instructorId) {
@@ -167,7 +164,6 @@ export async function updateCourse(
       teacher_name: instructor.name,
       instructor_id: instructorId,
       school: school || null,
-      overview: overview || null,
       ...listingFields,
     })
     .eq("id", courseId);
