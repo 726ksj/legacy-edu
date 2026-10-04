@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
+import { sanitizeNoticeHtml } from "@/lib/sanitizeHtml";
 
 const ATTACHMENT_BUCKET = "notice-attachments";
 
@@ -16,10 +17,14 @@ export interface NoticeFormState {
 function readNoticeFields(formData: FormData) {
   const category = String(formData.get("category") ?? "공지").trim();
   const title = String(formData.get("title") ?? "").trim();
-  const content = String(formData.get("content") ?? "").trim();
+  const content = sanitizeNoticeHtml(String(formData.get("content") ?? ""));
   const visibility = String(formData.get("visibility") ?? "members").trim();
 
-  if (!title || !content) {
+  // 리치텍스트 에디터는 빈 상태에서도 "<p></p>" 같은 태그를 보내오니,
+  // 태그를 걷어낸 실제 글자가 있는지로 빈 값을 판단한다.
+  const contentText = content.replace(/<[^>]*>/g, "").trim();
+
+  if (!title || !contentText) {
     return { error: "제목과 내용을 입력해주세요." } as const;
   }
   if (category !== "공지" && category !== "이벤트") {

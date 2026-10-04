@@ -9,6 +9,7 @@ import {
   type NoticeFormState,
 } from "../actions";
 import DeleteAttachmentButton from "./DeleteAttachmentButton";
+import RichTextEditor from "@/components/notice/RichTextEditor";
 
 const initialState: NoticeFormState = {};
 
@@ -87,13 +88,7 @@ export default function EditNoticeForm({
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         내용
-        <textarea
-          name="content"
-          defaultValue={notice.content}
-          required
-          rows={8}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
+        <RichTextEditor name="content" defaultValue={notice.content} />
       </label>
 
       {attachments.length > 0 && (

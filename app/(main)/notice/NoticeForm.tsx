@@ -3,6 +3,7 @@
 import { useActionState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createNotice, type NoticeFormState } from "./actions";
+import RichTextEditor from "@/components/notice/RichTextEditor";
 
 const initialState: NoticeFormState = {};
 
@@ -62,12 +63,7 @@ export default function NoticeForm() {
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         내용
-        <textarea
-          name="content"
-          required
-          rows={6}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
+        <RichTextEditor name="content" />
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         첨부파일 (선택, 여러 개 가능)
