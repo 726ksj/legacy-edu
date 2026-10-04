@@ -28,7 +28,6 @@ export interface EditingCourse {
   school: string | null;
   overview: string | null;
   level: string | null;
-  tagline: string | null;
   is_best: boolean;
   duration_days: number | null;
   price: number;
@@ -178,17 +177,6 @@ export default function CourseForm({
           BEST 뱃지
         </label>
       </div>
-
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        목록에 보여줄 한 줄 소개 (선택)
-        <input
-          name="tagline"
-          defaultValue={editingCourse?.tagline ?? ""}
-          placeholder="예: 12가지 후치수식과 동사 7일 완성!"
-          autoComplete="off"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
-        />
-      </label>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
         담당 강사 계정 (선택)

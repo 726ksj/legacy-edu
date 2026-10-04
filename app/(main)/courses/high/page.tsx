@@ -14,7 +14,7 @@ export default async function Page() {
   const { data: courses } = await supabase
     .from("courses")
     .select(
-      "id, subject, teacher_name, title, school, tagline, is_best, duration_days, price",
+      "id, subject, teacher_name, title, school, is_best, duration_days, price",
     )
     .eq("level", "high")
     .order("title", { ascending: true });
@@ -39,7 +39,6 @@ export default async function Page() {
     teacherName: course.teacher_name,
     title: course.title,
     school: course.school,
-    tagline: course.tagline,
     isBest: course.is_best,
     durationDays: course.duration_days,
     lectureCount: lectureCountByCourse.get(course.id) ?? 0,

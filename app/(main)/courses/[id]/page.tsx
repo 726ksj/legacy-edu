@@ -23,7 +23,6 @@ interface Course {
   title: string;
   school: string | null;
   level: string | null;
-  tagline: string | null;
   is_best: boolean;
   duration_days: number | null;
   price: number;
@@ -53,7 +52,7 @@ export default async function CourseDetailPage({
     supabase
       .from("courses")
       .select(
-        "id, subject, title, school, level, tagline, is_best, duration_days, price, course_scope, content_features, target_audience, instructors(name, photo_url, bio)",
+        "id, subject, title, school, level, is_best, duration_days, price, course_scope, content_features, target_audience, instructors(name, photo_url, bio)",
       )
       .eq("id", id)
       .maybeSingle()
@@ -106,12 +105,7 @@ export default async function CourseDetailPage({
             </span>
           )}
         </div>
-        {course.tagline && (
-          <p className="mt-3 text-sm font-bold text-zinc-700">
-            {course.tagline}
-          </p>
-        )}
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
           {course.title}
         </h1>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500">

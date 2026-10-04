@@ -28,11 +28,6 @@ export default function CourseCard({
             BEST
           </span>
         )}
-        {course.tagline && (
-          <p className="mt-1 text-sm font-bold text-zinc-800">
-            {course.tagline}
-          </p>
-        )}
         <Link
           href={`/courses/${course.id}`}
           className="mt-0.5 block text-base font-semibold text-zinc-900 hover:text-brand-dark hover:underline"

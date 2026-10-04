@@ -57,7 +57,6 @@ function readCourseInfoField(formData: FormData, name: string) {
 
 function readListingFields(formData: FormData) {
   const level = String(formData.get("level") ?? "").trim();
-  const tagline = String(formData.get("tagline") ?? "").trim();
   const isBest = formData.get("isBest") === "on";
   const durationWeeksRaw = String(formData.get("durationWeeks") ?? "").trim();
   const priceRaw = String(formData.get("price") ?? "")
@@ -66,7 +65,6 @@ function readListingFields(formData: FormData) {
 
   return {
     level: level || null,
-    tagline: tagline || null,
     is_best: isBest,
     duration_days: durationWeeksRaw ? Number(durationWeeksRaw) * 7 : null,
     price: priceRaw ? Number(priceRaw) : 0,
