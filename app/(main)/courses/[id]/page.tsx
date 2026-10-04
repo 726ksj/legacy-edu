@@ -22,7 +22,6 @@ interface Course {
   subject: string;
   title: string;
   school: string | null;
-  overview: string | null;
   level: string | null;
   tagline: string | null;
   is_best: boolean;
@@ -54,7 +53,7 @@ export default async function CourseDetailPage({
     supabase
       .from("courses")
       .select(
-        "id, subject, title, school, overview, level, tagline, is_best, duration_days, price, course_scope, content_features, target_audience, instructors(name, photo_url, bio)",
+        "id, subject, title, school, level, tagline, is_best, duration_days, price, course_scope, content_features, target_audience, instructors(name, photo_url, bio)",
       )
       .eq("id", id)
       .maybeSingle()
@@ -126,11 +125,6 @@ export default async function CourseDetailPage({
           )}
           <span>강의수 {lessonCount ?? 0}강</span>
         </div>
-        {course.overview && (
-          <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-600">
-            {course.overview}
-          </p>
-        )}
       </div>
 
       <div>

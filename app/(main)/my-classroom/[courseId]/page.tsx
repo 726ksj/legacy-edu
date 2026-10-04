@@ -158,11 +158,23 @@ export default async function CourseClassroomPage({
             채팅방 바로가기
           </Link>
         </div>
-        {course.overview && (
-          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-600">
-            {course.overview}
-          </p>
-        )}
+      </div>
+
+      <div>
+        <h2 className="border-b-2 border-brand pb-2 text-lg font-bold text-zinc-900">
+          강좌 개요
+        </h2>
+        <div className="rounded-b-lg border border-t-0 border-zinc-200 bg-white p-6">
+          {course.overview ? (
+            <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-700">
+              {course.overview}
+            </p>
+          ) : (
+            <p className="text-sm text-zinc-400">
+              아직 등록된 내용이 없습니다.
+            </p>
+          )}
+        </div>
       </div>
 
       <div>
