@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireCourseManager } from "@/lib/teachers";
+import { parseWeekField } from "@/lib/weeks";
 import {
   buildMp4Url,
   createMuxClient,
@@ -53,6 +54,7 @@ export async function saveLesson(
   visibility: LessonVisibility,
   profileIds: string[],
   videoFilename: string,
+  week: number | null = null,
 ): Promise<{ error?: string }> {
   await requireCourseManager(courseId);
   const supabase = createAdminClient();
@@ -93,6 +95,7 @@ export async function saveLesson(
       status: "preparing",
       visibility,
       video_filename: videoFilename,
+      week,
     })
     .select("id")
     .single();
@@ -113,7 +116,7 @@ export async function saveLesson(
   }
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
-  revalidatePath(`/mypage/teaching/${courseId}`);
+  revalidatePath(`/mypage/teaching/${courseId}`, "layout");
   revalidatePath(`/my-classroom/${courseId}`);
   return {};
 }
@@ -159,6 +162,7 @@ export async function updateLessonInfo(
     formData.get("visibility") ?? "all",
   ) as LessonVisibility;
   const profileIds = formData.getAll("profileIds").map(String);
+  const week = parseWeekField(formData.get("week"));
 
   if (!title || !orderNoRaw || Number.isNaN(orderNo)) {
     return { error: "제목과 순서를 입력해주세요." };
@@ -179,6 +183,7 @@ export async function updateLessonInfo(
       title,
       order_no: orderNo,
       visibility,
+      week,
     })
     .eq("id", lessonId);
 
@@ -199,7 +204,7 @@ export async function updateLessonInfo(
   }
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
-  revalidatePath(`/mypage/teaching/${courseId}`);
+  revalidatePath(`/mypage/teaching/${courseId}`, "layout");
   revalidatePath(`/my-classroom/${courseId}`);
   return { success: true };
 }
@@ -225,7 +230,7 @@ export async function deleteLesson(lessonId: string, courseId: string) {
 
   await supabase.from("lessons").delete().eq("id", lessonId);
   revalidatePath(`/admin/courses/${courseId}/lessons`);
-  revalidatePath(`/mypage/teaching/${courseId}`);
+  revalidatePath(`/mypage/teaching/${courseId}`, "layout");
 }
 
 // 공개 대상(visibility)과는 별개로, 학생 전원에게 임시로 숨기거나 다시
@@ -246,7 +251,7 @@ export async function setLessonHidden(
     .eq("id", lessonId);
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
-  revalidatePath(`/mypage/teaching/${courseId}`);
+  revalidatePath(`/mypage/teaching/${courseId}`, "layout");
   revalidatePath(`/my-classroom/${courseId}`);
 }
 
@@ -348,6 +353,6 @@ export async function replaceLessonVideo(
   }
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
-  revalidatePath(`/mypage/teaching/${courseId}`);
+  revalidatePath(`/mypage/teaching/${courseId}`, "layout");
   return {};
 }

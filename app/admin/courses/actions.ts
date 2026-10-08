@@ -67,6 +67,7 @@ function readListingFields(formData: FormData) {
     level: level || null,
     is_best: isBest,
     duration_days: durationWeeksRaw ? Number(durationWeeksRaw) * 7 : null,
+    start_date: String(formData.get("startDate") ?? "").trim() || null,
     price: priceRaw ? Number(priceRaw) : 0,
     course_scope: readCourseInfoField(formData, "courseScope"),
     content_features: readCourseInfoField(formData, "contentFeatures"),

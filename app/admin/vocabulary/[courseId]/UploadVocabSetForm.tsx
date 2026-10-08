@@ -2,10 +2,17 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { uploadVocabSet, type UploadVocabSetState } from "./actions";
+import { WEEKS } from "@/lib/weeks";
 
 const initialState: UploadVocabSetState = {};
 
-export default function UploadVocabSetForm({ courseId }: { courseId: string }) {
+export default function UploadVocabSetForm({
+  courseId,
+  defaultWeek = null,
+}: {
+  courseId: string;
+  defaultWeek?: number | null;
+}) {
   const uploadWithCourseId = uploadVocabSet.bind(null, courseId);
   const [state, formAction, isPending] = useActionState(
     uploadWithCourseId,
@@ -33,6 +40,24 @@ export default function UploadVocabSetForm({ courseId }: { courseId: string }) {
         className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6"
       >
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          주차
+          <select
+            name="week"
+            required
+            defaultValue={defaultWeek ?? ""}
+            className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          >
+            <option value="" disabled>
+              주차 선택
+            </option>
+            {WEEKS.map((week) => (
+              <option key={week} value={week}>
+                {week}주차
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           단어장 제목 (예: 1단원 필수 단어)
           <input
             name="title"
@@ -50,7 +75,7 @@ export default function UploadVocabSetForm({ courseId }: { courseId: string }) {
         <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           엑셀 파일
           <span className="text-xs font-normal text-zinc-400">
-            첫 행은 열 제목: 단어, 뜻, 예문(선택)
+            첫 행은 열 제목: 단어, 뜻, 예시 문장(선택)
           </span>
           <div className="flex items-center gap-2">
             <label

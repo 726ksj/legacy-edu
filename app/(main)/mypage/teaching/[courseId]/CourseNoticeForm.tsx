@@ -23,7 +23,7 @@ export default function CourseNoticeForm({ courseId }: { courseId: string }) {
     <form
       ref={formRef}
       action={formAction}
-      className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4"
+      className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
     >
       <p className="text-sm font-semibold text-zinc-900">새 강좌 공지 작성</p>
       <input
@@ -35,7 +35,7 @@ export default function CourseNoticeForm({ courseId }: { courseId: string }) {
       <textarea
         name="content"
         required
-        rows={3}
+        rows={5}
         placeholder="내용"
         className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand"
       />

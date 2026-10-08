@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireCourseManager } from "@/lib/teachers";
 import { cellToString } from "@/lib/scoreUpload";
+import { parseWeekField } from "@/lib/weeks";
 
 async function assertVocabSetInCourse(
   supabase: ReturnType<typeof createAdminClient>,
@@ -23,6 +24,13 @@ async function assertVocabSetInCourse(
   }
 }
 
+// 같은 액션을 관리자 화면과 강사 화면(마이페이지 > 내 강좌 관리)이 함께
+// 쓰므로 두 경로 모두 갱신한다.
+function revalidateVocabPages(courseId: string) {
+  revalidatePath(`/admin/vocabulary/${courseId}`);
+  revalidatePath(`/mypage/teaching/${courseId}`, "layout");
+}
+
 export interface UploadVocabSetResultRow {
   row: number;
   word: string;
@@ -36,6 +44,7 @@ export interface UploadVocabSetState {
 }
 
 const REQUIRED_HEADERS = ["단어", "뜻"] as const;
+const EXAMPLE_HEADERS = ["예시 문장", "예시문장", "예문"] as const;
 
 export async function uploadVocabSet(
   courseId: string,
@@ -46,7 +55,11 @@ export async function uploadVocabSet(
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const file = formData.get("file");
+  const week = parseWeekField(formData.get("week"));
 
+  if (!week) {
+    return { error: "주차를 선택해주세요." };
+  }
   if (!title) {
     return { error: "단어장 제목을 입력해주세요." };
   }
@@ -105,7 +118,8 @@ export async function uploadVocabSet(
 
     const word = get("단어");
     const meaning = get("뜻");
-    const example = get("예문");
+    const example =
+      EXAMPLE_HEADERS.map((header) => get(header)).find(Boolean) ?? "";
 
     // 완전히 빈 행은 조용히 건너뛴다 (엑셀 끝부분에 흔함).
     if (!word && !meaning) return;
@@ -133,6 +147,7 @@ export async function uploadVocabSet(
     .insert({
       title,
       description: description || null,
+      week,
       created_by: user.id,
     })
     .select("id")
@@ -175,7 +190,7 @@ export async function uploadVocabSet(
     };
   }
 
-  revalidatePath(`/admin/vocabulary/${courseId}`);
+  revalidateVocabPages(courseId);
   return { successCount: parsedRows.length, failed };
 }
 
@@ -185,5 +200,18 @@ export async function deleteVocabSet(vocabSetId: string, courseId: string) {
   await assertVocabSetInCourse(supabase, vocabSetId, courseId);
 
   await supabase.from("vocab_sets").delete().eq("id", vocabSetId);
-  revalidatePath(`/admin/vocabulary/${courseId}`);
+  revalidateVocabPages(courseId);
+}
+
+export async function updateVocabSetWeek(
+  vocabSetId: string,
+  courseId: string,
+  week: number | null,
+) {
+  await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+  await assertVocabSetInCourse(supabase, vocabSetId, courseId);
+
+  await supabase.from("vocab_sets").update({ week }).eq("id", vocabSetId);
+  revalidateVocabPages(courseId);
 }

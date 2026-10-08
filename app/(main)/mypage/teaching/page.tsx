@@ -47,7 +47,7 @@ export default async function TeachingPage() {
         </h1>
         <div className="h-[3px] w-12 rounded-full bg-brand" />
         <p className="text-sm text-zinc-500">
-          담당 강좌의 영상과 강좌별 공지를 관리하세요.
+          담당 강좌의 주차별 영상·단어와 강좌별 공지를 관리하세요.
         </p>
       </div>
 

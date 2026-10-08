@@ -6,16 +6,20 @@ import LessonAudiencePicker, {
   type AudienceStudent,
 } from "./LessonAudiencePicker";
 import type { LessonVisibility } from "@/lib/enrollments";
+import { WEEKS } from "@/lib/weeks";
 
 export default function UploadLessonForm({
   courseId,
   students,
   nextOrderNo,
+  defaultWeek = null,
 }: {
   courseId: string;
   students: AudienceStudent[];
   nextOrderNo: number;
+  defaultWeek?: number | null;
 }) {
+  const [week, setWeek] = useState(defaultWeek ? String(defaultWeek) : "");
   const [orderNo, setOrderNo] = useState("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -98,6 +102,7 @@ export default function UploadLessonForm({
         visibility,
         Array.from(selectedIds),
         file.name,
+        week ? Number(week) : null,
       );
       if (saveResult.error) {
         setError(saveResult.error);
@@ -140,6 +145,22 @@ export default function UploadLessonForm({
             disabled={isBusy}
             className="w-20 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
           />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          주차
+          <select
+            value={week}
+            onChange={(e) => setWeek(e.target.value)}
+            disabled={isBusy}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
+          >
+            <option value="">미지정</option>
+            {WEEKS.map((w) => (
+              <option key={w} value={w}>
+                {w}주차
+              </option>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           제목

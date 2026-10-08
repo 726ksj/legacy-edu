@@ -29,6 +29,7 @@ export interface EditingCourse {
   level: string | null;
   is_best: boolean;
   duration_days: number | null;
+  start_date: string | null;
   price: number;
   course_scope: string | null;
   content_features: string | null;
@@ -154,6 +155,15 @@ export default function CourseForm({
             placeholder="13"
             autoComplete="off"
             className="w-24 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          강좌 시작일 (8주 커리큘럼 기준)
+          <input
+            name="startDate"
+            type="date"
+            defaultValue={editingCourse?.start_date ?? ""}
+            className="w-44 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">

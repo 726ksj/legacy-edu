@@ -14,6 +14,7 @@ import LessonAudiencePicker, {
 import LessonPreviewPanel from "./LessonPreviewPanel";
 import ReplaceLessonVideoForm from "./ReplaceLessonVideoForm";
 import type { LessonVisibility } from "@/lib/enrollments";
+import { WEEKS } from "@/lib/weeks";
 
 const initialState: UpdateLessonInfoState = {};
 
@@ -31,6 +32,7 @@ interface Lesson {
   visibility: LessonVisibility;
   video_filename: string | null;
   is_hidden: boolean;
+  week: number | null;
 }
 
 export default function LessonRow({
@@ -111,6 +113,21 @@ export default function LessonRow({
                   required
                   className="w-20 rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
                 />
+              </label>
+              <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
+                주차
+                <select
+                  name="week"
+                  defaultValue={lesson.week ?? ""}
+                  className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
+                >
+                  <option value="">미지정</option>
+                  {WEEKS.map((week) => (
+                    <option key={week} value={week}>
+                      {week}주차
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
                 제목

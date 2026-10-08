@@ -1,13 +1,9 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncLessonStatuses } from "@/lib/mux";
-import UploadLessonForm from "./UploadLessonForm";
-import LessonRow from "./LessonRow";
-import { deleteLesson } from "./actions";
-import type { AudienceStudent } from "./LessonAudiencePicker";
-
-export const dynamic = "force-dynamic";
+import UploadLessonForm from "@/app/admin/courses/[courseId]/lessons/UploadLessonForm";
+import LessonRow from "@/app/admin/courses/[courseId]/lessons/LessonRow";
+import { deleteLesson } from "@/app/admin/courses/[courseId]/lessons/actions";
+import type { AudienceStudent } from "@/app/admin/courses/[courseId]/lessons/LessonAudiencePicker";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   preparing: { label: "처리 중", className: "bg-amber-100 text-amber-700" },
@@ -19,37 +15,18 @@ interface EnrolledProfileRow {
   profiles: AudienceStudent | null;
 }
 
-interface AssignedTeacherRow {
-  profiles: { name: string } | null;
-}
-
-export default async function Page({
-  params,
+// 한 주차(또는 주차 미지정 null)의 영상 업로드 + 목록. 순서(order_no)는
+// 강좌 전체 기준이라, 업로드 폼/수정 폼에는 강좌 전체 영상 수를 넘긴다.
+export default async function LessonsSection({
+  courseId,
+  week,
 }: {
-  params: Promise<{ courseId: string }>;
+  courseId: string;
+  week: number | null;
 }) {
-  const { courseId } = await params;
   const supabase = createAdminClient();
 
-  const [{ data: course }, { data: assignedTeachers }] = await Promise.all([
-    supabase
-      .from("courses")
-      .select("id, subject, title, teacher_name")
-      .eq("id", courseId)
-      .maybeSingle(),
-    supabase
-      .from("course_teachers")
-      .select("profiles(name)")
-      .eq("course_id", courseId)
-      .eq("role", "teacher")
-      .returns<AssignedTeacherRow[]>(),
-  ]);
-
-  if (!course) {
-    notFound();
-  }
-
-  const { data: lessons } = await supabase
+  const { data: allLessons } = await supabase
     .from("lessons")
     .select(
       "id, order_no, title, mux_asset_id, status, created_at, description, visibility, video_filename, is_hidden, week",
@@ -57,7 +34,12 @@ export default async function Page({
     .eq("course_id", courseId)
     .order("order_no", { ascending: true });
 
-  if (lessons?.length) {
+  const totalCount = allLessons?.length ?? 0;
+  const lessons = (allLessons ?? []).filter(
+    (lesson) => (lesson.week ?? null) === week,
+  );
+
+  if (lessons.length) {
     await syncLessonStatuses(supabase, lessons);
   }
 
@@ -72,7 +54,7 @@ export default async function Page({
     .filter((profile): profile is AudienceStudent => profile !== null)
     .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
-  const lessonIds = (lessons ?? []).map((lesson) => lesson.id);
+  const lessonIds = lessons.map((lesson) => lesson.id);
   const { data: accessRows } = lessonIds.length
     ? await supabase
         .from("lesson_access")
@@ -88,36 +70,15 @@ export default async function Page({
   }
 
   return (
-    <div className="flex flex-1 flex-col p-8">
-      <h1 className="text-2xl font-bold text-zinc-900">
-        [{course.subject}] {course.title} — 영상 관리
-      </h1>
-      <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-        {course.teacher_name} 강사 강좌의 영상을 업로드하고 관리합니다.
-      </p>
-      <p className="mt-1 text-xs text-zinc-400">
-        배정된 강사 계정:{" "}
-        {assignedTeachers && assignedTeachers.length > 0
-          ? assignedTeachers.map((row) => row.profiles?.name).filter(Boolean).join(", ")
-          : "없음"}
-        {" · "}
-        <Link
-          href={`/mypage/teaching/${courseId}`}
-          className="font-semibold text-brand-dark hover:underline"
-        >
-          강좌별 공지 관리 화면 열기
-        </Link>
-      </p>
+    <div>
+      <UploadLessonForm
+        courseId={courseId}
+        students={students}
+        nextOrderNo={totalCount + 1}
+        defaultWeek={week}
+      />
 
-      <div className="mt-6">
-        <UploadLessonForm
-          courseId={courseId}
-          students={students}
-          nextOrderNo={(lessons?.length ?? 0) + 1}
-        />
-      </div>
-
-      <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
         <table className="w-full min-w-[880px] table-fixed text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
@@ -129,7 +90,7 @@ export default async function Page({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
-            {lessons?.map((lesson) => {
+            {lessons.map((lesson) => {
               const statusInfo =
                 STATUS_LABEL[lesson.status] ?? STATUS_LABEL.preparing;
               return (
@@ -141,14 +102,14 @@ export default async function Page({
                   students={students}
                   initialSelectedIds={accessByLesson.get(lesson.id) ?? []}
                   deleteAction={deleteLesson.bind(null, lesson.id, courseId)}
-                  maxOrderNo={lessons?.length ?? 1}
+                  maxOrderNo={totalCount}
                 />
               );
             })}
-            {lessons?.length === 0 && (
+            {lessons.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
-                  등록된 차시가 없습니다.
+                  등록된 영상이 없습니다.
                 </td>
               </tr>
             )}
