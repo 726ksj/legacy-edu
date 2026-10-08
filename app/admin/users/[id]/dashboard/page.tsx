@@ -224,7 +224,7 @@ export default async function Page({
 
       <section className="mt-6">
         <h2 className="text-sm font-bold text-zinc-900">전체 성적 목록</h2>
-        <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+        <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
               <tr>

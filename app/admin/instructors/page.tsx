@@ -47,7 +47,7 @@ export default async function Page() {
         </p>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>

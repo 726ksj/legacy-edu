@@ -117,8 +117,8 @@ export default async function Page({
         />
       </div>
 
-      <div className="mt-6 overflow-visible rounded-lg border border-zinc-200 bg-white">
-        <table className="w-full table-fixed text-left text-sm">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+        <table className="w-full min-w-[880px] table-fixed text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
               <th className="w-16 px-4 py-3">순서</th>

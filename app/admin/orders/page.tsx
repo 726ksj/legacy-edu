@@ -39,7 +39,7 @@ export default async function AdminOrdersPage() {
         학생들의 결제 내역을 확인하고 환불을 처리하는 페이지입니다.
       </p>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
