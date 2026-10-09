@@ -174,13 +174,15 @@ export default async function Page({
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
               <tr>
                 <th className="px-4 py-3">학생</th>
-                <th className="w-24 px-4 py-3">1회</th>
-                <th className="w-24 px-4 py-3">2회</th>
-                <th className="w-24 px-4 py-3">3회(최종)</th>
+                <th className="w-20 px-3 py-3">1회</th>
+                <th className="w-20 px-3 py-3">2회</th>
+                <th className="w-24 px-3 py-3">3회(최종)</th>
+                <th className="w-20 px-3 py-3">4회</th>
+                <th className="w-20 px-3 py-3">5회</th>
                 <th className="w-24 px-4 py-3">종합</th>
                 <th className="w-24 px-4 py-3">상태</th>
               </tr>
@@ -233,9 +235,11 @@ export default async function Page({
                         </details>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-zinc-700">{formatScore(row.rounds[1]?.score)}</td>
-                    <td className="px-4 py-3 text-zinc-700">{formatScore(row.rounds[2]?.score)}</td>
-                    <td className="px-4 py-3 text-zinc-700">{formatScore(row.rounds[3]?.score)}</td>
+                    {[1, 2, 3, 4, 5].map((roundNo) => (
+                      <td key={roundNo} className="px-3 py-3 text-zinc-700">
+                        {formatScore(row.rounds[roundNo]?.score)}
+                      </td>
+                    ))}
                     <td className="px-4 py-3 font-semibold text-zinc-900">
                       {row.totalScore === null ? "-" : `${row.totalScore}점`}
                     </td>
