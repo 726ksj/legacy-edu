@@ -99,7 +99,7 @@ export default function EditCourseForm({
           </span>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          수강기간(주)
+          수강 기간(주)
           <input
             name="durationWeeks"
             type="number"

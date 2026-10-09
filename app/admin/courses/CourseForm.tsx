@@ -198,7 +198,7 @@ export default function CourseForm({
             </select>
           </Field>
           <Field
-            label="담당 조교 (선택)"
+            label="조교 (선택)"
             hint="이 강좌 수강생의 성적 관리 권한을 가질 로그인 계정입니다."
           >
             <select
@@ -220,7 +220,7 @@ export default function CourseForm({
       <FormSection title="수강 설정">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field
-            label="수강기간(주)"
+            label="수강 기간(주)"
             hint="주차별 관리의 주차 수로도 쓰입니다. 비우면 주차 없음."
           >
             <input
