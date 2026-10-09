@@ -124,6 +124,12 @@ export default function UploadVocabSetForm({
             첫 행에 열 제목이 필요합니다: {REQUIRED_VOCAB_HEADERS.join(", ")}{" "}
             (모두 필수)
           </span>
+          <a
+            href="/api/vocab-template"
+            className="w-fit text-xs font-semibold text-brand-dark hover:underline"
+          >
+            엑셀 양식 다운로드
+          </a>
           <div className="flex items-center gap-2">
             <label
               htmlFor="vocab-upload-file"

@@ -126,6 +126,12 @@ export default async function Page({
                   {formatDateTime(set.created_at)}
                 </td>
                 <td className="px-4 py-3 text-right">
+                  <Link
+                    href={`/mypage/teaching/${courseId}/vocab/${set.id}`}
+                    className="mr-3 text-xs font-semibold text-brand-dark hover:underline"
+                  >
+                    단어 보기
+                  </Link>
                   <DeleteVocabSetButton
                     action={deleteVocabSet.bind(null, set.id, courseId)}
                   />

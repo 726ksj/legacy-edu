@@ -3,6 +3,7 @@ import { formatDateTime } from "@/lib/formatDateTime";
 import UploadVocabSetForm from "@/app/admin/vocabulary/[courseId]/UploadVocabSetForm";
 import DeleteVocabSetButton from "@/app/admin/vocabulary/[courseId]/DeleteVocabSetButton";
 import { deleteVocabSet } from "@/app/admin/vocabulary/[courseId]/actions";
+import Link from "next/link";
 import VocabSetWeekSelect from "./VocabSetWeekSelect";
 
 interface VocabSetAssignmentRow {
@@ -85,6 +86,12 @@ export default async function VocabSection({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
+              <Link
+                href={`/mypage/teaching/${courseId}/vocab/${set.id}`}
+                className="text-xs font-semibold text-brand-dark hover:underline"
+              >
+                단어 보기
+              </Link>
               {week === null && (
                 <VocabSetWeekSelect
                   vocabSetId={set.id}
