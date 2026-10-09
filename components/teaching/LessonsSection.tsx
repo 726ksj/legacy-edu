@@ -29,7 +29,7 @@ export default async function LessonsSection({
 }) {
   const supabase = createAdminClient();
 
-  const { data: allLessons } = await supabase
+  const { data: allLessons, error: lessonsError } = await supabase
     .from("lessons")
     .select(
       "id, order_no, title, mux_asset_id, status, created_at, description, visibility, video_filename, is_hidden, week",
@@ -74,6 +74,11 @@ export default async function LessonsSection({
 
   return (
     <div>
+      {lessonsError && (
+        <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          영상 목록을 불러오지 못했습니다: {lessonsError.message}
+        </p>
+      )}
       <UploadLessonForm
         courseId={courseId}
         students={students}

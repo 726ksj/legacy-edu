@@ -230,3 +230,21 @@ export async function updateVocabSetWeek(
   await supabase.from("vocab_sets").update({ week }).eq("id", vocabSetId);
   revalidateVocabPages(courseId);
 }
+
+// 단어장을 학생에게 임시로 숨기거나 다시 공개한다. 단어와 배정은 그대로
+// 두고 is_hidden만 바꾸므로 다시 공개하면 이전 상태로 돌아온다.
+export async function setVocabSetHidden(
+  vocabSetId: string,
+  courseId: string,
+  hidden: boolean,
+) {
+  await requireCourseManager(courseId);
+  const supabase = createAdminClient();
+  await assertVocabSetInCourse(supabase, vocabSetId, courseId);
+
+  await supabase
+    .from("vocab_sets")
+    .update({ is_hidden: hidden })
+    .eq("id", vocabSetId);
+  revalidateVocabPages(courseId);
+}

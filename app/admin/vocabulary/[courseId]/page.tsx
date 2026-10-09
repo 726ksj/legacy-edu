@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateTime } from "@/lib/formatDateTime";
 import UploadVocabSetForm from "./UploadVocabSetForm";
 import DeleteVocabSetButton from "./DeleteVocabSetButton";
+import VocabSetHideButton from "@/components/teaching/VocabSetHideButton";
 import { deleteVocabSet } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ interface VocabSetAssignmentRow {
     description: string | null;
     created_at: string;
     week: number | null;
+    is_hidden: boolean;
   } | null;
 }
 
@@ -37,9 +39,9 @@ export default async function Page({
     notFound();
   }
 
-  const { data: assignmentRows } = await supabase
+  const { data: assignmentRows, error: assignmentError } = await supabase
     .from("vocab_assignments")
-    .select("assigned_at, vocab_sets(id, title, description, created_at, week)")
+    .select("assigned_at, vocab_sets(id, title, description, created_at, week, is_hidden)")
     .eq("course_id", courseId)
     .order("assigned_at", { ascending: false })
     .returns<VocabSetAssignmentRow[]>();
@@ -49,12 +51,12 @@ export default async function Page({
     .filter((set): set is NonNullable<typeof set> => set !== null);
 
   const vocabSetIds = vocabSets.map((set) => set.id);
-  const { data: wordRows } = vocabSetIds.length
+  const { data: wordRows, error: wordError } = vocabSetIds.length
     ? await supabase
         .from("vocab_words")
         .select("vocab_set_id")
         .in("vocab_set_id", vocabSetIds)
-    : { data: [] as { vocab_set_id: string }[] };
+    : { data: [] as { vocab_set_id: string }[], error: null };
 
   const wordCountBySet = new Map<string, number>();
   for (const row of wordRows ?? []) {
@@ -94,6 +96,13 @@ export default async function Page({
         )}
       </div>
 
+      {(assignmentError || wordError) && (
+        <p className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          단어장 목록을 불러오지 못했습니다:{" "}
+          {assignmentError?.message ?? wordError?.message}
+        </p>
+      )}
+
       <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
@@ -102,17 +111,26 @@ export default async function Page({
               <th className="px-4 py-3">제목</th>
               <th className="px-4 py-3">단어 수</th>
               <th className="px-4 py-3">배정일</th>
-              <th className="px-4 py-3" />
+              <th className="w-20 px-2 py-3 text-center">단어 보기</th>
+              <th className="w-20 px-2 py-3 text-center">숨김</th>
+              <th className="w-20 px-2 py-3 text-center">삭제</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
             {vocabSets.map((set) => (
-              <tr key={set.id}>
+              <tr key={set.id} className={set.is_hidden ? "bg-zinc-50" : ""}>
                 <td className="px-4 py-3 text-zinc-500">
                   {set.week ? `${set.week}주차` : "미지정"}
                 </td>
                 <td className="px-4 py-3">
-                  <p className="font-medium text-zinc-900">{set.title}</p>
+                  <p className="flex flex-wrap items-center gap-2 font-medium text-zinc-900">
+                    {set.title}
+                    {set.is_hidden && (
+                      <span className="rounded bg-zinc-200 px-1.5 py-0.5 text-[11px] font-semibold text-zinc-600">
+                        비공개
+                      </span>
+                    )}
+                  </p>
                   {set.description && (
                     <p className="mt-0.5 text-xs text-zinc-400">
                       {set.description}
@@ -125,13 +143,22 @@ export default async function Page({
                 <td className="px-4 py-3 text-zinc-500">
                   {formatDateTime(set.created_at)}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-2 py-3 text-center">
                   <Link
                     href={`/mypage/teaching/${courseId}/vocab/${set.id}`}
-                    className="mr-3 text-xs font-semibold text-brand-dark hover:underline"
+                    className="text-xs font-semibold text-brand-dark hover:underline"
                   >
                     단어 보기
                   </Link>
+                </td>
+                <td className="px-2 py-3 text-center">
+                  <VocabSetHideButton
+                    vocabSetId={set.id}
+                    courseId={courseId}
+                    hidden={set.is_hidden}
+                  />
+                </td>
+                <td className="px-2 py-3 text-center">
                   <DeleteVocabSetButton
                     action={deleteVocabSet.bind(null, set.id, courseId)}
                   />
@@ -140,7 +167,7 @@ export default async function Page({
             ))}
             {vocabSets.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-zinc-400">
                   등록된 단어장이 없습니다.
                 </td>
               </tr>

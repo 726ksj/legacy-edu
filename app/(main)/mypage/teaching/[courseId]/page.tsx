@@ -44,9 +44,9 @@ export default async function Page({
   }
 
   const [
-    { data: lessonRows },
-    { data: vocabRows },
-    { data: courseNotices },
+    { data: lessonRows, error: lessonError },
+    { data: vocabRows, error: vocabError },
+    { data: courseNotices, error: noticeError },
     { count: studentCount },
   ] = await Promise.all([
     supabase.from("lessons").select("week").eq("course_id", courseId),
@@ -65,6 +65,9 @@ export default async function Page({
       .select("id", { count: "exact", head: true })
       .eq("course_id", courseId),
   ]);
+
+  // 조회가 실패했는데 0개로 보이면 자료가 없는 것으로 오해하니 알려준다.
+  const loadError = lessonError ?? vocabError ?? noticeError;
 
   // 주차(null = 미지정)별 영상/단어장 개수.
   const lessonCount = new Map<number | null, number>();
@@ -127,6 +130,12 @@ export default async function Page({
           </p>
         </div>
       </div>
+
+      {loadError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          일부 정보를 불러오지 못했습니다: {loadError.message}
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((stat) => (
