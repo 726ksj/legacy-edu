@@ -19,9 +19,11 @@ interface VocabSetAssignmentRow {
 export default async function VocabSection({
   courseId,
   week,
+  totalWeeks,
 }: {
   courseId: string;
   week: number | null;
+  totalWeeks: number;
 }) {
   const supabase = createAdminClient();
 
@@ -58,7 +60,11 @@ export default async function VocabSection({
       <p className="text-sm text-zinc-500">
         업로드한 단어장은 이 강좌의 수강생 전체에게 자동으로 배정됩니다.
       </p>
-      <UploadVocabSetForm courseId={courseId} defaultWeek={week} />
+      <UploadVocabSetForm
+        courseId={courseId}
+        defaultWeek={week}
+        totalWeeks={totalWeeks}
+      />
 
       <div className="flex flex-col gap-3">
         {vocabSets.map((set) => (
@@ -80,7 +86,11 @@ export default async function VocabSection({
             </div>
             <div className="flex shrink-0 items-center gap-3">
               {week === null && (
-                <VocabSetWeekSelect vocabSetId={set.id} courseId={courseId} />
+                <VocabSetWeekSelect
+                  vocabSetId={set.id}
+                  courseId={courseId}
+                  totalWeeks={totalWeeks}
+                />
               )}
               <DeleteVocabSetButton
                 action={deleteVocabSet.bind(null, set.id, courseId)}

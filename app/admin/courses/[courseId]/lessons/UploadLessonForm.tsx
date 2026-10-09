@@ -6,18 +6,20 @@ import LessonAudiencePicker, {
   type AudienceStudent,
 } from "./LessonAudiencePicker";
 import type { LessonVisibility } from "@/lib/enrollments";
-import { WEEKS } from "@/lib/weeks";
+import { weeksOf } from "@/lib/weeks";
 
 export default function UploadLessonForm({
   courseId,
   students,
   nextOrderNo,
   defaultWeek = null,
+  totalWeeks,
 }: {
   courseId: string;
   students: AudienceStudent[];
   nextOrderNo: number;
   defaultWeek?: number | null;
+  totalWeeks: number | null;
 }) {
   const [week, setWeek] = useState(defaultWeek ? String(defaultWeek) : "");
   const [orderNo, setOrderNo] = useState("");
@@ -146,6 +148,7 @@ export default function UploadLessonForm({
             className="w-20 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
           />
         </label>
+        {totalWeeks && (
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           주차
           <select
@@ -155,13 +158,14 @@ export default function UploadLessonForm({
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand disabled:bg-zinc-50"
           >
             <option value="">미지정</option>
-            {WEEKS.map((w) => (
+            {weeksOf(totalWeeks).map((w) => (
               <option key={w} value={w}>
                 {w}주차
               </option>
             ))}
           </select>
         </label>
+        )}
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           제목
           <input

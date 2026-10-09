@@ -2,14 +2,16 @@
 
 import { useTransition } from "react";
 import { updateVocabSetWeek } from "@/app/admin/vocabulary/[courseId]/actions";
-import { WEEKS } from "@/lib/weeks";
+import { weeksOf } from "@/lib/weeks";
 
 export default function VocabSetWeekSelect({
   vocabSetId,
   courseId,
+  totalWeeks,
 }: {
   vocabSetId: string;
   courseId: string;
+  totalWeeks: number;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -28,7 +30,7 @@ export default function VocabSetWeekSelect({
       <option value="" disabled>
         주차 지정
       </option>
-      {WEEKS.map((week) => (
+      {weeksOf(totalWeeks).map((week) => (
         <option key={week} value={week}>
           {week}주차
         </option>

@@ -20,9 +20,12 @@ interface EnrolledProfileRow {
 export default async function LessonsSection({
   courseId,
   week,
+  totalWeeks,
 }: {
   courseId: string;
-  week: number | null;
+  // 숫자 = 그 주차, null = 주차 미지정, "all" = 주차 구분 없이 전체.
+  week: number | null | "all";
+  totalWeeks: number | null;
 }) {
   const supabase = createAdminClient();
 
@@ -36,7 +39,7 @@ export default async function LessonsSection({
 
   const totalCount = allLessons?.length ?? 0;
   const lessons = (allLessons ?? []).filter(
-    (lesson) => (lesson.week ?? null) === week,
+    (lesson) => week === "all" || (lesson.week ?? null) === week,
   );
 
   if (lessons.length) {
@@ -75,7 +78,8 @@ export default async function LessonsSection({
         courseId={courseId}
         students={students}
         nextOrderNo={totalCount + 1}
-        defaultWeek={week}
+        defaultWeek={week === "all" ? null : week}
+        totalWeeks={totalWeeks}
       />
 
       <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
@@ -103,6 +107,7 @@ export default async function LessonsSection({
                   initialSelectedIds={accessByLesson.get(lesson.id) ?? []}
                   deleteAction={deleteLesson.bind(null, lesson.id, courseId)}
                   maxOrderNo={totalCount}
+                  totalWeeks={totalWeeks}
                 />
               );
             })}

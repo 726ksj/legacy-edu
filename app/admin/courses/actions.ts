@@ -55,6 +55,14 @@ function readCourseInfoField(formData: FormData, name: string) {
   return text || null;
 }
 
+// 커리큘럼 주차 수. 비워 두면 주차 구성을 쓰지 않는 강좌(null).
+function readTotalWeeks(formData: FormData) {
+  const raw = String(formData.get("totalWeeks") ?? "").trim();
+  if (!raw) return null;
+  const weeks = Number(raw);
+  return Number.isInteger(weeks) && weeks >= 1 && weeks <= 52 ? weeks : null;
+}
+
 function readListingFields(formData: FormData) {
   const level = String(formData.get("level") ?? "").trim();
   const isBest = formData.get("isBest") === "on";
@@ -68,6 +76,7 @@ function readListingFields(formData: FormData) {
     is_best: isBest,
     duration_days: durationWeeksRaw ? Number(durationWeeksRaw) * 7 : null,
     start_date: String(formData.get("startDate") ?? "").trim() || null,
+    total_weeks: readTotalWeeks(formData),
     price: priceRaw ? Number(priceRaw) : 0,
     course_scope: readCourseInfoField(formData, "courseScope"),
     content_features: readCourseInfoField(formData, "contentFeatures"),

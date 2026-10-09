@@ -14,7 +14,7 @@ import LessonAudiencePicker, {
 import LessonPreviewPanel from "./LessonPreviewPanel";
 import ReplaceLessonVideoForm from "./ReplaceLessonVideoForm";
 import type { LessonVisibility } from "@/lib/enrollments";
-import { WEEKS } from "@/lib/weeks";
+import { weeksOf } from "@/lib/weeks";
 
 const initialState: UpdateLessonInfoState = {};
 
@@ -43,6 +43,7 @@ export default function LessonRow({
   initialSelectedIds,
   deleteAction,
   maxOrderNo,
+  totalWeeks,
 }: {
   lesson: Lesson;
   courseId: string;
@@ -51,6 +52,7 @@ export default function LessonRow({
   initialSelectedIds: string[];
   deleteAction: () => Promise<void>;
   maxOrderNo: number;
+  totalWeeks: number | null;
 }) {
   const [editing, setEditing] = useState(false);
   const [visibility, setVisibility] = useState<LessonVisibility>(
@@ -114,6 +116,7 @@ export default function LessonRow({
                   className="w-20 rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
                 />
               </label>
+              {totalWeeks && (
               <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
                 주차
                 <select
@@ -122,13 +125,14 @@ export default function LessonRow({
                   className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900 outline-none focus:border-brand"
                 >
                   <option value="">미지정</option>
-                  {WEEKS.map((week) => (
+                  {weeksOf(totalWeeks).map((week) => (
                     <option key={week} value={week}>
                       {week}주차
                     </option>
                   ))}
                 </select>
               </label>
+              )}
               <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700">
                 제목
                 <input
@@ -194,7 +198,14 @@ export default function LessonRow({
   return (
     <tr>
       <td className="px-4 py-3 text-zinc-700">{lesson.order_no}</td>
-      <td className="px-4 py-3 font-medium text-zinc-900">{lesson.title}</td>
+      <td className="px-4 py-3 font-medium text-zinc-900">
+        {lesson.week !== null && (
+          <span className="mr-2 rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-semibold text-zinc-500">
+            {lesson.week}주차
+          </span>
+        )}
+        {lesson.title}
+      </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
           <span

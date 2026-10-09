@@ -15,10 +15,6 @@ export default async function Page({
   params: Promise<{ courseId: string; week: string }>;
 }) {
   const { courseId, week: weekParam } = await params;
-  const week = parseWeekParam(weekParam);
-  if (week === undefined) {
-    notFound();
-  }
 
   // 관리자 또는 이 강좌에 배정된 강사만 들어올 수 있다.
   try {
@@ -30,11 +26,17 @@ export default async function Page({
   const supabase = createAdminClient();
   const { data: course } = await supabase
     .from("courses")
-    .select("id, subject, title, start_date")
+    .select("id, subject, title, start_date, total_weeks")
     .eq("id", courseId)
     .maybeSingle();
 
-  if (!course) {
+  // 주차 구성을 쓰지 않는 강좌이거나 범위 밖 주차면 없는 페이지로 취급한다.
+  if (!course || !course.total_weeks) {
+    notFound();
+  }
+  const totalWeeks: number = course.total_weeks;
+  const week = parseWeekParam(weekParam, totalWeeks);
+  if (week === undefined) {
     notFound();
   }
 
@@ -62,7 +64,11 @@ export default async function Page({
 
       <section>
         <h2 className="mb-3 text-lg font-bold text-zinc-900">영상 관리</h2>
-        <LessonsSection courseId={courseId} week={week} />
+        <LessonsSection
+          courseId={courseId}
+          week={week}
+          totalWeeks={totalWeeks}
+        />
       </section>
 
       <section>
@@ -72,7 +78,13 @@ export default async function Page({
             {
               key: "voca",
               label: "단어(VOCA)",
-              content: <VocabSection courseId={courseId} week={week} />,
+              content: (
+                <VocabSection
+                  courseId={courseId}
+                  week={week}
+                  totalWeeks={totalWeeks}
+                />
+              ),
             },
             { key: "writing", label: "서술형", content: null },
             { key: "order", label: "순서 암기", content: null },

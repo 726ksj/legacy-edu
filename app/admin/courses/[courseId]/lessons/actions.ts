@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireCourseManager } from "@/lib/teachers";
 import { parseWeekField } from "@/lib/weeks";
+import { validateWeekForCourse } from "@/lib/courseWeeks";
 import {
   buildMp4Url,
   createMuxClient,
@@ -58,6 +59,11 @@ export async function saveLesson(
 ): Promise<{ error?: string }> {
   await requireCourseManager(courseId);
   const supabase = createAdminClient();
+
+  const weekError = await validateWeekForCourse(courseId, week);
+  if (weekError) {
+    return { error: weekError };
+  }
 
   const { count } = await supabase
     .from("lessons")
@@ -166,6 +172,11 @@ export async function updateLessonInfo(
 
   if (!title || !orderNoRaw || Number.isNaN(orderNo)) {
     return { error: "제목과 순서를 입력해주세요." };
+  }
+
+  const weekError = await validateWeekForCourse(courseId, week);
+  if (weekError) {
+    return { error: weekError };
   }
 
   const { count } = await supabase

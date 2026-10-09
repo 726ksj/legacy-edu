@@ -30,6 +30,7 @@ export interface EditingCourse {
   is_best: boolean;
   duration_days: number | null;
   start_date: string | null;
+  total_weeks: number | null;
   price: number;
   course_scope: string | null;
   content_features: string | null;
@@ -158,7 +159,23 @@ export default function CourseForm({
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-          강좌 시작일 (8주 커리큘럼 기준)
+          커리큘럼 주차(수)
+          <span className="text-xs font-normal text-zinc-400">
+            영상·단어를 주차별로 관리할 강좌만 입력 (비우면 주차 없음)
+          </span>
+          <input
+            name="totalWeeks"
+            type="number"
+            min={1}
+            max={52}
+            defaultValue={editingCourse?.total_weeks ?? ""}
+            placeholder="8"
+            autoComplete="off"
+            className="w-24 rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+          강좌 시작일 (주차 날짜 계산 기준)
           <input
             name="startDate"
             type="date"

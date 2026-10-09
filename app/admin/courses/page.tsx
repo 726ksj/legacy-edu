@@ -39,7 +39,7 @@ export default async function Page({
     ? await supabase
         .from("courses")
         .select(
-          "id, subject, title, instructor_id, school, level, is_best, duration_days, start_date, price, course_scope, content_features, target_audience",
+          "id, subject, title, instructor_id, school, level, is_best, duration_days, start_date, total_weeks, price, course_scope, content_features, target_audience",
         )
         .eq("id", edit)
         .maybeSingle()

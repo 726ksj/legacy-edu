@@ -34,7 +34,7 @@ export default async function Page({
   const [{ data: course }, { data: assignedTeachers }] = await Promise.all([
     supabase
       .from("courses")
-      .select("id, subject, title, teacher_name")
+      .select("id, subject, title, teacher_name, total_weeks")
       .eq("id", courseId)
       .maybeSingle(),
     supabase
@@ -114,6 +114,7 @@ export default async function Page({
           courseId={courseId}
           students={students}
           nextOrderNo={(lessons?.length ?? 0) + 1}
+          totalWeeks={course.total_weeks}
         />
       </div>
 
@@ -142,6 +143,7 @@ export default async function Page({
                   initialSelectedIds={accessByLesson.get(lesson.id) ?? []}
                   deleteAction={deleteLesson.bind(null, lesson.id, courseId)}
                   maxOrderNo={lessons?.length ?? 1}
+                  totalWeeks={course.total_weeks}
                 />
               );
             })}

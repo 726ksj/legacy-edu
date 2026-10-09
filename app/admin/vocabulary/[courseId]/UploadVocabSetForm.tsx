@@ -2,16 +2,18 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { uploadVocabSet, type UploadVocabSetState } from "./actions";
-import { WEEKS } from "@/lib/weeks";
+import { weeksOf } from "@/lib/weeks";
 
 const initialState: UploadVocabSetState = {};
 
 export default function UploadVocabSetForm({
   courseId,
   defaultWeek = null,
+  totalWeeks,
 }: {
   courseId: string;
   defaultWeek?: number | null;
+  totalWeeks: number;
 }) {
   const uploadWithCourseId = uploadVocabSet.bind(null, courseId);
   const [state, formAction, isPending] = useActionState(
@@ -50,7 +52,7 @@ export default function UploadVocabSetForm({
             <option value="" disabled>
               주차 선택
             </option>
-            {WEEKS.map((week) => (
+            {weeksOf(totalWeeks).map((week) => (
               <option key={week} value={week}>
                 {week}주차
               </option>

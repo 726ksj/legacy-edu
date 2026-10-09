@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireCourseManager } from "@/lib/teachers";
 import { cellToString } from "@/lib/scoreUpload";
 import { parseWeekField } from "@/lib/weeks";
+import { validateWeekForCourse } from "@/lib/courseWeeks";
 
 async function assertVocabSetInCourse(
   supabase: ReturnType<typeof createAdminClient>,
@@ -59,6 +60,10 @@ export async function uploadVocabSet(
 
   if (!week) {
     return { error: "주차를 선택해주세요." };
+  }
+  const weekError = await validateWeekForCourse(courseId, week);
+  if (weekError) {
+    return { error: weekError };
   }
   if (!title) {
     return { error: "단어장 제목을 입력해주세요." };
@@ -209,6 +214,7 @@ export async function updateVocabSetWeek(
   week: number | null,
 ) {
   await requireCourseManager(courseId);
+  if (await validateWeekForCourse(courseId, week)) return;
   const supabase = createAdminClient();
   await assertVocabSetInCourse(supabase, vocabSetId, courseId);
 
