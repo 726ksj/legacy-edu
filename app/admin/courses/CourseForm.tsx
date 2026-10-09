@@ -205,13 +205,16 @@ export default function CourseForm({
       </div>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-        담당 강사 계정 (선택)
+        {editingCourse ? "담당 강사 계정 (선택)" : "담당 강사 계정 (필수)"}
         <select
           name="teacherProfileId"
+          required={!editingCourse}
           defaultValue={editingTeacherProfileId ?? ""}
           className="max-w-xs rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-brand"
         >
-          <option value="">배정 안 함</option>
+          <option value="">
+            {editingCourse ? "배정 안 함" : "강사 계정을 선택하세요"}
+          </option>
           {teachers.map((teacher) => (
             <option key={teacher.id} value={teacher.id}>
               {teacher.name} ({teacher.username})

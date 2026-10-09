@@ -101,8 +101,22 @@ export async function createCourse(
   if (!title || !instructorId) {
     return { error: "강좌명과 강사를 선택해주세요." };
   }
+  if (!teacherProfileId) {
+    return { error: "담당 강사 계정을 배정해주세요." };
+  }
 
   const supabase = createAdminClient();
+
+  // 폼 밖에서 임의의 프로필 ID를 보내도 강사 계정이 아니면 막는다.
+  const { data: teacherProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", teacherProfileId)
+    .eq("role", "teacher")
+    .maybeSingle();
+  if (!teacherProfile) {
+    return { error: "선택한 담당 강사 계정을 찾을 수 없습니다." };
+  }
 
   let instructor;
   try {
