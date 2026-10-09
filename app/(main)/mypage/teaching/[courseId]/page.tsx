@@ -154,6 +154,19 @@ export default async function Page({
         ))}
       </div>
 
+      <Link
+        href={`/mypage/teaching/${courseId}/results`}
+        className="flex items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white px-5 py-4 hover:border-brand"
+      >
+        <div>
+          <h2 className="text-lg font-bold text-zinc-900">학습 결과</h2>
+          <p className="mt-0.5 text-sm text-zinc-500">
+            학생별 단어 테스트 점수와 반 오답 현황을 확인합니다.
+          </p>
+        </div>
+        <span className="shrink-0 text-sm font-semibold text-brand-dark">보러 가기 →</span>
+      </Link>
+
       <div className="flex flex-col gap-6">
         {!totalWeeks && (
           <section>
