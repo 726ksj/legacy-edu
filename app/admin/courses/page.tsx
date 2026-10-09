@@ -14,19 +14,14 @@ export default async function Page({
   const { data: courses, error } = await supabase
     .from("courses")
     .select(
-      "id, subject, title, teacher_name, school, level, price, created_at",
+      "id, subject, title, teacher_name, school, level, price, start_date, created_at",
     )
+    .order("start_date", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
 
   const { data: instructors } = await supabase
     .from("instructors")
-    .select("id, name, subject")
-    .order("name", { ascending: true });
-
-  const { data: teachers } = await supabase
-    .from("profiles")
-    .select("id, name, username")
-    .eq("role", "teacher")
+    .select("id, name, subject, profile_id")
     .order("name", { ascending: true });
 
   const { data: assistants } = await supabase
@@ -39,7 +34,7 @@ export default async function Page({
     ? await supabase
         .from("courses")
         .select(
-          "id, subject, title, instructor_id, school, level, is_best, duration_days, start_date, total_weeks, price, course_scope, content_features, target_audience",
+          "id, subject, title, instructor_id, school, level, is_best, duration_days, start_date, price, course_scope, content_features, target_audience",
         )
         .eq("id", edit)
         .maybeSingle()
@@ -52,9 +47,6 @@ export default async function Page({
         .eq("course_id", edit)
     : { data: null };
 
-  const currentTeacherProfileId =
-    currentAssignments?.find((row) => row.role === "teacher")?.profile_id ??
-    null;
   const currentAssistantProfileId =
     currentAssignments?.find((row) => row.role === "assistant")?.profile_id ??
     null;
@@ -70,10 +62,8 @@ export default async function Page({
         <CourseForm
           key={editingCourse?.id ?? "new"}
           instructors={instructors ?? []}
-          teachers={teachers ?? []}
           assistants={assistants ?? []}
           editingCourse={editingCourse}
-          editingTeacherProfileId={currentTeacherProfileId}
           editingAssistantProfileId={currentAssistantProfileId}
         />
       </div>

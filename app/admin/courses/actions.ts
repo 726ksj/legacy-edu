@@ -17,7 +17,7 @@ async function resolveInstructor(
 ) {
   const { data, error } = await supabase
     .from("instructors")
-    .select("name, subject")
+    .select("name, subject, profile_id")
     .eq("id", instructorId)
     .maybeSingle();
 
@@ -55,14 +55,6 @@ function readCourseInfoField(formData: FormData, name: string) {
   return text || null;
 }
 
-// 커리큘럼 주차 수. 비워 두면 주차 구성을 쓰지 않는 강좌(null).
-function readTotalWeeks(formData: FormData) {
-  const raw = String(formData.get("totalWeeks") ?? "").trim();
-  if (!raw) return null;
-  const weeks = Number(raw);
-  return Number.isInteger(weeks) && weeks >= 1 && weeks <= 52 ? weeks : null;
-}
-
 function readListingFields(formData: FormData) {
   const level = String(formData.get("level") ?? "").trim();
   const isBest = formData.get("isBest") === "on";
@@ -71,12 +63,22 @@ function readListingFields(formData: FormData) {
     .replace(/,/g, "")
     .trim();
 
+  const durationWeeks = durationWeeksRaw ? Number(durationWeeksRaw) : null;
+
   return {
     level: level || null,
     is_best: isBest,
-    duration_days: durationWeeksRaw ? Number(durationWeeksRaw) * 7 : null,
-    start_date: String(formData.get("startDate") ?? "").trim() || null,
-    total_weeks: readTotalWeeks(formData),
+    duration_days: durationWeeks ? durationWeeks * 7 : null,
+    // 수강기간(주)이 곧 주차별 관리의 주차 수다. 1~52주만 주차 구성을 쓴다.
+    total_weeks:
+      durationWeeks && durationWeeks >= 1 && durationWeeks <= 52
+        ? Math.round(durationWeeks)
+        : null,
+    // 시작일 입력이 없는 폼(예전 수정 화면)에서 저장해도 값이 지워지지
+    // 않도록, 필드가 폼에 있을 때만 갱신한다.
+    ...(formData.has("startDate")
+      ? { start_date: String(formData.get("startDate") ?? "").trim() || null }
+      : {}),
     price: priceRaw ? Number(priceRaw) : 0,
     course_scope: readCourseInfoField(formData, "courseScope"),
     content_features: readCourseInfoField(formData, "contentFeatures"),
@@ -91,7 +93,6 @@ export async function createCourse(
   await requireAdmin();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
-  const teacherProfileId = String(formData.get("teacherProfileId") ?? "").trim();
   const assistantProfileId = String(
     formData.get("assistantProfileId") ?? "",
   ).trim();
@@ -101,28 +102,23 @@ export async function createCourse(
   if (!title || !instructorId) {
     return { error: "강좌명과 강사를 선택해주세요." };
   }
-  if (!teacherProfileId) {
-    return { error: "담당 강사 계정을 배정해주세요." };
-  }
 
   const supabase = createAdminClient();
-
-  // 폼 밖에서 임의의 프로필 ID를 보내도 강사 계정이 아니면 막는다.
-  const { data: teacherProfile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", teacherProfileId)
-    .eq("role", "teacher")
-    .maybeSingle();
-  if (!teacherProfile) {
-    return { error: "선택한 담당 강사 계정을 찾을 수 없습니다." };
-  }
 
   let instructor;
   try {
     instructor = await resolveInstructor(supabase, instructorId);
   } catch (err) {
     return { error: err instanceof Error ? err.message : "강사 조회에 실패했습니다." };
+  }
+
+  // 선택한 강사의 로그인 계정이 곧 이 강좌의 담당 강사(영상 업로드/공지
+  // 작성 권한)가 된다. 계정이 연결되지 않은 강사로는 강좌를 만들 수 없다.
+  if (!instructor.profile_id) {
+    return {
+      error:
+        "선택한 강사에 로그인 계정이 연결되어 있지 않습니다. 강사 관리에서 계정을 먼저 연결해주세요.",
+    };
   }
 
   const { data: inserted, error } = await supabase
@@ -142,7 +138,7 @@ export async function createCourse(
     return { error: error?.message ?? "등록에 실패했습니다." };
   }
 
-  await syncCourseStaff(supabase, inserted.id, "teacher", teacherProfileId);
+  await syncCourseStaff(supabase, inserted.id, "teacher", instructor.profile_id);
   await syncCourseStaff(supabase, inserted.id, "assistant", assistantProfileId);
 
   revalidatePath("/admin/courses");
@@ -160,7 +156,6 @@ export async function updateCourse(
   await requireAdmin();
   const title = String(formData.get("title") ?? "").trim();
   const instructorId = String(formData.get("instructorId") ?? "").trim();
-  const teacherProfileId = String(formData.get("teacherProfileId") ?? "").trim();
   const assistantProfileId = String(
     formData.get("assistantProfileId") ?? "",
   ).trim();
@@ -196,8 +191,16 @@ export async function updateCourse(
     return { error: error.message };
   }
 
-  await syncCourseStaff(supabase, courseId, "teacher", teacherProfileId);
-  await syncCourseStaff(supabase, courseId, "assistant", assistantProfileId);
+  // 강사를 바꾸면 담당 강사 계정도 새 강사의 계정으로 맞춘다. 계정이 없는
+  // 강사(기존 데이터)로 바꾸는 경우에는 기존 배정을 건드리지 않는다.
+  if (instructor.profile_id) {
+    await syncCourseStaff(supabase, courseId, "teacher", instructor.profile_id);
+  }
+  // 조교 선택이 없는 폼(예전 수정 화면)에서 저장해도 배정이 지워지지 않게
+  // 필드가 있을 때만 맞춘다.
+  if (formData.has("assistantProfileId")) {
+    await syncCourseStaff(supabase, courseId, "assistant", assistantProfileId);
+  }
 
   revalidatePath("/admin/courses");
   revalidatePath(`/admin/courses/${courseId}`);

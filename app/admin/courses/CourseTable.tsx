@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDate } from "@/lib/formatDateTime";
 import DeleteCourseButton from "./DeleteCourseButton";
 import { deleteCourse } from "./actions";
 
@@ -14,7 +14,7 @@ export interface CourseRow {
   school: string | null;
   level: string | null;
   price: number;
-  created_at: string;
+  start_date: string | null;
 }
 
 function uniqueSorted(values: (string | null)[]): string[] {
@@ -88,7 +88,7 @@ export default function CourseTable({
               <th className="px-4 py-3">학교</th>
               <th className="px-4 py-3">과정</th>
               <th className="px-4 py-3">가격</th>
-              <th className="px-4 py-3">개설일</th>
+              <th className="px-4 py-3">강좌 시작일</th>
               <th className="px-4 py-3" />
             </tr>
             <tr className="border-t border-zinc-100">
@@ -190,7 +190,7 @@ export default function CourseTable({
                   {row.price ? `${row.price.toLocaleString()}원` : "-"}
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {formatDateTime(row.created_at)}
+                  {row.start_date ? formatDate(row.start_date) : "-"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">

@@ -18,7 +18,7 @@ export default async function Page({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, subject, title, instructor_id, school, level, is_best, duration_days, start_date, total_weeks, price, course_scope, content_features, target_audience",
+      "id, subject, title, instructor_id, school, level, is_best, duration_days, start_date, price, course_scope, content_features, target_audience",
     )
     .eq("id", courseId)
     .maybeSingle();
@@ -29,7 +29,7 @@ export default async function Page({
 
   const { data: instructors } = await supabase
     .from("instructors")
-    .select("id, name, subject")
+    .select("id, name, subject, profile_id")
     .order("name", { ascending: true });
 
   return (
