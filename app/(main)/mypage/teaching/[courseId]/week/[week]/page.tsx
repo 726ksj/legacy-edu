@@ -5,6 +5,7 @@ import { requireCourseManager } from "@/lib/teachers";
 import { parseWeekParam, weekDateRange } from "@/lib/weeks";
 import LessonsSection from "@/components/teaching/LessonsSection";
 import VocabSection from "@/components/teaching/VocabSection";
+import WritingSection from "@/components/teaching/WritingSection";
 import FeatureTabs from "@/components/teaching/FeatureTabs";
 
 export const dynamic = "force-dynamic";
@@ -86,7 +87,17 @@ export default async function Page({
                 />
               ),
             },
-            { key: "writing", label: "서술형", content: null },
+            {
+              key: "writing",
+              label: "서술형",
+              content: (
+                <WritingSection
+                  courseId={courseId}
+                  week={week}
+                  totalWeeks={totalWeeks}
+                />
+              ),
+            },
             { key: "order", label: "순서 암기", content: null },
             { key: "grammar", label: "어법 선택", content: null },
           ]}

@@ -64,9 +64,6 @@ export default async function VocabSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-zinc-500">
-        업로드한 단어장은 이 강좌의 수강생 전체에게 자동으로 배정됩니다.
-      </p>
       <UploadVocabSetForm
         courseId={courseId}
         defaultWeek={week}
