@@ -191,11 +191,15 @@ export async function updateCourse(
     return { error: error.message };
   }
 
-  // 강사를 바꾸면 담당 강사 계정도 새 강사의 계정으로 맞춘다. 계정이 없는
-  // 강사(기존 데이터)로 바꾸는 경우에는 기존 배정을 건드리지 않는다.
-  if (instructor.profile_id) {
-    await syncCourseStaff(supabase, courseId, "teacher", instructor.profile_id);
-  }
+  // 담당 강사 계정은 항상 선택한 강사 카드의 계정과 같게 맞춘다. 계정이
+  // 연결되지 않은 강사라면 담당 강사 배정은 비워진다(예전에 따로 배정해 둔
+  // 계정이 남아 다른 강사의 강좌를 관리하는 일이 없도록).
+  await syncCourseStaff(
+    supabase,
+    courseId,
+    "teacher",
+    instructor.profile_id ?? "",
+  );
   // 조교 선택이 없는 폼(예전 수정 화면)에서 저장해도 배정이 지워지지 않게
   // 필드가 있을 때만 맞춘다.
   if (formData.has("assistantProfileId")) {

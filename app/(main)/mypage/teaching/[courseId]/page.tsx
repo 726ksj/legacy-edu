@@ -35,7 +35,7 @@ export default async function Page({
 
   const { data: course } = await supabase
     .from("courses")
-    .select("id, subject, title, teacher_name, start_date, total_weeks")
+    .select("id, title, start_date, total_weeks")
     .eq("id", courseId)
     .maybeSingle();
 
@@ -115,9 +115,6 @@ export default async function Page({
           ← 내 강좌 관리
         </Link>
         <div className="mt-3 flex flex-col gap-1">
-          <span className="text-xs font-semibold text-brand-dark">
-            {course.subject} · {course.teacher_name} 강사
-          </span>
           <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
             {course.title}
           </h1>
@@ -190,7 +187,7 @@ export default async function Page({
             </Link>
           )}
 
-          <ul className="grid md:grid-cols-2 md:[&>li]:border-b md:[&>li]:border-zinc-100 md:[&>li:nth-child(odd)]:border-r">
+          <ul className="divide-y divide-zinc-100">
             {weeks.map((week) => {
               const range = weekDateRange(course.start_date, week);
               const lessons = lessonCount.get(week) ?? 0;
