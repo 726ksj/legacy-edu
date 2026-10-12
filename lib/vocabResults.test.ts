@@ -51,6 +51,13 @@ describe("buildStudentResults", () => {
     expect(rows[1].firstScore).toBeNull();
     expect(rows[2].status).toBe("not_started");
   });
+  it("지각 응시 기록이 있으면 late", () => {
+    const lateRows = buildStudentResults(
+      [student("a", "가"), student("b", "나")],
+      [{ ...attempt("a", 1, 50), is_late: true }, attempt("b", 1, 50)],
+    );
+    expect(lateRows.map((r) => r.late)).toEqual([true, false]);
+  });
   it("요약", () => {
     expect(summarizeResults(rows)).toEqual({ completed: 1, inProgress: 1, notStarted: 1, averageTotal: 53 });
   });

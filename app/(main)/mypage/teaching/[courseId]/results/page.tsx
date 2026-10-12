@@ -127,7 +127,7 @@ export default async function Page({
       await Promise.all([
         supabase
           .from("vocab_test_attempts")
-          .select("profile_id, round_no, status, score, correct_count, total_count")
+          .select("profile_id, round_no, status, score, correct_count, total_count, is_late")
           .eq("vocab_set_id", selectedSet.id)
           .in("profile_id", studentIds)
           .returns<ResultAttempt[]>(),
@@ -162,7 +162,7 @@ export default async function Page({
             { label: "진행 중", value: `${summary.inProgress}명` },
             { label: "미응시", value: `${summary.notStarted}명` },
             {
-              label: "평균 종합 점수",
+              label: "평균 종합 점수(1차 40% + 2차 60%)",
               value: summary.averageTotal === null ? "-" : `${summary.averageTotal}점`,
             },
           ].map((item) => (
@@ -178,11 +178,11 @@ export default async function Page({
             <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
               <tr>
                 <th className="px-4 py-3">학생</th>
-                <th className="w-20 px-3 py-3">1회</th>
-                <th className="w-20 px-3 py-3">2회</th>
-                <th className="w-24 px-3 py-3">3회(최종)</th>
-                <th className="w-20 px-3 py-3">4회</th>
-                <th className="w-20 px-3 py-3">5회</th>
+                <th className="w-20 px-3 py-3">1차 시험</th>
+                <th className="w-20 px-3 py-3">1차 재시험</th>
+                <th className="w-20 px-3 py-3">2차 시험</th>
+                <th className="w-20 px-3 py-3">2차 재시험</th>
+                <th className="w-20 px-3 py-3">3차 재시험</th>
                 <th className="w-24 px-4 py-3">종합</th>
                 <th className="w-24 px-4 py-3">상태</th>
               </tr>
@@ -247,6 +247,11 @@ export default async function Page({
                       <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
                         {status.label}
                       </span>
+                      {row.late && (
+                        <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-700">
+                          지각 응시
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );

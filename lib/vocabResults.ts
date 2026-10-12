@@ -19,6 +19,8 @@ export interface ResultAttempt {
   score: number | null;
   correct_count: number | null;
   total_count: number;
+  // 지난 주차 시험을 늦게 응시한 기록(지각 응시).
+  is_late?: boolean;
 }
 
 export interface ResultNote {
@@ -38,6 +40,7 @@ export interface StudentResultRow {
   finalScore: number | null;
   totalScore: number | null;
   status: ResultStatus;
+  late: boolean;
 }
 
 export function compositeScore(first: number | null, final: number | null): number | null {
@@ -76,6 +79,7 @@ export function buildStudentResults(
       finalScore: final,
       totalScore: compositeScore(first, final),
       status,
+      late: list.some((attempt) => attempt.is_late === true),
     };
   });
 }
