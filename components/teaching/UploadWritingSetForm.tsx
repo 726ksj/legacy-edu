@@ -108,7 +108,7 @@ export default function UploadWritingSetForm({
             </label>
           )}
           <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-            서술형 세트 제목 (예: 1주차 서술형)
+            어순 배열 세트 제목 (예: 1주차 어순 배열)
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -212,7 +212,7 @@ export default function UploadWritingSetForm({
           ) : (
             !canRegister && (
               <p className="text-xs text-zinc-500">
-                주차와 서술형 세트 제목을 입력하면 등록할 수 있습니다.
+                주차와 어순 배열 세트 제목을 입력하면 등록할 수 있습니다.
               </p>
             )
           )}

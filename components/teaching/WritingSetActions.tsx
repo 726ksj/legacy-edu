@@ -32,7 +32,7 @@ export function WritingSetDeleteButton({ setId, courseId }: { setId: string; cou
       type="button"
       disabled={isPending}
       onClick={() => {
-        if (!window.confirm("이 서술형 세트를 삭제할까요? 문장도 함께 삭제됩니다.")) return;
+        if (!window.confirm("이 어순 배열 세트를 삭제할까요? 문장도 함께 삭제됩니다.")) return;
         startTransition(() => deleteWritingSet(setId, courseId));
       }}
       className="text-xs font-semibold text-red-500 hover:text-red-600 disabled:opacity-60"

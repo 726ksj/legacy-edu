@@ -4,7 +4,7 @@ import { REQUIRED_WRITING_HEADERS, OPTIONAL_WRITING_HEADERS } from "@/lib/writin
 
 export const dynamic = "force-dynamic";
 
-// 서술형 문장 업로드용 엑셀 양식. 영어 문장/우리말은 필수이고, 배열 단위와 핵심
+// 어순 배열 문장 업로드용 엑셀 양식. 영어 문장/우리말은 필수이고, 배열 단위와 핵심
 // 어구는 선택이다(배열 단위를 비우면 단어 단위로 자동 분할, 항목은 "/"로 구분).
 export async function GET() {
   const user = await getAuthUser();
@@ -13,7 +13,7 @@ export async function GET() {
   }
 
   const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet("서술형");
+  const sheet = workbook.addWorksheet("어순 배열");
 
   const headers = [...REQUIRED_WRITING_HEADERS, ...OPTIONAL_WRITING_HEADERS];
   sheet.columns = headers.map((header) => ({
@@ -44,7 +44,7 @@ export async function GET() {
   return new Response(buffer as ArrayBuffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="writing-template.xlsx"; filename*=UTF-8''${encodeURIComponent("서술형_업로드_양식.xlsx")}`,
+      "Content-Disposition": `attachment; filename="writing-template.xlsx"; filename*=UTF-8''${encodeURIComponent("어순배열_업로드_양식.xlsx")}`,
       "Cache-Control": "no-store",
     },
   });

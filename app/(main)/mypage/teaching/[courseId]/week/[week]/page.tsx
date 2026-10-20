@@ -73,7 +73,7 @@ export default async function Page({
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-bold text-zinc-900">단어 관리</h2>
+        <h2 className="mb-3 text-lg font-bold text-zinc-900">테스트 관리</h2>
         <FeatureTabs
           tabs={[
             {
@@ -89,7 +89,7 @@ export default async function Page({
             },
             {
               key: "writing",
-              label: "서술형",
+              label: "어순 배열",
               content: (
                 <WritingSection
                   courseId={courseId}
@@ -98,8 +98,8 @@ export default async function Page({
                 />
               ),
             },
-            { key: "order", label: "순서 암기", content: null },
-            { key: "grammar", label: "어법 선택", content: null },
+            { key: "order", label: "순서 배열", content: null },
+            { key: "grammar", label: "문장 배열", content: null },
           ]}
         />
       </section>

@@ -13,7 +13,7 @@ interface WritingSetRow {
   writing_sentences: { count: number }[];
 }
 
-// 한 주차의 서술형 세트 업로드 + 목록.
+// 한 주차의 어순 배열 세트 업로드 + 목록.
 export default async function WritingSection({
   courseId,
   week,
@@ -26,7 +26,7 @@ export default async function WritingSection({
   if (week === null) {
     return (
       <p className="rounded-lg border border-zinc-200 bg-white px-4 py-10 text-center text-sm text-zinc-400">
-        서술형은 주차를 정해서 등록합니다. 1~{totalWeeks}주차 화면에서 등록해주세요.
+        어순 배열은 주차를 정해서 등록합니다. 1~{totalWeeks}주차 화면에서 등록해주세요.
       </p>
     );
   }
@@ -48,7 +48,7 @@ export default async function WritingSection({
 
       {error && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-          서술형 목록을 불러오지 못했습니다: {error.message}
+          어순 배열 목록을 불러오지 못했습니다: {error.message}
         </p>
       )}
 
@@ -98,7 +98,7 @@ export default async function WritingSection({
             {sets.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-zinc-400">
-                  {error ? "목록을 불러오지 못했습니다." : "등록된 서술형 세트가 없습니다."}
+                  {error ? "목록을 불러오지 못했습니다." : "등록된 어순 배열 세트가 없습니다."}
                 </td>
               </tr>
             )}

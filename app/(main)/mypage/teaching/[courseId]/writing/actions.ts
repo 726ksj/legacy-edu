@@ -33,7 +33,7 @@ async function assertWritingSetInCourse(
     .eq("course_id", courseId)
     .maybeSingle();
   if (!data) {
-    throw new Error("이 강좌의 서술형 세트가 아닙니다.");
+    throw new Error("이 강좌의 어순 배열 세트가 아닙니다.");
   }
 }
 
@@ -123,7 +123,7 @@ export interface RegisterWritingSetInput {
   sentences: WritingRowInput[];
 }
 
-// 미리보기에서 오류가 없던 문장을 서술형 세트로 저장한다. 클라이언트가 보낸
+// 미리보기에서 오류가 없던 문장을 어순 배열 세트로 저장한다. 클라이언트가 보낸
 // 값이라 서버에서 같은 규칙으로 한 번 더 검증한다.
 export async function registerWritingSet(
   courseId: string,
@@ -141,7 +141,7 @@ export async function registerWritingSet(
     return { error: weekError };
   }
   if (!title) {
-    return { error: "서술형 세트 제목을 입력해주세요." };
+    return { error: "어순 배열 세트 제목을 입력해주세요." };
   }
   if (input.sentences.length === 0 || input.sentences.length > MAX_WRITING_SENTENCES) {
     return { error: "등록할 문장이 올바르지 않습니다." };
