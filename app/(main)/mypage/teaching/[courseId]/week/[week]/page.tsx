@@ -7,6 +7,7 @@ import LessonsSection from "@/components/teaching/LessonsSection";
 import VocabSection from "@/components/teaching/VocabSection";
 import WritingSection from "@/components/teaching/WritingSection";
 import OrderSection from "@/components/teaching/OrderSection";
+import SentenceSection from "@/components/teaching/SentenceSection";
 import FeatureTabs from "@/components/teaching/FeatureTabs";
 
 export const dynamic = "force-dynamic";
@@ -110,7 +111,17 @@ export default async function Page({
                 />
               ),
             },
-            { key: "grammar", label: "문장 배열", content: null },
+            {
+              key: "grammar",
+              label: "문장 배열",
+              content: (
+                <SentenceSection
+                  courseId={courseId}
+                  week={week}
+                  totalWeeks={totalWeeks}
+                />
+              ),
+            },
           ]}
         />
       </section>
