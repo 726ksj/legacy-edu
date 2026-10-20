@@ -7,12 +7,7 @@ import {
   type WritingPreviewState,
 } from "@/app/(main)/mypage/teaching/[courseId]/writing/actions";
 import { weeksOf } from "@/lib/weeks";
-import {
-  CHUNK_SEPARATOR,
-  OPTIONAL_WRITING_HEADERS,
-  REQUIRED_WRITING_HEADERS,
-  countWritingErrors,
-} from "@/lib/writingUpload";
+import { CHUNK_SEPARATOR, countWritingErrors } from "@/lib/writingUpload";
 
 const initialState: WritingPreviewState = {};
 
@@ -119,10 +114,6 @@ export default function UploadWritingSetForm({
 
         <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           엑셀 파일
-          <span className="text-xs font-normal text-zinc-400">
-            첫 행에 열 제목이 필요합니다: {REQUIRED_WRITING_HEADERS.join(", ")} (필수) ·{" "}
-            {OPTIONAL_WRITING_HEADERS.join(", ")} (선택, 항목은 {CHUNK_SEPARATOR}로 구분)
-          </span>
           <a
             href="/api/writing-template"
             className="w-fit text-xs font-semibold text-brand-dark hover:underline"

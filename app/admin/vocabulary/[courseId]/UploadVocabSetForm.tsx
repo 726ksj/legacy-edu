@@ -7,7 +7,7 @@ import {
   type VocabPreviewState,
 } from "./actions";
 import { weeksOf } from "@/lib/weeks";
-import { REQUIRED_VOCAB_HEADERS, countVocabErrors } from "@/lib/vocabUpload";
+import { countVocabErrors } from "@/lib/vocabUpload";
 
 const initialState: VocabPreviewState = {};
 
@@ -115,10 +115,6 @@ export default function UploadVocabSetForm({
 
         <div className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
           엑셀 파일
-          <span className="text-xs font-normal text-zinc-400">
-            첫 행에 열 제목이 필요합니다: {REQUIRED_VOCAB_HEADERS.join(", ")}{" "}
-            (모두 필수)
-          </span>
           <a
             href="/api/vocab-template"
             className="w-fit text-xs font-semibold text-brand-dark hover:underline"
