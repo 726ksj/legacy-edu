@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDate } from "@/lib/formatDateTime";
 import UploadOrderSetForm from "./UploadOrderSetForm";
 import { OrderSetDeleteButton, OrderSetHideButton } from "./OrderSetActions";
 
@@ -58,7 +58,7 @@ export default async function OrderSection({
             <tr>
               <th className="px-4 py-3">제목</th>
               <th className="w-20 px-4 py-3">문제 수</th>
-              <th className="w-40 px-4 py-3">등록일</th>
+              <th className="w-28 px-4 py-3">등록일</th>
               <th className="w-20 px-2 py-3 text-center">문제 보기</th>
               <th className="w-20 px-2 py-3 text-center">숨김</th>
               <th className="w-20 px-2 py-3 text-center">삭제</th>
@@ -78,7 +78,7 @@ export default async function OrderSection({
                   </p>
                 </td>
                 <td className="px-4 py-3 text-zinc-700">{set.order_questions[0]?.count ?? 0}개</td>
-                <td className="px-4 py-3 text-zinc-500">{formatDateTime(set.created_at)}</td>
+                <td className="px-4 py-3 text-zinc-500">{formatDate(set.created_at)}</td>
                 <td className="px-2 py-3 text-center">
                   <Link
                     href={`/mypage/teaching/${courseId}/order/${set.id}`}

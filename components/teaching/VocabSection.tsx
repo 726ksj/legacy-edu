@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDate } from "@/lib/formatDateTime";
 import UploadVocabSetForm from "@/app/admin/vocabulary/[courseId]/UploadVocabSetForm";
 import DeleteVocabSetButton from "@/app/admin/vocabulary/[courseId]/DeleteVocabSetButton";
 import { deleteVocabSet } from "@/app/admin/vocabulary/[courseId]/actions";
@@ -82,7 +82,7 @@ export default async function VocabSection({
             <tr>
               <th className="px-4 py-3">제목</th>
               <th className="w-20 px-4 py-3">단어 수</th>
-              <th className="w-40 px-4 py-3">등록일</th>
+              <th className="w-28 px-4 py-3">등록일</th>
               {week === null && <th className="w-28 px-4 py-3">주차</th>}
               <th className="w-20 px-2 py-3 text-center">단어 보기</th>
               <th className="w-20 px-2 py-3 text-center">숨김</th>
@@ -111,7 +111,7 @@ export default async function VocabSection({
                   {wordCountBySet.get(set.id) ?? 0}개
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {formatDateTime(set.created_at)}
+                  {formatDate(set.created_at)}
                 </td>
                 {week === null && (
                   <td className="px-4 py-3">
