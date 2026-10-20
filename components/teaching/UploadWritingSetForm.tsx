@@ -58,7 +58,6 @@ export default function UploadWritingSetForm({
           english: row.english,
           korean: row.korean,
           chunksText: row.chunks.join(` ${CHUNK_SEPARATOR} `),
-          keyPhrasesText: row.keyPhrases.join(` ${CHUNK_SEPARATOR} `),
         })),
       });
       if (result.error) {
@@ -223,7 +222,7 @@ export default function UploadWritingSetForm({
               <thead className="sticky top-0 bg-zinc-50 text-xs font-semibold text-zinc-500">
                 <tr>
                   <th className="w-12 px-3 py-2">행</th>
-                  <th className="px-3 py-2">영어 문장 / 우리말</th>
+                  <th className="px-3 py-2">영어 문장 / 뜻</th>
                   <th className="px-3 py-2">배열 단위</th>
                   <th className="w-40 px-3 py-2">상태</th>
                 </tr>
@@ -242,10 +241,7 @@ export default function UploadWritingSetForm({
                           <span
                             key={index}
                             className={
-                              "rounded px-1.5 py-0.5 text-xs " +
-                              (row.keyPhrases.includes(chunk)
-                                ? "bg-brand font-semibold text-white"
-                                : "bg-zinc-100 text-zinc-700")
+                              "rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-700"
                             }
                           >
                             {chunk}

@@ -3,6 +3,7 @@ import {
   annotateWritingRows,
   countWritingErrors,
   findMissingWritingHeaders,
+  normalizeWritingHeader,
   type WritingRowInput,
 } from "./writingUpload";
 
@@ -11,14 +12,19 @@ const input = (overrides: Partial<WritingRowInput> = {}): WritingRowInput => ({
   english: "I eat an apple every morning.",
   korean: "나는 매일 아침 사과를 먹는다.",
   chunksText: "",
-  keyPhrasesText: "",
   ...overrides,
 });
 
 describe("findMissingWritingHeaders", () => {
-  it("필수 열(영어 문장, 우리말)만 확인한다", () => {
+  it("필수 열(영어 문장, 뜻)만 확인한다", () => {
+    expect(findMissingWritingHeaders(["영어 문장", "뜻"])).toEqual([]);
+    expect(findMissingWritingHeaders(["영어 문장"])).toEqual(["뜻"]);
+  });
+
+  it("이전 양식의 '우리말' 열 제목도 '뜻'으로 인정한다", () => {
     expect(findMissingWritingHeaders(["영어 문장", "우리말"])).toEqual([]);
-    expect(findMissingWritingHeaders(["영어 문장"])).toEqual(["우리말"]);
+    expect(normalizeWritingHeader(" 우리말 ")).toBe("뜻");
+    expect(normalizeWritingHeader("뜻")).toBe("뜻");
   });
 });
 
@@ -43,22 +49,17 @@ describe("annotateWritingRows", () => {
     expect(row.error).toBe("배열 단위가 2개 이상이어야 합니다.");
   });
 
-  it("핵심 어구는 배열 단위 중 하나여야 한다", () => {
-    const [ok] = annotateWritingRows([
-      input({ chunksText: "I eat / an apple / every morning.", keyPhrasesText: "an apple" }),
+  it("배열 단위는 '/'로 나누고 앞뒤 공백을 정리한다", () => {
+    const [row] = annotateWritingRows([
+      input({ chunksText: "I eat /  an apple / every morning." }),
     ]);
-    expect(ok.error).toBeUndefined();
-    expect(ok.keyPhrases).toEqual(["an apple"]);
-
-    const [bad] = annotateWritingRows([
-      input({ chunksText: "I eat / an apple / every morning.", keyPhrasesText: "a banana" }),
-    ]);
-    expect(bad.error).toBe('핵심 어구 "a banana"가 배열 단위에 없습니다.');
+    expect(row.error).toBeUndefined();
+    expect(row.chunks).toEqual(["I eat", "an apple", "every morning."]);
   });
 
-  it("영어 문장과 우리말은 필수", () => {
+  it("영어 문장과 뜻은 필수", () => {
     const [row] = annotateWritingRows([input({ korean: "" })]);
-    expect(row.error).toBe("우리말이(가) 비어 있습니다.");
+    expect(row.error).toBe("뜻이(가) 비어 있습니다.");
   });
 
   it("같은 영어 문장은 두 번째부터 오류(대소문자·공백 무시)", () => {

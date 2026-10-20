@@ -8,8 +8,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// 어순 배열 문장 업로드용 엑셀 양식. 영어 문장/우리말은 필수이고, 배열 단위와 핵심
-// 어구는 선택이다(배열 단위를 비우면 단어 단위로 자동 분할, 항목은 "/"로 구분).
+// 어순 배열 문장 업로드용 엑셀 양식. 영어 문장/뜻은 필수이고, 배열 단위는
+// 선택이다(배열 단위를 비우면 단어 단위로 자동 분할, 항목은 "/"로 구분).
 export async function GET() {
   const user = await getAuthUser();
   if (!user) {
@@ -23,7 +23,7 @@ export async function GET() {
   sheet.columns = headers.map((header) => ({
     header,
     key: header,
-    width: header === "영어 문장" || header === "우리말" ? 42 : 36,
+    width: header === "영어 문장" || header === "뜻" ? 42 : 36,
   }));
   sheet.getRow(1).font = { bold: true };
   // 첫 열 제목에 메모로 한도를 안내한다(셀 값이 아니라 업로드 읽기에는 영향이 없다).
@@ -34,14 +34,12 @@ export async function GET() {
       "I eat an apple every morning.",
       "나는 매일 아침 사과를 먹는다.",
       "I eat / an apple / every morning.",
-      "an apple",
     ],
-    ["She studies at the library.", "그녀는 도서관에서 공부한다.", "", ""],
+    ["She studies at the library.", "그녀는 도서관에서 공부한다.", ""],
     [
       "The experiment demonstrated the theory.",
       "그 실험은 그 이론을 입증했다.",
       "The experiment / demonstrated / the theory.",
-      "demonstrated",
     ],
   ]);
 

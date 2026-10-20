@@ -13,6 +13,7 @@ import {
   annotateWritingRows,
   countWritingErrors,
   findMissingWritingHeaders,
+  normalizeWritingHeader,
   type WritingPreviewRow,
   type WritingRowInput,
 } from "@/lib/writingUpload";
@@ -72,7 +73,7 @@ export async function previewWritingSet(
   const columnIndex = new Map<string, number>();
   const headers: string[] = [];
   worksheet.getRow(1).eachCell((cell, colNumber) => {
-    const header = cellToString(cell.value).trim();
+    const header = normalizeWritingHeader(cellToString(cell.value));
     if (header) {
       headers.push(header);
       columnIndex.set(header, colNumber);
@@ -96,12 +97,11 @@ export async function previewWritingSet(
     const input: WritingRowInput = {
       row: rowNumber,
       english: get("영어 문장"),
-      korean: get("우리말"),
+      korean: get("뜻"),
       chunksText: get("배열 단위"),
-      keyPhrasesText: get("핵심 어구"),
     };
     // 완전히 빈 행은 조용히 건너뛴다 (엑셀 끝부분에 흔함).
-    if (!input.english && !input.korean && !input.chunksText && !input.keyPhrasesText) return;
+    if (!input.english && !input.korean && !input.chunksText) return;
     inputs.push(input);
   });
 
@@ -172,7 +172,6 @@ export async function registerWritingSet(
       english: row.english,
       korean: row.korean,
       chunks: row.chunks,
-      key_phrases: row.keyPhrases,
     })),
   );
   if (sentencesError) {

@@ -12,7 +12,6 @@ interface SentenceRow {
   english: string;
   korean: string;
   chunks: string[];
-  key_phrases: string[];
 }
 
 export default async function Page({
@@ -39,7 +38,7 @@ export default async function Page({
       .maybeSingle(),
     supabase
       .from("writing_sentences")
-      .select("id, order_no, english, korean, chunks, key_phrases")
+      .select("id, order_no, english, korean, chunks")
       .eq("writing_set_id", setId)
       .order("order_no", { ascending: true })
       .returns<SentenceRow[]>(),
@@ -66,8 +65,7 @@ export default async function Page({
           {writingSet.is_hidden ? " · 비공개" : ""}
         </p>
         <p className="mt-1 text-xs text-zinc-400">
-          내용을 고치려면 엑셀을 수정해 새 세트로 다시 업로드해주세요. 진한 분홍색 배열 단위가
-          핵심 어구입니다.
+          내용을 고치려면 엑셀을 수정해 새 세트로 다시 업로드해주세요.
         </p>
       </div>
 
@@ -85,12 +83,7 @@ export default async function Page({
                   {sentence.chunks.map((chunk, index) => (
                     <span
                       key={index}
-                      className={
-                        "rounded px-2 py-0.5 text-xs " +
-                        (sentence.key_phrases.includes(chunk)
-                          ? "bg-brand font-semibold text-white"
-                          : "bg-zinc-100 text-zinc-700")
-                      }
+                      className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700"
                     >
                       {chunk}
                     </span>
