@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { formatDateTime } from "@/lib/formatDateTime";
+import { formatDate } from "@/lib/formatDateTime";
 import UploadVocabSetForm from "./UploadVocabSetForm";
 import DeleteVocabSetButton from "./DeleteVocabSetButton";
 import VocabSetHideButton from "@/components/teaching/VocabSetHideButton";
@@ -141,7 +141,7 @@ export default async function Page({
                   {wordCountBySet.get(set.id) ?? 0}개
                 </td>
                 <td className="px-4 py-3 text-zinc-500">
-                  {formatDateTime(set.created_at)}
+                  {formatDate(set.created_at)}
                 </td>
                 <td className="px-2 py-3 text-center">
                   <Link
