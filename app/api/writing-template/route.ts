@@ -1,6 +1,10 @@
 import ExcelJS from "exceljs";
 import { getAuthUser } from "@/lib/supabase/server";
-import { REQUIRED_WRITING_HEADERS, OPTIONAL_WRITING_HEADERS } from "@/lib/writingUpload";
+import {
+  REQUIRED_WRITING_HEADERS,
+  OPTIONAL_WRITING_HEADERS,
+  MAX_WRITING_SENTENCES,
+} from "@/lib/writingUpload";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +26,8 @@ export async function GET() {
     width: header === "영어 문장" || header === "우리말" ? 42 : 36,
   }));
   sheet.getRow(1).font = { bold: true };
+  // 첫 열 제목에 메모로 한도를 안내한다(셀 값이 아니라 업로드 읽기에는 영향이 없다).
+  sheet.getCell("A1").note = `한 파일에는 최대 ${MAX_WRITING_SENTENCES}문장까지 올릴 수 있습니다.`;
 
   sheet.addRows([
     [
@@ -44,7 +50,7 @@ export async function GET() {
   return new Response(buffer as ArrayBuffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="writing-template.xlsx"; filename*=UTF-8''${encodeURIComponent("어순배열_업로드_양식.xlsx")}`,
+      "Content-Disposition": `attachment; filename="writing-template.xlsx"; filename*=UTF-8''${encodeURIComponent("어순 배열_업로드_양식.xlsx")}`,
       "Cache-Control": "no-store",
     },
   });
