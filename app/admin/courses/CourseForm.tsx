@@ -250,7 +250,7 @@ export default function CourseForm({
               key={priceInputKey}
               name="price"
               defaultValue={editingCourse?.price ?? ""}
-              placeholder="51,000"
+              placeholder="0"
               className={INPUT_CLASS}
             />
           </Field>
