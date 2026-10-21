@@ -196,12 +196,6 @@ export default function CourseTable({
                       영상 관리
                     </Link>
                     <Link
-                      href={`/admin/courses/${row.id}/materials`}
-                      className="text-xs font-semibold text-brand-dark hover:underline"
-                    >
-                      자료 관리
-                    </Link>
-                    <Link
                       href={`/admin/courses?edit=${row.id}`}
                       className="text-xs font-semibold text-zinc-600 hover:underline"
                     >
