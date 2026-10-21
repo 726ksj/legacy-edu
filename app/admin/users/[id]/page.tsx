@@ -10,8 +10,8 @@ import {
   updateScoreReport,
   deleteScoreReport,
 } from "./score-actions";
-import { deleteEnrollment } from "../../enrollments/actions";
-import DeleteEnrollmentButton from "../../enrollments/DeleteEnrollmentButton";
+import { deleteEnrollment } from "../actions";
+import DeleteEnrollmentButton from "./DeleteEnrollmentButton";
 import ScoreReportSection, {
   type ScoreReportEntry,
 } from "@/components/admin/ScoreReportSection";

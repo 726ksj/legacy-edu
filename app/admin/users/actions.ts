@@ -93,3 +93,37 @@ export async function deleteUser(
   revalidatePath("/admin/users");
   redirect("/admin/users");
 }
+
+// 회원 상세 화면에서 학생의 수강 권한을 해지한다. 메모(questions)는 enrollments와
+// 직접 연결돼 있지 않아서, 해제하기 전에 어떤 학생·강좌였는지 먼저 알아둬야 그
+// 강좌의 차시에 남긴 메모를 찾아 같이 지울 수 있다.
+export async function deleteEnrollment(id: string) {
+  await requireAdmin();
+  const supabase = createAdminClient();
+
+  const { data: enrollment } = await supabase
+    .from("enrollments")
+    .select("profile_id, course_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  await supabase.from("enrollments").delete().eq("id", id);
+
+  if (enrollment) {
+    const { data: lessons } = await supabase
+      .from("lessons")
+      .select("id")
+      .eq("course_id", enrollment.course_id);
+
+    const lessonIds = (lessons ?? []).map((lesson) => lesson.id);
+    if (lessonIds.length > 0) {
+      await supabase
+        .from("questions")
+        .delete()
+        .eq("profile_id", enrollment.profile_id)
+        .in("lesson_id", lessonIds);
+    }
+
+    revalidatePath(`/admin/users/${enrollment.profile_id}`);
+  }
+}

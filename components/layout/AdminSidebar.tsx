@@ -24,7 +24,6 @@ const ADMIN_NAV_GROUPS = [
       { label: "단어장 관리", href: "/admin/vocabulary" },
       { label: "성적 관리", href: "/admin/score-report-categories" },
       { label: "채팅 모니터링", href: "/admin/chat" },
-      { label: "수강 권한 관리", href: "/admin/enrollments" },
     ],
   },
   {

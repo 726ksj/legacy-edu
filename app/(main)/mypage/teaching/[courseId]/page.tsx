@@ -99,8 +99,14 @@ export default async function Page({
     (week) => (lessonCount.get(week) ?? 0) > 0 && (vocabCount.get(week) ?? 0) > 0,
   ).length;
 
-  const stats = [
-    { label: "수강생", value: studentCount ?? 0, unit: "명" },
+  // href가 있는 박스는 눌러서 이동한다(수강생 박스 → 수강생 관리).
+  const stats: { label: string; value: number; unit: string; href?: string }[] = [
+    {
+      label: "수강생",
+      value: studentCount ?? 0,
+      unit: "명",
+      href: `/mypage/teaching/${courseId}/students`,
+    },
     { label: "전체 영상", value: totalLessons, unit: "개" },
     ...(totalWeeks
       ? [{ label: "전체 단어장", value: totalVocabSets, unit: "개" }]
@@ -138,20 +144,35 @@ export default async function Page({
       )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-zinc-200 bg-white p-4"
-          >
-            <p className="text-xs font-semibold text-zinc-500">{stat.label}</p>
-            <p className="mt-2 text-2xl font-bold text-zinc-900">
-              {stat.value}
-              <span className="ml-1 text-sm font-medium text-zinc-400">
-                {stat.unit}
-              </span>
-            </p>
-          </div>
-        ))}
+        {stats.map((stat) => {
+          const content = (
+            <>
+              <p className="text-xs font-semibold text-zinc-500">{stat.label}</p>
+              <p className="mt-2 text-2xl font-bold text-zinc-900">
+                {stat.value}
+                <span className="ml-1 text-sm font-medium text-zinc-400">
+                  {stat.unit}
+                </span>
+              </p>
+            </>
+          );
+          return stat.href ? (
+            <Link
+              key={stat.label}
+              href={stat.href}
+              className="rounded-xl border border-zinc-200 bg-white p-4 hover:border-brand"
+            >
+              {content}
+            </Link>
+          ) : (
+            <div
+              key={stat.label}
+              className="rounded-xl border border-zinc-200 bg-white p-4"
+            >
+              {content}
+            </div>
+          );
+        })}
       </div>
 
       <Link
