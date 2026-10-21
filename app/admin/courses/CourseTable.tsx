@@ -166,12 +166,7 @@ export default function CourseTable({
               >
                 <td className="px-4 py-3 text-zinc-700">{row.subject}</td>
                 <td className="px-4 py-3 font-medium text-zinc-900">
-                  <Link
-                    href={`/admin/courses/${row.id}`}
-                    className="hover:text-brand-dark hover:underline"
-                  >
-                    {row.title}
-                  </Link>
+                  {row.title}
                 </td>
                 <td className="px-4 py-3 text-zinc-700">
                   {row.teacher_name}
@@ -199,6 +194,12 @@ export default function CourseTable({
                       className="text-xs font-semibold text-brand-dark hover:underline"
                     >
                       영상 관리
+                    </Link>
+                    <Link
+                      href={`/admin/courses/${row.id}/materials`}
+                      className="text-xs font-semibold text-brand-dark hover:underline"
+                    >
+                      자료 관리
                     </Link>
                     <Link
                       href={`/admin/courses?edit=${row.id}`}

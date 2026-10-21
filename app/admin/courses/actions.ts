@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 import { createMuxClient } from "@/lib/mux";
@@ -241,9 +240,4 @@ export async function deleteCourse(id: string) {
 
   await supabase.from("courses").delete().eq("id", id);
   revalidatePath("/admin/courses");
-}
-
-export async function deleteCourseAndRedirect(id: string) {
-  await deleteCourse(id);
-  redirect("/admin/courses");
 }
