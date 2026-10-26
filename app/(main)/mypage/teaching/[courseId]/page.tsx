@@ -46,6 +46,9 @@ export default async function Page({
   const [
     { data: lessonRows, error: lessonError },
     { data: vocabRows, error: vocabError },
+    { data: writingRows, error: writingError },
+    { data: orderRows, error: orderError },
+    { data: sentenceRows, error: sentenceError },
     { data: courseNotices, error: noticeError },
     { count: studentCount },
   ] = await Promise.all([
@@ -55,6 +58,9 @@ export default async function Page({
       .select("vocab_sets(week)")
       .eq("course_id", courseId)
       .returns<{ vocab_sets: { week: number | null } | null }[]>(),
+    supabase.from("writing_sets").select("week").eq("course_id", courseId),
+    supabase.from("order_sets").select("week").eq("course_id", courseId),
+    supabase.from("sentence_sets").select("week").eq("course_id", courseId),
     supabase
       .from("course_notices")
       .select("id, title, content, created_at")
@@ -67,7 +73,13 @@ export default async function Page({
   ]);
 
   // 조회가 실패했는데 0개로 보이면 자료가 없는 것으로 오해하니 알려준다.
-  const loadError = lessonError ?? vocabError ?? noticeError;
+  const loadError =
+    lessonError ??
+    vocabError ??
+    writingError ??
+    orderError ??
+    sentenceError ??
+    noticeError;
 
   // 주차(null = 미지정)별 영상/단어장 개수.
   const lessonCount = new Map<number | null, number>();
@@ -81,8 +93,24 @@ export default async function Page({
     const key = row.vocab_sets.week ?? null;
     vocabCount.set(key, (vocabCount.get(key) ?? 0) + 1);
   }
+  // 어순/순서/문장 배열 세트는 강좌에 바로 속해서 주차별 개수만 센다.
+  const countByWeek = (rows: { week: number | null }[] | null) => {
+    const counts = new Map<number | null, number>();
+    for (const row of rows ?? []) {
+      const key = row.week ?? null;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  };
+  const writingCount = countByWeek(writingRows);
+  const orderCount = countByWeek(orderRows);
+  const sentenceCount = countByWeek(sentenceRows);
   const unassignedTotal =
-    (lessonCount.get(null) ?? 0) + (vocabCount.get(null) ?? 0);
+    (lessonCount.get(null) ?? 0) +
+    (vocabCount.get(null) ?? 0) +
+    (writingCount.get(null) ?? 0) +
+    (orderCount.get(null) ?? 0) +
+    (sentenceCount.get(null) ?? 0);
 
   const totalLessons = lessonRows?.length ?? 0;
   const totalVocabSets = vocabRows?.filter((row) => row.vocab_sets).length ?? 0;
@@ -224,7 +252,11 @@ export default async function Page({
             >
               <span className="font-semibold text-amber-800">
                 주차가 지정되지 않은 자료가 있습니다 · 영상{" "}
-                {lessonCount.get(null) ?? 0} · 단어장 {vocabCount.get(null) ?? 0}
+                {lessonCount.get(null) ?? 0} · 단어(VOCA){" "}
+                {vocabCount.get(null) ?? 0} · 어순 배열{" "}
+                {writingCount.get(null) ?? 0} · 순서 배열{" "}
+                {orderCount.get(null) ?? 0} · 문장 배열{" "}
+                {sentenceCount.get(null) ?? 0}
               </span>
               <span className="shrink-0 text-amber-700">지정하기 →</span>
             </Link>
@@ -234,7 +266,13 @@ export default async function Page({
             {weeks.map((week) => {
               const range = weekDateRange(course.start_date, week);
               const lessons = lessonCount.get(week) ?? 0;
-              const vocabs = vocabCount.get(week) ?? 0;
+              const badges = [
+                { label: "영상", count: lessons },
+                { label: "단어(VOCA)", count: vocabCount.get(week) ?? 0 },
+                { label: "어순 배열", count: writingCount.get(week) ?? 0 },
+                { label: "순서 배열", count: orderCount.get(week) ?? 0 },
+                { label: "문장 배열", count: sentenceCount.get(week) ?? 0 },
+              ];
               const isCurrent = thisWeek === week;
               const isPast = thisWeek !== null && week < thisWeek;
               return (
@@ -279,26 +317,19 @@ export default async function Page({
                         )}
                       </div>
                       <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
-                        <span
-                          className={
-                            "rounded-md px-2 py-0.5 font-medium " +
-                            (lessons > 0
-                              ? "bg-brand-light text-brand-dark"
-                              : "bg-zinc-100 text-zinc-400")
-                          }
-                        >
-                          영상 {lessons}
-                        </span>
-                        <span
-                          className={
-                            "rounded-md px-2 py-0.5 font-medium " +
-                            (vocabs > 0
-                              ? "bg-brand-light text-brand-dark"
-                              : "bg-zinc-100 text-zinc-400")
-                          }
-                        >
-                          단어장 {vocabs}
-                        </span>
+                        {badges.map((badge) => (
+                          <span
+                            key={badge.label}
+                            className={
+                              "rounded-md px-2 py-0.5 font-medium " +
+                              (badge.count > 0
+                                ? "bg-brand-light text-brand-dark"
+                                : "bg-zinc-100 text-zinc-400")
+                            }
+                          >
+                            {badge.label} {badge.count}
+                          </span>
+                        ))}
                       </div>
                     </div>
 
