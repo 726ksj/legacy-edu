@@ -41,7 +41,7 @@ export default async function Page({
       .maybeSingle(),
     supabase
       .from("vocab_words")
-      .select("id, word, meaning, example")
+      .select("id, word, meaning, example, example_meaning")
       .eq("vocab_set_id", setId)
       .order("sort_order", { ascending: true }),
   ]);
@@ -77,13 +77,14 @@ export default async function Page({
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[800px] text-left text-sm">
           <thead className="bg-zinc-50 text-xs font-semibold text-zinc-500">
             <tr>
               <th className="w-14 px-4 py-3">번호</th>
               <th className="w-1/4 px-4 py-3">단어</th>
               <th className="w-1/4 px-4 py-3">뜻</th>
               <th className="px-4 py-3">예시 문장</th>
+              <th className="px-4 py-3">예시 문장 뜻</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -97,11 +98,14 @@ export default async function Page({
                 <td className="px-4 py-3 text-zinc-500">
                   {word.example ?? "-"}
                 </td>
+                <td className="px-4 py-3 text-zinc-500">
+                  {word.example_meaning ?? "-"}
+                </td>
               </tr>
             ))}
             {words?.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-zinc-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-zinc-400">
                   등록된 단어가 없습니다.
                 </td>
               </tr>

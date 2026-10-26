@@ -4,7 +4,7 @@ import { REQUIRED_VOCAB_HEADERS } from "@/lib/vocabUpload";
 
 export const dynamic = "force-dynamic";
 
-// 단어장 업로드용 엑셀 양식. 헤더 3개(단어, 뜻, 예시 문장)와 예시 몇 줄만
+// 단어장 업로드용 엑셀 양식. 헤더 4개(단어, 뜻, 예시 문장, 예시 문장 뜻)와 예시 몇 줄만
 // 들어 있고, 강사는 예시 줄을 지우고 자기 단어를 채워 올리면 된다.
 export async function GET() {
   const user = await getAuthUser();
@@ -18,14 +18,19 @@ export async function GET() {
   sheet.columns = REQUIRED_VOCAB_HEADERS.map((header) => ({
     header,
     key: header,
-    width: header === "예시 문장" ? 60 : 24,
+    width: header.startsWith("예시 문장") ? 60 : 24,
   }));
   sheet.getRow(1).font = { bold: true };
 
   sheet.addRows([
-    ["abandon", "버리다, 포기하다", "He had to abandon his plan."],
-    ["resilient", "회복력 있는", "Children are often more resilient than adults."],
-    ["scarce", "부족한, 드문", "Water is scarce in the desert."],
+    ["abandon", "버리다, 포기하다", "He had to abandon his plan.", "그는 계획을 포기해야 했다."],
+    [
+      "resilient",
+      "회복력 있는",
+      "Children are often more resilient than adults.",
+      "아이들은 종종 어른보다 회복력이 좋다.",
+    ],
+    ["scarce", "부족한, 드문", "Water is scarce in the desert.", "사막에서는 물이 부족하다."],
   ]);
 
   const buffer = await workbook.xlsx.writeBuffer();

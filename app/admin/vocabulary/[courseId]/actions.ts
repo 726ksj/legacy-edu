@@ -8,6 +8,7 @@ import { cellToString } from "@/lib/scoreUpload";
 import { parseWeekField } from "@/lib/weeks";
 import { validateWeekForCourse } from "@/lib/courseWeeks";
 import {
+  EXAMPLE_MEANING_HEADER,
   REQUIRED_VOCAB_HEADERS,
   annotateVocabRows,
   countVocabErrors,
@@ -104,9 +105,10 @@ export async function previewVocabSet(
     const word = get("단어");
     const meaning = get("뜻");
     const example = get("예시 문장");
+    const exampleMeaning = get(EXAMPLE_MEANING_HEADER);
     // 완전히 빈 행은 조용히 건너뛴다 (엑셀 끝부분에 흔함).
-    if (!word && !meaning && !example) return;
-    inputs.push({ row: rowNumber, word, meaning, example });
+    if (!word && !meaning && !example && !exampleMeaning) return;
+    inputs.push({ row: rowNumber, word, meaning, example, exampleMeaning });
   });
 
   if (inputs.length === 0) {
@@ -182,6 +184,7 @@ export async function registerVocabSet(
       word: row.word,
       meaning: row.meaning,
       example: row.example,
+      example_meaning: row.exampleMeaning || null,
       sort_order: index,
     })),
   );

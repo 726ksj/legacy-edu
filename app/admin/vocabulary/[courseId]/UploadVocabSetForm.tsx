@@ -213,13 +213,14 @@ export default function UploadVocabSetForm({
           )}
 
           <div className="max-h-96 overflow-auto rounded-md border border-zinc-200">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[800px] text-left text-sm">
               <thead className="sticky top-0 bg-zinc-50 text-xs font-semibold text-zinc-500">
                 <tr>
                   <th className="w-14 px-3 py-2">행</th>
                   <th className="px-3 py-2">단어</th>
                   <th className="px-3 py-2">뜻</th>
                   <th className="px-3 py-2">예시 문장</th>
+                  <th className="px-3 py-2">예시 문장 뜻</th>
                   <th className="w-48 px-3 py-2">상태</th>
                 </tr>
               </thead>
@@ -235,6 +236,9 @@ export default function UploadVocabSetForm({
                     </td>
                     <td className="px-3 py-2 text-zinc-500">
                       {row.example || "-"}
+                    </td>
+                    <td className="px-3 py-2 text-zinc-500">
+                      {row.exampleMeaning || "-"}
                     </td>
                     <td
                       className={
